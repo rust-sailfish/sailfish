@@ -1,0 +1,25 @@
+[package]
+name = "sailfish-macros"
+version = "0.0.1"
+authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
+description = "Really fast, intuitive template engine for Rust"
+homepage = "https://github.com/Kogia-sima/sailfish"
+repository = "https://github.com/Kogia-sima/sailfish"
+readme = "../README.md"
+keywords = ["markup", "template", "html"]
+categories = ["template-engine"]
+license = "MIT"
+workspace = ".."
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "sailfish_macros"
+proc-macro = true
+test = false
+doctest = false
+
+[dependencies]
+sailfish-compiler = { path = "../sailfish-compiler", version = "0.0.1", features = ["procmacro"] }
+proc-macro2 = "1.0.17"

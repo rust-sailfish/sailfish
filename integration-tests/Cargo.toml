@@ -1,0 +1,14 @@
+[package]
+name = "integration-tests"
+version = "0.0.1"
+authors = ["Kogia-sima <orcinus4627@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+sailfish = { path = "../sailfish" }
+sailfish-macros = { path = "../sailfish-macros" }
+
+[dev-dependencies]
+trybuild = "1.0.28"
+pretty_assertions = "0.6.1"

@@ -1,0 +1,17 @@
+[package]
+name = "sailfish"
+version = "0.0.1"
+authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
+description = "Really fast, intuitive template engine for Rust"
+homepage = "https://github.com/Kogia-sima/sailfish"
+repository = "https://github.com/Kogia-sima/sailfish"
+readme = "../README.md"
+keywords = ["markup", "template", "html"]
+categories = ["template-engine"]
+license = "MIT"
+workspace = ".."
+edition = "2018"
+
+[dependencies]
+itoa = "0.4.5"
+ryu = "1.0.4"

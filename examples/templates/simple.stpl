@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <%# This is a comment %>
+    <% for (i, msg) in messages.iter().enumerate() { %>
+      <% if i == 0 { %>
+        <h1>Hello, world!</h1>
+      <% } %>
+      <div><%= *msg %></div>
+    <% } %>
+  </body>
+</html>

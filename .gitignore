@@ -1,0 +1,4 @@
+target/
+scripts/
+*.log
+*.s

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "sailfish",
+  "patterns": [
+    {
+      "include": "#commentblock"
+    },
+    {
+      "include": "#codeblock"
+    },
+    {
+      "include": "text.html.basic"
+    }
+  ],
+  "repository": {
+    "commentblock": {
+      "patterns": [{
+        "name": "comment.block.embedded.html",
+        "begin": "<(%|\\?)#",
+        "end": "(%|\\?)>",
+        "captures": {
+          "0": {
+            "name": "punctuation.definition.comment.html"
+          }
+        }
+      }]
+    },
+    "codeblock": {
+      "patterns": [{
+        "name": "source.rust.embedded.html",
+        "begin": "<(%|\\?)(=|-)?",
+        "beginCaptures": {
+          "0": {
+            "name": "punctuation.definition.tag.begin.html"
+          }
+        },
+        "end": "(%|\\?)>",
+        "endCaptures": {
+          "0": {
+            "name": "punctuation.definition.tag.end.html"
+          }
+        },
+        "patterns": [{
+          "include": "source.rust"
+        }]
+      }]
+    }
+  },
+  "scopeName": "source.sailfish"
+}

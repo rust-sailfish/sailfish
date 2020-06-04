@@ -1,0 +1,27 @@
+{
+    "name": "vscode-sailfish",
+    "displayName": "vscode-sailfish",
+    "description": "Syntax highlighting for sailfish templates in VSCode",
+    "version": "0.1.0",
+    "author": "Ryohei Machida <orcinus4627@gmail.com>",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.45.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "sailfish",
+            "aliases": ["sailfish"],
+            "extensions": [".stpl", ".html.stpl"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "sailfish",
+            "scopeName": "source.sailfish",
+            "path": "./syntaxes/sailfish.tmLanguage.json"
+        }]
+    }
+}
