@@ -4,6 +4,10 @@
 
 Simple, small, and extremely fast template engine for Rust
 
+[![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
 </div>
 
 ## ✨ Features
