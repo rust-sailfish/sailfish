@@ -1,3 +1,4 @@
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use syn::visit_mut::VisitMut;
 use syn::{Block, Expr, ExprBlock, LitStr};
@@ -28,13 +29,15 @@ fn empty_block() -> Block {
     }
 }
 
-struct ResolverImpl<'h> {
+struct ResolverImpl<'s, 'h> {
+    template_dir: &'s Path,
+    path_stack: Vec<PathBuf>,
     deps: Vec<String>,
     error: Option<Error>,
-    include_handler: Arc<dyn 'h + Fn(&str) -> Result<Block, Error>>,
+    include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
 }
 
-impl<'h> VisitMut for ResolverImpl<'h> {
+impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
     fn visit_expr_mut(&mut self, i: &mut Expr) {
         return_if_some!(self.error);
         let em = matches_or_else!(*i, Expr::Macro(ref em), em, {
@@ -60,8 +63,17 @@ impl<'h> VisitMut for ResolverImpl<'h> {
             }
         };
 
+        // resolve the template file path
+        let input_file = if arg.starts_with('/') {
+            // absolute imclude
+            self.template_dir.join(&arg[1..])
+        } else {
+            // relative include
+            self.path_stack.last().unwrap().parent().unwrap().join(arg.clone())
+        };
+
         // parse and translate the child template
-        let mut blk = match (*self.include_handler)(&arg) {
+        let mut blk = match (*self.include_handler)(&*input_file) {
             Ok(blk) => blk,
             Err(mut e) => {
                 e.chains
@@ -71,6 +83,7 @@ impl<'h> VisitMut for ResolverImpl<'h> {
             }
         };
 
+        self.path_stack.push(input_file);
         self.deps.push(arg);
         syn::visit_mut::visit_block_mut(self, &mut blk);
 
@@ -84,7 +97,7 @@ impl<'h> VisitMut for ResolverImpl<'h> {
 
 #[derive(Clone)]
 pub struct Resolver<'h> {
-    include_handler: Arc<dyn 'h + Fn(&str) -> Result<Block, Error>>,
+    include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
 }
 
 impl<'h> Resolver<'h> {
@@ -101,7 +114,7 @@ impl<'h> Resolver<'h> {
     #[inline]
     pub fn include_handler(
         self,
-        new: Arc<dyn 'h + Fn(&str) -> Result<Block, Error>>,
+        new: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
     ) -> Resolver<'h> {
         Self {
             include_handler: new,
@@ -109,12 +122,20 @@ impl<'h> Resolver<'h> {
     }
 
     #[inline]
-    pub fn resolve(&self, ast: &mut Block) -> Result<(), Error> {
-        ResolverImpl {
+    pub fn resolve(&self, template_dir: &Path, input_file: &Path, ast: &mut Block) -> Result<(), Error> {
+        let mut child = ResolverImpl {
+            template_dir: template_dir,
+            path_stack: vec![input_file.to_owned()],
             deps: Vec::new(),
             error: None,
             include_handler: Arc::clone(&self.include_handler)
-        }.visit_block_mut(ast);
-        Ok(())
+        };
+        child.visit_block_mut(ast);
+
+        if let Some(e) = child.error {
+            Err(e)
+        } else {
+            Ok(())
+        }
     }
 }

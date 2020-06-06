@@ -40,15 +40,8 @@ impl Compiler {
 
         let input = input.canonicalize()?;
 
-        let include_handler = Arc::new(|arg: &str| -> Result<_, Error> {
-            let input_file = if arg.starts_with("/") {
-                // absolute imclude
-                template_dir.join(arg)
-            } else {
-                // relative include
-                input.parent().unwrap().join(arg)
-            };
-            Ok(self.translate_file_contents(&*input_file)?.ast)
+        let include_handler = Arc::new(|child_file: &Path| -> Result<_, Error> {
+            Ok(self.translate_file_contents(&*child_file)?.ast)
         });
 
         let resolver = Resolver::new().include_handler(include_handler);
@@ -57,7 +50,7 @@ impl Compiler {
         let compile_file = |input: &Path, output: &Path| -> Result<(), Error> {
             let mut tsource = self.translate_file_contents(input)?;
 
-            resolver.resolve(&mut tsource.ast)?;
+            resolver.resolve(template_dir, &*input, &mut tsource.ast)?;
             optimizer.optimize(&mut tsource.ast);
 
             if let Some(parent) = output.parent() {

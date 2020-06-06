@@ -27,7 +27,7 @@ quote = { version = "1.0.6", default-features = false }
 [dependencies.syn]
 version = "1.0.21"
 default-features = false
-features = ["parsing", "full", "visit-mut", "printing", "clone-impls"]
+features = ["parsing", "full", "visit-mut", "printing", "clone-impls", "extra-traits"]
 
 [dependencies.proc-macro2]
 version = "1.0.10"
