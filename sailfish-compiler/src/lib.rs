@@ -12,6 +12,7 @@ mod translator;
 mod util;
 
 pub use compiler::Compiler;
+pub use config::Config;
 pub use error::{Error, ErrorKind};
 
 #[cfg(feature = "procmacro")]
