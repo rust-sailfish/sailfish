@@ -12,7 +12,13 @@ fn assert_render_result(name: &str, result: RenderResult) {
     output_file.push(name);
     output_file.set_extension("out");
 
-    let expected = std::fs::read_to_string(output_file).unwrap();
+    let mut expected = std::fs::read_to_string(output_file).unwrap();
+    if expected.ends_with('\n') {
+        expected.truncate(expected.len() - 1);
+        if expected.ends_with('\r') {
+            expected.truncate(expected.len() - 1);
+        }
+    }
     assert_string_eq!(&*result.unwrap(), &*expected);
 }
 
