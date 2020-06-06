@@ -75,6 +75,7 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
         }
 
         // resolve the template file path
+        // TODO: How should arguments be interpreted on Windows?
         let input_file = if arg.starts_with('/') {
             // absolute imclude
             self.template_dir.join(&arg[1..])

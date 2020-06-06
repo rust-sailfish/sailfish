@@ -1,4 +1,5 @@
 // TODO: Better error message (unbalanced rust delimiter, etc.)
+// TODO: disallow '<%' token inside code block
 
 use memchr::{memchr, memchr2, memchr3};
 use std::convert::TryInto;
