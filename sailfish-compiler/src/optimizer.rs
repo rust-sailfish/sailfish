@@ -115,7 +115,7 @@ impl VisitMut for OptmizerImpl {
                         buffer.push_str(line.trim_start());
                     }
                 }
-                i.mac.tokens = quote! { sfrt::render_text!(_ctx, #buffer); };
+                i.mac.tokens = quote! { _ctx, #buffer };
                 return;
             }
         }

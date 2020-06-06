@@ -45,7 +45,7 @@ impl Compiler {
         });
 
         let resolver = Resolver::new().include_handler(include_handler);
-        let optimizer = Optimizer::new();
+        let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
 
         let compile_file = |input: &Path, output: &Path| -> Result<(), Error> {
             let mut tsource = self.translate_file_contents(input)?;
