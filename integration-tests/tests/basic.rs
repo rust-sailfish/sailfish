@@ -142,6 +142,18 @@ fn test_teams() {
     assert_render("teams", teams);
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "rm_whitespace.stpl")]
+#[template(rm_whitespace = true)]
+struct RmWhitespace<'a, 'b> {
+    messages: &'a [&'b str],
+}
+
+#[test]
+fn test_rm_whitespace() {
+    assert_render("rm_whitespace", RmWhitespace { messages: &["foo", "bar"] });
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;
