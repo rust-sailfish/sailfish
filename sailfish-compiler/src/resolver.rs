@@ -60,13 +60,6 @@ impl<'h> VisitMut for ResolverImpl<'h> {
             }
         };
 
-        // TODO: support relative path
-        if arg.starts_with("./") || arg.starts_with("../") {
-            self.error = Some(make_error!(ErrorKind::Unimplemented(
-                "include! with relative path is not supported yet.".to_owned()
-            )))
-        }
-
         // parse and translate the child template
         let mut blk = match (*self.include_handler)(&arg) {
             Ok(blk) => blk,

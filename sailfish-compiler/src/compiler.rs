@@ -38,14 +38,16 @@ impl Compiler {
     pub fn compile_file(&self, template_dir: &Path, input: &Path, output: &Path) -> Result<(), Error> {
         // TODO: introduce cache system
 
-        let input = if input.is_absolute() {
-            input.to_owned()
-        } else {
-            template_dir.join(input)
-        };
-        
+        let input = input.canonicalize()?;
+
         let include_handler = Arc::new(|arg: &str| -> Result<_, Error> {
-            let input_file = template_dir.join(arg);
+            let input_file = if arg.starts_with("/") {
+                // absolute imclude
+                template_dir.join(arg)
+            } else {
+                // relative include
+                input.parent().unwrap().join(arg)
+            };
             Ok(self.translate_file_contents(&*input_file)?.ast)
         });
 
