@@ -1,0 +1,20 @@
+[package]
+name = "benches"
+version = "0.0.1"
+authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+horrorshow = "0.8.3"
+markup = "0.4.1"
+askama = "0.9.0"
+criterion = "0.3.2"
+yarte = "0.8.3"
+sailfish = { path = "../sailfish" }
+sailfish-macros = { path = "../sailfish-macros" }
+fomat-macros = "0.3.1"
+
+[[bench]]
+name = "all"
+harness = false
