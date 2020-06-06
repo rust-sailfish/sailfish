@@ -92,17 +92,6 @@ fn test_include() {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "include-nest.stpl")]
-struct IncludeNest<'a> {
-    s: &'a str,
-}
-
-#[test]
-fn test_include_nest() {
-    assert_render("include-nest", IncludeNest { s: "foo" });
-}
-
-#[derive(TemplateOnce)]
 #[template(path = "big-table.stpl")]
 struct BigTable {
     table: Vec<Vec<usize>>        
@@ -151,4 +140,20 @@ fn test_teams() {
         ],
     };
     assert_render("teams", teams);
+}
+
+#[cfg(unix)]
+mod unix {
+    use super::*;
+
+    #[derive(TemplateOnce)]
+    #[template(path = "include-nest.stpl")]
+    struct IncludeNest<'a> {
+        s: &'a str,
+    }
+
+    #[test]
+    fn test_include_nest() {
+        assert_render("include-nest", IncludeNest { s: "foo" });
+    }
 }
