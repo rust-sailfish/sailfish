@@ -28,7 +28,7 @@ Dependencies:
 
 ```toml
 [dependencies]
-sailfish = "0.0.1"
+sailfish = "0.0.2"
 sailfish-macros = "0.0.1"
 ```
 
