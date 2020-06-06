@@ -135,8 +135,10 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let mut all_options = DeriveTemplateOptions::default();
     for attr in strct.attrs {
-        let opt = syn::parse2::<DeriveTemplateOptions>(attr.tokens)?;
-        all_options.merge(opt)?;
+        if attr.path.is_ident("template") {
+            let opt = syn::parse2::<DeriveTemplateOptions>(attr.tokens)?;
+            all_options.merge(opt)?;
+        }
     }
 
     let mut template_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect(
