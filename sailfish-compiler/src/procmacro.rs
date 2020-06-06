@@ -113,6 +113,7 @@ struct TemplateStruct {
 }
 
 fn compile(
+    template_dir: &Path,
     input_file: &Path,
     output_file: &Path,
     options: &DeriveTemplateOptions,
@@ -126,7 +127,7 @@ fn compile(
     }
 
     let compiler = Compiler::with_config(config);
-    compiler.compile_file(input_file, &*output_file)
+    compiler.compile_file(template_dir, input_file, &*output_file)
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
@@ -138,15 +139,13 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         all_options.merge(opt)?;
     }
 
+    let mut template_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect(
+        "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
+    ));
+    template_dir.push("templates");
+
     let input_file = match all_options.path {
-        Some(ref path) => {
-            let mut input = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect(
-                "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
-            ));
-            input.push("templates");
-            input.push(path.value());
-            input
-        }
+        Some(ref path) => template_dir.join(path.value()),
         None => {
             return Err(syn::Error::new(
                 Span::call_site(),
@@ -178,7 +177,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     output_file.push("templates");
     output_file.push(filename);
 
-    compile(&*input_file, &*output_file, &all_options)
+    compile(&*template_dir, &*input_file, &*output_file, &all_options)
         .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
     let input_file_string = input_file.to_string_lossy();

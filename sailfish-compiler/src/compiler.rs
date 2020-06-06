@@ -1,13 +1,14 @@
 use quote::ToTokens;
 use std::fs;
 use std::path::Path;
+use std::sync::Arc;
 
 use crate::config::Config;
 use crate::error::*;
 use crate::optimizer::Optimizer;
 use crate::parser::Parser;
 use crate::resolver::Resolver;
-use crate::translator::Translator;
+use crate::translator::{Translator, TranslatedSource};
 use crate::util::rustfmt_block;
 
 #[derive(Default)]
@@ -24,21 +25,35 @@ impl Compiler {
         Self { config }
     }
 
-    pub fn compile_file(&self, input: &Path, output: &Path) -> Result<(), Error> {
-        // TODO: introduce cache system
-
+    fn translate_file_contents(&self, input: &Path) -> Result<TranslatedSource, Error> {
         let parser = Parser::new().delimiter(self.config.delimiter);
         let translator = Translator::new().escape(self.config.escape);
-        let resolver = Resolver::new();
+        let content = fs::read_to_string(input)
+            .chain_err(|| format!("Failed to open template file: {:?}", input))?;
+
+        let stream = parser.parse(&*content);
+        translator.translate(stream)
+    }
+
+    pub fn compile_file(&self, template_dir: &Path, input: &Path, output: &Path) -> Result<(), Error> {
+        // TODO: introduce cache system
+
+        let input = if input.is_absolute() {
+            input.to_owned()
+        } else {
+            template_dir.join(input)
+        };
+        
+        let include_handler = Arc::new(|arg: &str| -> Result<_, Error> {
+            let input_file = template_dir.join(arg);
+            Ok(self.translate_file_contents(&*input_file)?.ast)
+        });
+
+        let resolver = Resolver::new().include_handler(include_handler);
         let optimizer = Optimizer::new();
 
         let compile_file = |input: &Path, output: &Path| -> Result<(), Error> {
-            let content = fs::read_to_string(&*input)
-                .chain_err(|| format!("Failed to open template file: {:?}", input))?;
-
-            let stream = parser.parse(&*content);
-            let mut tsource = translator.translate(stream)?;
-            drop(content);
+            let mut tsource = self.translate_file_contents(input)?;
 
             resolver.resolve(&mut tsource.ast)?;
             optimizer.optimize(&mut tsource.ast);
