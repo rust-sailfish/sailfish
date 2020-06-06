@@ -13,3 +13,8 @@ sailfish-macros = { path = "../sailfish-macros" }
 name = "simple"
 path = "simple.rs"
 test = false
+
+[[bin]]
+name = "include"
+path = "include.rs"
+test = false

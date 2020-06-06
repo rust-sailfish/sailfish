@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <% include!("header.stpl"); %>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    Hello, <%= name %>!
+  </body>
+</html>
