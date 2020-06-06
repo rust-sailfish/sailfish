@@ -9,7 +9,7 @@ use crate::optimizer::Optimizer;
 use crate::parser::Parser;
 use crate::resolver::Resolver;
 use crate::translator::{Translator, TranslatedSource};
-use crate::util::rustfmt_block;
+use crate::util::{read_to_string, rustfmt_block};
 
 #[derive(Default)]
 pub struct Compiler {
@@ -28,7 +28,7 @@ impl Compiler {
     fn translate_file_contents(&self, input: &Path) -> Result<TranslatedSource, Error> {
         let parser = Parser::new().delimiter(self.config.delimiter);
         let translator = Translator::new().escape(self.config.escape);
-        let content = fs::read_to_string(input)
+        let content = read_to_string(input)
             .chain_err(|| format!("Failed to open template file: {:?}", input))?;
 
         let stream = parser.parse(&*content);

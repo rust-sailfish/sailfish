@@ -1,5 +1,20 @@
 use std::io::{self, Write};
+use std::path::Path;
 use std::process::{Command, Stdio};
+
+pub fn read_to_string(path: &Path) -> io::Result<String> {
+    let mut content = std::fs::read_to_string(path)?;
+
+    // strip break line at file end
+    if content.ends_with('\n') {
+        content.truncate(content.len() - 1);
+        if content.ends_with('\r') {
+            content.truncate(content.len() - 1);
+        }
+    }
+
+    Ok(content)
+}
 
 /// Format block expression using `rustfmt` command
 pub fn rustfmt_block(source: &str) -> io::Result<String> {
