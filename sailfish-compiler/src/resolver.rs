@@ -63,6 +63,11 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
             }
         };
 
+        // ignore include! for rust file
+        if arg.ends_with(".rs") {
+            return;
+        }
+
         // resolve the template file path
         let input_file = if arg.starts_with('/') {
             // absolute imclude
