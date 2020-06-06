@@ -1,7 +1,8 @@
 use quote::ToTokens;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use crate::config::Config;
 use crate::error::*;
 use crate::optimizer::Optimizer;
 use crate::parser::Parser;
@@ -9,20 +10,9 @@ use crate::resolver::Resolver;
 use crate::translator::Translator;
 use crate::util::rustfmt_block;
 
+#[derive(Default)]
 pub struct Compiler {
-    delimiter: char,
-    escape: bool,
-    cache_dir: PathBuf,
-}
-
-impl Default for Compiler {
-    fn default() -> Self {
-        Self {
-            delimiter: '%',
-            escape: true,
-            cache_dir: Path::new(env!("OUT_DIR")).join("cache"),
-        }
-    }
+    config: Config
 }
 
 impl Compiler {
@@ -30,21 +20,15 @@ impl Compiler {
         Self::default()
     }
 
-    pub fn delimiter(mut self, new: char) -> Self {
-        self.delimiter = new;
-        self
-    }
-
-    pub fn escape(mut self, new: bool) -> Self {
-        self.escape = new;
-        self
+    pub fn with_config(config: Config) -> Self {
+        Self { config }
     }
 
     pub fn compile_file(&self, input: &Path, output: &Path) -> Result<(), Error> {
         // TODO: introduce cache system
 
-        let parser = Parser::new().delimiter(self.delimiter);
-        let translator = Translator::new().escape(self.escape);
+        let parser = Parser::new().delimiter(self.config.delimiter);
+        let translator = Translator::new().escape(self.config.escape);
         let resolver = Resolver::new();
         let optimizer = Optimizer::new();
 

@@ -6,6 +6,7 @@ use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, Lifetime, LitBool, LitChar, LitStr, Token};
 
+use crate::config::Config;
 use crate::compiler::Compiler;
 use crate::error::*;
 
@@ -116,14 +117,15 @@ fn compile(
     output_file: &Path,
     options: &DeriveTemplateOptions,
 ) -> Result<(), Error> {
-    let mut compiler = Compiler::new();
+    let mut config = Config::default();
     if let Some(ref delimiter) = options.delimiter {
-        compiler = compiler.delimiter(delimiter.value());
+        config.delimiter = delimiter.value();
     }
     if let Some(ref escape) = options.escape {
-        compiler = compiler.escape(escape.value);
+        config.escape = escape.value;
     }
 
+    let compiler = Compiler::with_config(config);
     compiler.compile_file(input_file, &*output_file)
 }
 
