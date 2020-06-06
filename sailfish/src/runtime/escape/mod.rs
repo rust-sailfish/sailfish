@@ -1,3 +1,7 @@
+//! HTML escaping
+//!
+//! By default sailfish replaces the characters `&"<>` with the equivalent html.
+
 mod avx2;
 mod fallback;
 mod naive;
@@ -23,6 +27,9 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&'static str; 4] = ["&quot;", "&amp;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 4;
 
+/// write the escaped contents with custom function
+///
+/// This function is soft-deprecated because using this function causes a large binary size.
 #[inline]
 pub fn escape_with<F: FnMut(&str)>(mut writer: F, feed: &str) {
     unsafe {
@@ -49,6 +56,17 @@ pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
     escape_with(|e| buf.write_str(e), feed);
 }
 
+/// write the escaped contents into `String`
+///
+/// # Examples
+///
+/// ```
+/// use sailfish::runtime::escape::escape_to_string;
+///
+/// let mut buf = String::new();
+/// escape_to_string("<h1>Hello, world!</h1>", &mut buf);
+/// assert_eq!(buf, "&lt;h1&gt;Hello, world!&lt;/h1&gt;");
+/// ```
 #[inline]
 pub fn escape_to_string(feed: &str, s: &mut String) {
     unsafe {
