@@ -91,6 +91,7 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
         self.path_stack.push(input_file);
         self.deps.push(arg);
         syn::visit_mut::visit_block_mut(self, &mut blk);
+        self.path_stack.pop();
 
         *i = Expr::Block(ExprBlock {
             attrs: Vec::new(),
