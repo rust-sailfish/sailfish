@@ -34,7 +34,9 @@ fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
     None
 }
 
-struct OptmizerImpl {}
+struct OptmizerImpl {
+    rm_whitespace: bool,
+}
 
 impl VisitMut for OptmizerImpl {
     fn visit_expr_mut(&mut self, i: &mut Expr) {
@@ -84,18 +86,67 @@ impl VisitMut for OptmizerImpl {
 
         *i = new_expr;
     }
+
+    fn visit_expr_macro_mut(&mut self, i: &mut ExprMacro) {
+        if self.rm_whitespace {
+            if let Some(v) = get_rendertext_value(i) {
+                let mut buffer = String::new();
+                let mut it = v.lines().peekable();
+
+                if let Some(line) = it.next() {
+                    if it.peek().is_some() {
+                        buffer.push_str(line.trim_end());
+                        buffer.push('\n');
+                    } else {
+                        return;
+                    }
+                }
+
+                while let Some(line) = it.next() {
+                    if it.peek().is_some() {
+                        if !line.is_empty() {
+                            buffer.push_str(line.trim());
+                            buffer.push('\n');
+                        } else {
+                            // ignore empty line
+                        }
+                    } else {
+                        // last line
+                        buffer.push_str(line.trim_start());
+                    }
+                }
+                i.mac.tokens = quote! { sfrt::render_text!(_ctx, #buffer); };
+                return;
+            }
+        }
+
+        syn::visit_mut::visit_expr_macro_mut(self, i);
+    }
 }
 
-pub struct Optimizer {}
+pub struct Optimizer {
+    rm_whitespace: bool,
+}
 
 impl Optimizer {
     #[inline]
     pub fn new() -> Self {
-        Self {}
+        Self {
+            rm_whitespace: false,
+        }
+    }
+
+    #[inline]
+    pub fn rm_whitespace(mut self, new: bool) -> Self {
+        self.rm_whitespace = new;
+        self
     }
 
     #[inline]
     pub fn optimize(&self, i: &mut Block) {
-        OptmizerImpl {}.visit_block_mut(i);
+        OptmizerImpl {
+            rm_whitespace: self.rm_whitespace,
+        }
+        .visit_block_mut(i);
     }
 }
