@@ -1,0 +1,25 @@
+dist: bionic
+language: rust
+
+branches:
+  except:
+    - stable
+
+matrix:
+  fast_finish: true
+  include:
+    - os: linux
+      rust: stable
+
+    - os: linux
+      rust: nightly
+
+    - os: osx
+      rust: stable
+
+env:
+  global:
+    - RUST_BACKTRACE=1
+
+script:
+  - cargo test --all-features --workspace
