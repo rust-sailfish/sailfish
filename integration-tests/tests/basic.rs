@@ -84,3 +84,14 @@ struct Include<'a> {
 fn test_include() {
     assert_render("include", Include { strs: &["foo", "bar"] });
 }
+
+#[derive(TemplateOnce)]
+#[template(path = "include-nest.stpl")]
+struct IncludeNest<'a> {
+    s: &'a str,
+}
+
+#[test]
+fn test_include_nest() {
+    assert_render("include-nest", IncludeNest { s: "foo" });
+}
