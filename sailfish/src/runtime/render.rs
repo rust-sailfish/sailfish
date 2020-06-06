@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 use super::buffer::Buffer;
 use super::escape;
 
+/// types which can be rendered inside buffer block (`<%= %>`)
 pub trait Render {
     fn render(&self, b: &mut Buffer) -> fmt::Result;
 

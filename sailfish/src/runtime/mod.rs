@@ -1,3 +1,5 @@
+//! Sailfish runtime
+
 mod buffer;
 pub mod escape;
 mod macros;

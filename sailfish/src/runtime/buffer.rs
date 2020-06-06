@@ -1,6 +1,10 @@
 use std::fmt;
 use std::ops::{Add, AddAssign};
 
+/// Buffer for rendered contents
+///
+/// This struct is quite simular to `String`, but some methods are
+/// re-implemented for faster buffering.
 #[derive(Clone, Debug)]
 pub struct Buffer {
     inner: String,
