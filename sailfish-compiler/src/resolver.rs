@@ -1,3 +1,4 @@
+use quote::quote;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use syn::visit_mut::VisitMut;
@@ -40,7 +41,7 @@ struct ResolverImpl<'s, 'h> {
 impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
     fn visit_expr_mut(&mut self, i: &mut Expr) {
         return_if_some!(self.error);
-        let em = matches_or_else!(*i, Expr::Macro(ref em), em, {
+        let em = matches_or_else!(*i, Expr::Macro(ref mut em), em, {
             syn::visit_mut::visit_expr_mut(self, i);
             return;
         });
@@ -63,8 +64,13 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
             }
         };
 
-        // ignore include! for rust file
+        // resolve include! for rust file
         if arg.ends_with(".rs") {
+            if !arg.starts_with("/") {
+                let absolute_path = self.path_stack.last().unwrap().parent().unwrap().join(arg);
+                let absolute_path_str = absolute_path.to_string_lossy();
+                em.mac.tokens = quote!{ include!(#absolute_path_str) };
+            }
             return;
         }
 
