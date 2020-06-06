@@ -33,3 +33,8 @@ $ cargo bench
 - Teams
 
 ![Teams](./teams.png)
+
+## License
+
+This benchmark code is distributed under the special permission granted by [Dirkjan Ochtman](https://github.com/djc) (See [this issue](https://github.com/djc/template-benchmarks-rs/issues/26)).
+**You cannot modify or redistribute the code without a explicit permission**.
