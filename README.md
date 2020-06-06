@@ -14,7 +14,7 @@ Simple, small, and extremely fast template engine for Rust
 
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
 - Relatively small number of dependencies (<15 crates in total)
-- Extremely fast (See [benchmarks](./benches))
+- Extremely fast
 - Better error message
 - Template rendering is always type-safe because templates are statically compiled.
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
