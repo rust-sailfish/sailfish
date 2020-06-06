@@ -73,3 +73,14 @@ struct CustomDelimiter;
 fn custom_delimiter() {
     assert_render("custom_delimiter", CustomDelimiter);
 }
+
+#[derive(TemplateOnce)]
+#[template(path = "include.stpl")]
+struct Include<'a> {
+    strs: &'a [&'a str],
+}
+
+#[test]
+fn test_include() {
+    assert_render("include", Include { strs: &["foo", "bar"] });
+}
