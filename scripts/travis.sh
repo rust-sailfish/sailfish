@@ -1,11 +1,11 @@
 #!/bin/bash
 
 set -ex
-export CARGO_OPTIONS="--all-features --workspace"
+export CARGO_OPTIONS="--all-features -p sailfish -p sailfish-compiler -p integration-tests"
 
 if [ "$TRAVIS_RUST_VERSION" = "nightly" ] && [ -z "$TRAVIS_TAG" ]; then
   export CARGO_INCREMENTAL=0
-  export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Clink-dead-code -Coverflow-checks=off -Copt-level=0 -Cpanic=abort -Zpanic_abort_tests"
+  export RUSTFLAGS="-Zprofile -Ccodegen-units=1 -Clink-dead-code -Coverflow-checks=off -Copt-level=0"
 
   wget https://github.com/mozilla/grcov/releases/download/v0.5.5/grcov-linux-x86_64.tar.bz2
   tar xvf grcov-linux-x86_64.tar.bz2
