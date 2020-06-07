@@ -164,6 +164,15 @@ fn test_rm_whitespace() {
     );
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "comment.stpl")]
+struct Comment {}
+
+#[test]
+fn test_comment() {
+    assert_render("comment", Comment{})
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;
