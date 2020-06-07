@@ -165,6 +165,7 @@ impl SourceBuilder {
 
     pub fn finalize(mut self) -> Result<TranslatedSource, Error> {
         self.source.push_str("\n}");
+        proc_macro2::fallback::force();
         match syn::parse_str::<Block>(&*self.source) {
             Ok(ast) => Ok(TranslatedSource {
                 ast,
