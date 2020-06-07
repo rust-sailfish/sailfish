@@ -205,4 +205,35 @@ mod tests {
         assert_eq!(buffer.len, 8);
         assert_eq!(buffer.capacity, 10);
     }
+
+    #[test]
+    fn string_conversion() {
+        // from empty string
+        let s = String::new();
+        let mut buf = Buffer::from(s);
+        assert_eq!(buf.as_str(), "");
+        buf.write_str("abc");
+        assert_eq!(buf.as_str(), "abc");
+
+        // into non-empty string
+        let mut s = buf.into_string();
+        assert_eq!(s, "abc");
+
+        s.push_str("defghijklmn");
+        assert_eq!(s, "abcdefghijklmn");
+
+        // from non-empty string
+        let mut buf = Buffer::from(s);
+        assert_eq!(buf.as_str(), "abcdefghijklmn");
+        buf.clear();
+        assert_eq!(buf.as_str(), "");
+
+        // into empty string
+        let buf = Buffer::new();
+        let mut s = buf.into_string();
+        assert_eq!(s, "");
+
+        s.push_str("apple");
+        assert_eq!(s, "apple");
+    }
 }
