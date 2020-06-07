@@ -18,10 +18,10 @@ pub struct SourceMap {
 }
 
 impl SourceMap {
-    #[inline]
-    pub fn entries(&self) -> &[SourceMapEntry] {
-        &*self.entries
-    }
+    // #[inline]
+    // pub fn entries(&self) -> &[SourceMapEntry] {
+    //     &*self.entries
+    // }
 
     pub fn reverse_mapping(&self, offset: usize) -> Option<usize> {
         // find entry which satisfies entry.new <= offset < entry.new + entry.length

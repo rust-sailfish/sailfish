@@ -23,13 +23,6 @@ macro_rules! return_if_some {
     };
 }
 
-fn empty_block() -> Block {
-    Block {
-        brace_token: Default::default(),
-        stmts: Vec::new(),
-    }
-}
-
 struct ResolverImpl<'s, 'h> {
     template_dir: &'s Path,
     path_stack: Vec<PathBuf>,
@@ -66,10 +59,11 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
 
         // resolve include! for rust file
         if arg.ends_with(".rs") {
-            if !arg.starts_with("/") {
-                let absolute_path = self.path_stack.last().unwrap().parent().unwrap().join(arg);
+            if !arg.starts_with('/') {
+                let absolute_path =
+                    self.path_stack.last().unwrap().parent().unwrap().join(arg);
                 let absolute_path_str = absolute_path.to_string_lossy();
-                em.mac.tokens = quote!{ include!(#absolute_path_str) };
+                em.mac.tokens = quote! { include!(#absolute_path_str) };
             }
             return;
         }
@@ -81,7 +75,12 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
             self.template_dir.join(&arg[1..])
         } else {
             // relative include
-            self.path_stack.last().unwrap().parent().unwrap().join(arg.clone())
+            self.path_stack
+                .last()
+                .unwrap()
+                .parent()
+                .unwrap()
+                .join(arg.clone())
         };
 
         // parse and translate the child template
@@ -135,13 +134,18 @@ impl<'h> Resolver<'h> {
     }
 
     #[inline]
-    pub fn resolve(&self, template_dir: &Path, input_file: &Path, ast: &mut Block) -> Result<(), Error> {
+    pub fn resolve(
+        &self,
+        template_dir: &Path,
+        input_file: &Path,
+        ast: &mut Block,
+    ) -> Result<(), Error> {
         let mut child = ResolverImpl {
-            template_dir: template_dir,
+            template_dir,
             path_stack: vec![input_file.to_owned()],
             deps: Vec::new(),
             error: None,
-            include_handler: Arc::clone(&self.include_handler)
+            include_handler: Arc::clone(&self.include_handler),
         };
         child.visit_block_mut(ast);
 

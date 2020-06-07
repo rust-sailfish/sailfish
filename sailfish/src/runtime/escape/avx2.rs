@@ -1,3 +1,5 @@
+#![allow(clippy::cast_ptr_alignment)]
+
 #[cfg(target_arch = "x86")]
 use std::arch::x86::*;
 #[cfg(target_arch = "x86_64")]

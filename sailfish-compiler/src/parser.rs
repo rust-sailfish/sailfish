@@ -103,6 +103,7 @@ pub struct ParseStream<'a> {
     delimiter: char,
 }
 
+#[allow(dead_code)]
 impl<'a> ParseStream<'a> {
     /// Returns an empty `ParseStream` containing no tokens
     pub fn new() -> Self {
@@ -220,7 +221,7 @@ impl<'a> ParseStream<'a> {
         let end = self
             .source
             .find(&*self.block_delimiter.0)
-            .unwrap_or(self.source.len());
+            .unwrap_or_else(|| self.source.len());
         let token = Token {
             content: self.take_n(end),
             offset,

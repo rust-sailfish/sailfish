@@ -1,3 +1,5 @@
+#![allow(clippy::cast_ptr_alignment)]
+
 use super::naive;
 
 #[cfg(target_pointer_width = "16")]
@@ -13,8 +15,8 @@ const USIZE_ALIGN: usize = USIZE_BYTES - 1;
 
 #[inline(always)]
 fn contains_zero_byte(x: usize) -> bool {
-    const LO_U64: u64 = 0x0101010101010101;
-    const HI_U64: u64 = 0x8080808080808080;
+    const LO_U64: u64 = 0x0101_0101_0101_0101;
+    const HI_U64: u64 = 0x8080_8080_8080_8080;
     const LO_USIZE: usize = LO_U64 as usize;
     const HI_USIZE: usize = HI_U64 as usize;
 
@@ -23,10 +25,10 @@ fn contains_zero_byte(x: usize) -> bool {
 
 #[inline]
 fn contains_key(x: usize) -> bool {
-    const INDEPENDENTS1: usize = 0x0404040404040404_u64 as usize;
-    const INDEPENDENTS2: usize = 0x0202020202020202_u64 as usize;
-    const KEY1: usize = 0x2626262626262626_u64 as usize;
-    const KEY2: usize = 0x3e3e3e3e3e3e3e3e_u64 as usize;
+    const INDEPENDENTS1: usize = 0x0404_0404_0404_0404_u64 as usize;
+    const INDEPENDENTS2: usize = 0x0202_0202_0202_0202_u64 as usize;
+    const KEY1: usize = 0x2626_2626_2626_2626_u64 as usize;
+    const KEY2: usize = 0x3e3e_3e3e_3e3e_3e3e_u64 as usize;
 
     let y1 = x | INDEPENDENTS1;
     let y2 = x | INDEPENDENTS2;

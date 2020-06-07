@@ -4,6 +4,7 @@ use syn::visit_mut::VisitMut;
 use syn::{Block, Expr, ExprMacro, Ident, LitStr, Stmt, Token};
 
 struct RenderTextMacroArgument {
+    #[allow(dead_code)]
     context: Ident,
     arg: LitStr,
 }

@@ -7,7 +7,7 @@ pub struct Config {
     pub cache_dir: PathBuf,
     pub rm_whitespace: bool,
     #[doc(hidden)]
-    pub _non_exhaustive: ()
+    pub _non_exhaustive: (),
 }
 
 impl Default for Config {
@@ -17,7 +17,7 @@ impl Default for Config {
             escape: true,
             cache_dir: Path::new(env!("OUT_DIR")).join("cache"),
             rm_whitespace: false,
-            _non_exhaustive: ()
+            _non_exhaustive: (),
         }
     }
 }

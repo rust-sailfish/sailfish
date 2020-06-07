@@ -88,13 +88,18 @@ struct Include<'a> {
 
 #[test]
 fn test_include() {
-    assert_render("include", Include { strs: &["foo", "bar"] });
+    assert_render(
+        "include",
+        Include {
+            strs: &["foo", "bar"],
+        },
+    );
 }
 
 #[derive(TemplateOnce)]
 #[template(path = "big-table.stpl")]
 struct BigTable {
-    table: Vec<Vec<usize>>        
+    table: Vec<Vec<usize>>,
 }
 
 #[test]
@@ -151,7 +156,12 @@ struct RmWhitespace<'a, 'b> {
 
 #[test]
 fn test_rm_whitespace() {
-    assert_render("rm_whitespace", RmWhitespace { messages: &["foo", "bar"] });
+    assert_render(
+        "rm_whitespace",
+        RmWhitespace {
+            messages: &["foo", "bar"],
+        },
+    );
 }
 
 #[cfg(unix)]

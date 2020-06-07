@@ -58,9 +58,20 @@ impl Buffer {
         self.capacity
     }
 
+    /// Force the length of buffer to `new_len`
+    ///
+    /// # Safety
+    ///
+    /// - `new_len` must be less than or equal to `capacity()`
+    /// - The elements at `old_len..new_len` must be initialized
     #[inline]
-    pub unsafe fn set_len(&mut self, new: usize) {
-        self.len = new;
+    pub unsafe fn set_len(&mut self, new_len: usize) {
+        self.len = new_len;
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     pub fn reserve(&mut self, size: usize) {
@@ -145,7 +156,7 @@ impl From<String> for Buffer {
             Buffer {
                 data: other.as_mut_ptr(),
                 len: other.len(),
-                capacity: other.capacity()
+                capacity: other.capacity(),
             }
         } else {
             Buffer::new()

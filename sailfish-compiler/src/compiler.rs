@@ -8,12 +8,12 @@ use crate::error::*;
 use crate::optimizer::Optimizer;
 use crate::parser::Parser;
 use crate::resolver::Resolver;
-use crate::translator::{Translator, TranslatedSource};
+use crate::translator::{TranslatedSource, Translator};
 use crate::util::{read_to_string, rustfmt_block};
 
 #[derive(Default)]
 pub struct Compiler {
-    config: Config
+    config: Config,
 }
 
 impl Compiler {
@@ -35,7 +35,12 @@ impl Compiler {
         translator.translate(stream)
     }
 
-    pub fn compile_file(&self, template_dir: &Path, input: &Path, output: &Path) -> Result<(), Error> {
+    pub fn compile_file(
+        &self,
+        template_dir: &Path,
+        input: &Path,
+        output: &Path,
+    ) -> Result<(), Error> {
         // TODO: introduce cache system
 
         let input = input.canonicalize()?;

@@ -22,7 +22,7 @@ static ESCAPE_LUT: [u8; 256] = [
     9, 9, 9, 9,
 ];
 
-const ESCAPED: [&'static str; 4] = ["&quot;", "&amp;", "&lt;", "&gt;"];
+const ESCAPED: [&str; 4] = ["&quot;", "&amp;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 4;
 
 /// write the escaped contents with custom function

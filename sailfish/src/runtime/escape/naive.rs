@@ -42,5 +42,5 @@ pub(super) unsafe fn proceed<F: FnMut(&str)>(
 
     debug_assert_eq!(ptr, end_ptr);
     debug_assert!(start_ptr <= ptr);
-    return start_ptr;
+    start_ptr
 }

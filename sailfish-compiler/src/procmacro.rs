@@ -6,8 +6,8 @@ use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, Lifetime, LitBool, LitChar, LitStr, Token};
 
-use crate::config::Config;
 use crate::compiler::Compiler;
+use crate::config::Config;
 use crate::error::*;
 
 enum GenericParamName {
