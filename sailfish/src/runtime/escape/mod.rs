@@ -80,9 +80,9 @@ mod tests {
     use super::*;
 
     fn escape(feed: &str) -> String {
-        let mut buf = Buffer::new();
-        escape_to_buf(feed, &mut buf);
-        buf.into_string()
+        let mut s = String::new();
+        escape_to_string(feed, &mut s);
+        s
     }
 
     #[test]
