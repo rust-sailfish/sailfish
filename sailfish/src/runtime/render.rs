@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use std::fmt;
 use std::path::{Path, PathBuf};
 
 use super::buffer::Buffer;
