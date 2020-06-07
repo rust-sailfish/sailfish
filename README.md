@@ -23,8 +23,6 @@ Simple, small, and extremely fast template engine for Rust
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
 - Automatically re-compile sources when template file is updated.
 
-:warning: Currentry sailfish is in early-stage development. You can use this library but be sure that there might be some bugs. Also API is still unstable, and thus may changes frequently.
-
 ## 🐟 Example
 
 Dependencies:
