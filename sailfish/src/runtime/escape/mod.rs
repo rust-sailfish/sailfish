@@ -130,6 +130,7 @@ mod tests {
         let mut data = Vec::with_capacity(100);
         let mut buf1 = Buffer::new();
         let mut buf2 = Buffer::new();
+        let mut buf3 = Buffer::new();
 
         for len in 0..100 {
             data.clear();
@@ -147,18 +148,21 @@ mod tests {
 
             buf1.clear();
             buf2.clear();
+            buf3.clear();
 
             unsafe {
                 escape_to_buf(&*s, &mut buf1);
+                fallback::escape(&mut |s| buf2.write_str(s), s.as_bytes());
                 naive::escape(
-                    &mut |s| buf2.write_str(s),
+                    &mut |s| buf3.write_str(s),
                     s.as_ptr(),
                     s.as_ptr(),
                     s.as_ptr().add(s.len()),
                 );
             }
 
-            assert_eq!(buf1.as_str(), buf2.as_str());
+            assert_eq!(buf1.as_str(), buf3.as_str());
+            assert_eq!(buf2.as_str(), buf3.as_str());
         }
     }
 }
