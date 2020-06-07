@@ -69,13 +69,11 @@ You can find more examples in [examples](./examples) directory.
 
 ## 🐾 Roadmap
 
-- `Template` trait ([RFC](https://github.com/Kogia-sima/sailfish/blob/master/docs/rfcs/3-template-trait.md))
+- `Template` trait ([RFC](https://github.com/Kogia-sima/sailfish/issues/3))
 - Template inheritance (block, partials, etc.)
-- Include another templates without copy
 - Whitespace suppressing
-- HTML minification
-- Filters
-- Dynamic template compilation ([RFC](https://github.com/Kogia-sima/sailfish/blob/master/docs/rfcs/1-dynamic-loading.md))
+- Filters ([RFC](https://github.com/Kogia-sima/sailfish/issues/2))
+- Dynamic template compilation ([RFC](https://github.com/Kogia-sima/sailfish/issues/1))
 - `format_templates!(fmt, args..)` macro
 
 ## 👤 Author
