@@ -1,0 +1,26 @@
+error: Unknown option: `patth`
+ --> $DIR/unknown_option.rs:5:12
+  |
+5 | #[template(patth = "foo.stpl")]
+  |            ^^^^^
+
+error[E0599]: no method named `render_once` found for struct `UnknownOption` in the current scope
+  --> $DIR/unknown_option.rs:11:64
+   |
+6  | struct UnknownOption {
+   | -------------------- method `render_once` not found for this
+...
+11 |     println!("{}", UnknownOption { name: "Hanako".to_owned() }.render_once().unwrap());
+   |                                                                ^^^^^^^^^^^ method not found in `UnknownOption`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `render_once`, perhaps you need to implement it:
+           candidate #1: `sailfish::TemplateOnce`
+
+warning: unused import: `sailfish::TemplateOnce`
+ --> $DIR/unknown_option.rs:1:5
+  |
+1 | use sailfish::TemplateOnce;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
