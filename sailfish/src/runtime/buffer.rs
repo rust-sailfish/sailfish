@@ -1,5 +1,10 @@
+use std::alloc::{alloc, dealloc, realloc, Layout};
 use std::fmt;
+use std::mem::ManuallyDrop;
 use std::ops::{Add, AddAssign};
+use std::ptr;
+
+const MEMORY_LAYOUT: Layout = unsafe { Layout::from_size_align_unchecked(1, 1) };
 
 /// Buffer for rendered contents
 ///
@@ -7,80 +12,120 @@ use std::ops::{Add, AddAssign};
 /// re-implemented for faster buffering.
 #[derive(Clone, Debug)]
 pub struct Buffer {
-    inner: String,
+    data: *mut u8,
+    len: usize,
+    capacity: usize,
 }
 
 impl Buffer {
     #[inline]
     pub const fn new() -> Buffer {
         Self {
-            inner: String::new(),
+            data: ptr::null_mut(),
+            len: 0,
+            capacity: 0,
         }
     }
 
     #[inline]
     pub fn with_capacity(n: usize) -> Buffer {
-        Self {
-            inner: String::with_capacity(n),
+        unsafe {
+            let layout = Layout::from_size_align_unchecked(n, 1);
+            let data = alloc(layout);
+            Self {
+                data,
+                len: 0,
+                capacity: n,
+            }
         }
     }
 
     #[inline]
     pub fn as_str(&self) -> &str {
-        &*self.inner
+        unsafe {
+            let bytes = std::slice::from_raw_parts(self.data, self.len);
+            std::str::from_utf8_unchecked(bytes)
+        }
     }
 
     #[inline]
     pub fn len(&self) -> usize {
-        self.inner.len()
+        self.len
     }
 
     #[inline]
     pub fn capacity(&self) -> usize {
-        self.inner.capacity()
+        self.capacity
     }
 
     #[inline]
     pub unsafe fn set_len(&mut self, new: usize) {
-        self.inner.as_mut_vec().set_len(new);
+        self.len = new;
     }
 
-    #[inline]
-    pub fn reserve(&mut self, n: usize) {
-        if n > self.inner.capacity() - self.inner.len() {
-            self.inner.reserve(n);
+    pub fn reserve(&mut self, size: usize) {
+        if size > self.capacity - self.len {
+            unsafe {
+                let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
+                self.realloc(new_capacity);
+                self.capacity = new_capacity;
+            }
         }
     }
 
     #[inline]
     pub fn clear(&mut self) {
-        // unsafe { self.inner.set_len(0) };
-        self.inner.clear();
+        self.len = 0;
     }
 
     #[inline]
     pub fn into_string(self) -> String {
-        self.inner
+        if self.capacity == 0 {
+            std::mem::forget(self);
+            String::new()
+        } else {
+            let buf = ManuallyDrop::new(self);
+            unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
+        }
     }
 
     #[inline]
     pub fn write_str(&mut self, data: &str) {
-        let inner_len = self.inner.len();
         let size = data.len();
-        if size > self.inner.capacity() - self.inner.len() {
-            self.inner.reserve(size);
+        if size > self.capacity - self.len {
+            self.reserve(size);
         }
         unsafe {
-            let p = self.inner.as_mut_ptr().add(self.inner.len());
+            let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
-            self.inner.as_mut_vec().set_len(inner_len + size);
+            self.len += size;
         }
     }
 
     #[inline]
     pub fn write_char(&mut self, data: char) {
-        // TODO: do not use standard library
-        self.inner.push(data);
+        let mut buf = [0u8; 4];
+        self.write_str(data.encode_utf8(&mut buf));
+    }
+
+    unsafe fn realloc(&mut self, cap: usize) {
+        if self.data.is_null() {
+            let new_layout = Layout::from_size_align_unchecked(cap, 1);
+            self.data = alloc(new_layout);
+        } else {
+            let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
+            self.data = realloc(self.data, old_layout, cap);
+        }
+    }
+}
+
+impl Drop for Buffer {
+    fn drop(&mut self) {
+        if !self.data.is_null() {
+            unsafe {
+                dealloc(self.data, MEMORY_LAYOUT);
+            }
+        }
     }
 }
 
@@ -95,16 +140,23 @@ impl fmt::Write for Buffer {
 impl From<String> for Buffer {
     #[inline]
     fn from(other: String) -> Buffer {
-        Buffer { inner: other }
+        if other.capacity() > 0 {
+            let mut other = ManuallyDrop::new(other);
+            Buffer {
+                data: other.as_mut_ptr(),
+                len: other.len(),
+                capacity: other.capacity()
+            }
+        } else {
+            Buffer::new()
+        }
     }
 }
 
 impl From<&str> for Buffer {
     #[inline]
     fn from(other: &str) -> Buffer {
-        Buffer {
-            inner: other.to_owned(),
-        }
+        Buffer::from(other.to_owned())
     }
 }
 
@@ -129,5 +181,59 @@ impl Default for Buffer {
     #[inline]
     fn default() -> Buffer {
         Buffer::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Buffer;
+
+    #[test]
+    fn test1() {
+        let mut buffer = Buffer::new();
+        assert!(buffer.data.is_null());
+        assert_eq!(buffer.len, 0);
+        assert_eq!(buffer.capacity, 0);
+
+        buffer.write_str("apple");
+        assert!(!buffer.data.is_null());
+        assert_eq!(buffer.len, 5);
+        assert_eq!(buffer.capacity, 5);
+
+        buffer.write_str("pie");
+        assert!(!buffer.data.is_null());
+        assert_eq!(buffer.len, 8);
+        assert_eq!(buffer.capacity, 10);
+    }
+
+    #[test]
+    fn string_conversion() {
+        // from empty string
+        let s = String::new();
+        let mut buf = Buffer::from(s);
+        assert_eq!(buf.as_str(), "");
+        buf.write_str("abc");
+        assert_eq!(buf.as_str(), "abc");
+
+        // into non-empty string
+        let mut s = buf.into_string();
+        assert_eq!(s, "abc");
+
+        s.push_str("defghijklmn");
+        assert_eq!(s, "abcdefghijklmn");
+
+        // from non-empty string
+        let mut buf = Buffer::from(s);
+        assert_eq!(buf.as_str(), "abcdefghijklmn");
+        buf.clear();
+        assert_eq!(buf.as_str(), "");
+
+        // into empty string
+        let buf = Buffer::new();
+        let mut s = buf.into_string();
+        assert_eq!(s, "");
+
+        s.push_str("apple");
+        assert_eq!(s, "apple");
     }
 }
