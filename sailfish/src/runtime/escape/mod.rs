@@ -7,8 +7,6 @@ mod fallback;
 mod naive;
 mod sse2;
 
-use std::ptr;
-
 use super::buffer::Buffer;
 
 static ESCAPE_LUT: [u8; 256] = [
@@ -69,11 +67,12 @@ pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
 /// ```
 #[inline]
 pub fn escape_to_string(feed: &str, s: &mut String) {
-    unsafe {
-        let mut buf = Buffer::from(ptr::read(s));
-        escape_to_buf(feed, &mut buf);
-        ptr::write(s, buf.into_string());
-    }
+    let mut s2 = String::new();
+    std::mem::swap(s, &mut s2);
+    let mut buf = Buffer::from(s2);
+    escape_to_buf(feed, &mut buf);
+    let mut s2 = buf.into_string();
+    std::mem::swap(s, &mut s2);
 }
 
 #[cfg(test)]
