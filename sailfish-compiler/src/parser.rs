@@ -103,16 +103,15 @@ pub struct ParseStream<'a> {
     delimiter: char,
 }
 
-#[allow(dead_code)]
 impl<'a> ParseStream<'a> {
-    /// Returns an empty `ParseStream` containing no tokens
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.source.is_empty()
-    }
+    // /// Returns an empty `ParseStream` containing no tokens
+    // pub fn new() -> Self {
+    //     Self::default()
+    // }
+    // 
+    // pub fn is_empty(&self) -> bool {
+    //     self.source.is_empty()
+    // }
 
     pub fn into_vec(self) -> Result<Vec<Token<'a>>, Error> {
         let mut vec = Vec::new();
