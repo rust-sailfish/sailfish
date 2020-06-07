@@ -206,3 +206,35 @@ macro_rules! render_float {
 }
 
 render_float!(f32, f64);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn receiver_coercion() {
+        let mut b = Buffer::new();
+        (&1).render(&mut b).unwrap();
+        (&&1).render(&mut b).unwrap();
+        (&&&1).render(&mut b).unwrap();
+        (&&&&1).render(&mut b).unwrap();
+
+        let v = 2.0;
+        (&v).render(&mut b).unwrap();
+        (&&v).render(&mut b).unwrap();
+        (&&&v).render(&mut b).unwrap();
+        (&&&&v).render(&mut b).unwrap();
+
+        let s = "apple";
+        (&*s).render_escaped(&mut b).unwrap();
+        (&s).render_escaped(&mut b).unwrap();
+        (&&s).render_escaped(&mut b).unwrap();
+        (&&&s).render_escaped(&mut b).unwrap();
+        (&&&&s).render_escaped(&mut b).unwrap();
+
+        (&'c').render_escaped(&mut b).unwrap();
+        (&&'<').render_escaped(&mut b).unwrap();
+        (&&&'&').render_escaped(&mut b).unwrap();
+        (&&&&' ').render_escaped(&mut b).unwrap();
+    }
+}
