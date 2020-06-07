@@ -22,4 +22,4 @@ env:
     - RUST_BACKTRACE=1
 
 script:
-  - cargo test --all-features --workspace
+  - bash ./scripts/travis.sh
