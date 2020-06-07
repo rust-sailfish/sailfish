@@ -4,25 +4,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::punctuated::Punctuated;
-use syn::{Fields, Ident, ItemStruct, Lifetime, LitBool, LitChar, LitStr, Token};
+use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
 use crate::compiler::Compiler;
 use crate::config::Config;
 use crate::error::*;
-
-enum GenericParamName {
-    Ident(Ident),
-    LifeTime(Lifetime),
-}
-
-impl ToTokens for GenericParamName {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            GenericParamName::Ident(ref i) => i.to_tokens(tokens),
-            GenericParamName::LifeTime(ref l) => l.to_tokens(tokens),
-        }
-    }
-}
 
 // arguments for include_template* macros
 #[derive(Default)]
@@ -110,10 +96,6 @@ impl DeriveTemplateOptions {
         merge_single(&mut self.type_, other.type_)?;
         Ok(())
     }
-}
-
-struct TemplateStruct {
-    options: DeriveTemplateOptions,
 }
 
 fn compile(
