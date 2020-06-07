@@ -10,7 +10,7 @@ horrorshow = "0.8.3"
 markup = "0.4.1"
 askama = "0.9.0"
 criterion = "0.3.2"
-yarte = "0.8.3"
+yarte = { version = "0.9.8", features = ["fixed"] }
 sailfish = { path = "../sailfish" }
 sailfish-macros = { path = "../sailfish-macros" }
 fomat-macros = "0.3.1"
