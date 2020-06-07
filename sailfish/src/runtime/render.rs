@@ -17,28 +17,28 @@ pub trait Render {
     }
 }
 
-/// Autoref-based stable specialization
-///
-/// Explanation can be found [here](https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md)
-impl<T: Display> Render for &T {
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
-        fmt::write(b, format_args!("{}", self))
-    }
-
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
-        struct Wrapper<'a>(&'a mut Buffer);
-
-        impl<'a> fmt::Write for Wrapper<'a> {
-            #[inline]
-            fn write_str(&mut self, s: &str) -> fmt::Result {
-                escape::escape_to_buf(s, self.0);
-                Ok(())
-            }
-        }
-
-        fmt::write(&mut Wrapper(b), format_args!("{}", self))
-    }
-}
+// /// Autoref-based stable specialization
+// ///
+// /// Explanation can be found [here](https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md)
+// impl<T: Display> Render for &T {
+//     fn render(&self, b: &mut Buffer) -> fmt::Result {
+//         fmt::write(b, format_args!("{}", self))
+//     }
+// 
+//     fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+//         struct Wrapper<'a>(&'a mut Buffer);
+// 
+//         impl<'a> fmt::Write for Wrapper<'a> {
+//             #[inline]
+//             fn write_str(&mut self, s: &str) -> fmt::Result {
+//                 escape::escape_to_buf(s, self.0);
+//                 Ok(())
+//             }
+//         }
+// 
+//         fmt::write(&mut Wrapper(b), format_args!("{}", self))
+//     }
+// }
 
 impl Render for str {
     #[inline]
