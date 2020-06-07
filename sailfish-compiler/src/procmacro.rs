@@ -30,6 +30,7 @@ struct DeriveTemplateOptions {
     path: Option<LitStr>,
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
+    rm_whitespace: Option<LitBool>,
     type_: Option<LitStr>,
 }
 
@@ -59,6 +60,8 @@ impl Parse for DeriveTemplateOptions {
                 options.delimiter = Some(s.parse::<LitChar>()?);
             } else if key == "escape" {
                 options.escape = Some(s.parse::<LitBool>()?);
+            } else if key == "rm_whitespace" {
+                options.rm_whitespace = Some(s.parse::<LitBool>()?);
             } else if key == "type" {
                 options.type_ = Some(s.parse::<LitStr>()?);
             } else {
@@ -103,6 +106,7 @@ impl DeriveTemplateOptions {
         merge_single(&mut self.path, other.path)?;
         merge_single(&mut self.delimiter, other.delimiter)?;
         merge_single(&mut self.escape, other.escape)?;
+        merge_single(&mut self.rm_whitespace, other.rm_whitespace)?;
         merge_single(&mut self.type_, other.type_)?;
         Ok(())
     }
@@ -124,6 +128,9 @@ fn compile(
     }
     if let Some(ref escape) = options.escape {
         config.escape = escape.value;
+    }
+    if let Some(ref rm_whitespace) = options.rm_whitespace {
+        config.rm_whitespace = rm_whitespace.value;
     }
 
     let compiler = Compiler::with_config(config);

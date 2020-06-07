@@ -50,12 +50,14 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
 
 #[derive(TemplateOnce)]
 #[template(path = "big-table.stpl")]
+#[template(rm_whitespace = true)]
 struct BigTable<'a> {
     table: &'a [Vec<usize>],
 }
 
 #[derive(TemplateOnce)]
 #[template(path = "teams.stpl")]
+#[template(rm_whitespace = true)]
 struct TeamsTemplate<'a> {
     year: u16,
     teams: &'a [Team],
