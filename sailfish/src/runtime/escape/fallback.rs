@@ -32,8 +32,8 @@ fn contains_key(x: usize) -> bool {
 
     let y1 = x | INDEPENDENTS1;
     let y2 = x | INDEPENDENTS2;
-    let z1 = y1.wrapping_sub(KEY1);
-    let z2 = y2.wrapping_sub(KEY2);
+    let z1 = y1 ^ KEY1;
+    let z2 = y2 ^ KEY2;
     contains_zero_byte(z1) || contains_zero_byte(z2)
 }
 
@@ -70,7 +70,9 @@ pub unsafe fn escape_aligned<F: FnMut(&str)>(
         debug_assert_eq!((ptr as usize) % USIZE_BYTES, 0);
 
         let chunk = *(ptr as *const usize);
+        eprintln!("# {:x}", chunk);
         if contains_key(chunk) {
+            eprintln!("true!");
             start_ptr = naive::proceed(writer, start_ptr, ptr, ptr.add(USIZE_BYTES))
         }
         ptr = ptr.add(USIZE_BYTES);
