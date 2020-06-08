@@ -122,10 +122,6 @@ impl<'a> ParseStream<'a> {
         Ok(vec)
     }
 
-    pub fn to_vec(&self) -> Result<Vec<Token<'a>>, Error> {
-        self.clone().into_vec()
-    }
-
     fn error(&self, msg: &str) -> Error {
         let offset = self.original_source.len() - self.source.len();
         make_error!(

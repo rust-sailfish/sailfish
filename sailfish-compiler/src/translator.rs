@@ -217,7 +217,7 @@ mod tests {
             source: String::with_capacity(token_iter.original_source.len()),
             source_map: SourceMap::default(),
         };
-        ps.feed_tokens(&token_iter.clone().to_vec().unwrap());
+        ps.feed_tokens(&token_iter.clone().into_vec().unwrap());
         eprintln!("{}", ps.source);
         Translator::new().translate(token_iter).unwrap();
     }
