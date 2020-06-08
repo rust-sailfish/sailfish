@@ -36,7 +36,7 @@ sailfish-macros = "0.0.3"
 
 Template file (templates/hello.stpl):
 
-```html
+```erb
 <DOCTYPE! html>
 <html>
   <body>
