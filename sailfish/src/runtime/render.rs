@@ -159,6 +159,24 @@ impl Render for PathBuf {
 //     }
 // }
 
+impl Render for bool {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> fmt::Result {
+        let s = if *self {
+            "true"
+        } else {
+            "false"
+        };
+        b.write_str(s);
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+        self.render(b)
+    }
+}
+
 macro_rules! render_int {
     ($($int:ty),*) => {
         $(
