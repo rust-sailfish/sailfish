@@ -18,7 +18,7 @@ macro_rules! render_escaped {
 #[doc(hidden)]
 macro_rules! render_text {
     ($ctx:ident, $value:expr) => {
-        $ctx.buf.write_str($value)
+        $ctx.buf.push_str($value)
     };
 }
 

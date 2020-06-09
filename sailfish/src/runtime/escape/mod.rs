@@ -51,7 +51,7 @@ pub fn escape_with<F: FnMut(&str)>(mut writer: F, feed: &str) {
 
 #[doc(hidden)]
 pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
-    escape_with(|e| buf.write_str(e), feed);
+    escape_with(|e| buf.push_str(e), feed);
 }
 
 /// write the escaped contents into `String`
@@ -152,9 +152,9 @@ mod tests {
 
             unsafe {
                 escape_to_buf(&*s, &mut buf1);
-                fallback::escape(&mut |s| buf2.write_str(s), s.as_bytes());
+                fallback::escape(&mut |s| buf2.push_str(s), s.as_bytes());
                 naive::escape(
-                    &mut |s| buf3.write_str(s),
+                    &mut |s| buf3.push_str(s),
                     s.as_ptr(),
                     s.as_ptr(),
                     s.as_ptr().add(s.len()),

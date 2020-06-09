@@ -12,7 +12,7 @@ pub trait Render {
     fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
         let mut tmp = Buffer::new();
         self.render(&mut tmp)?;
-        b.write_str(tmp.as_str());
+        b.push_str(tmp.as_str());
         Ok(())
     }
 }
@@ -30,7 +30,7 @@ pub trait Render {
 // 
 //         impl<'a> fmt::Write for Wrapper<'a> {
 //             #[inline]
-//             fn write_str(&mut self, s: &str) -> fmt::Result {
+//             fn push_str(&mut self, s: &str) -> fmt::Result {
 //                 escape::escape_to_buf(s, self.0);
 //                 Ok(())
 //             }
@@ -43,7 +43,7 @@ pub trait Render {
 impl Render for str {
     #[inline]
     fn render(&self, b: &mut Buffer) -> fmt::Result {
-        b.write_str(self);
+        b.push_str(self);
         Ok(())
     }
 
@@ -57,7 +57,7 @@ impl Render for str {
 impl<'a> Render for &'a str {
     #[inline]
     fn render(&self, b: &mut Buffer) -> fmt::Result {
-        b.write_str(self);
+        b.push_str(self);
         Ok(())
     }
 
@@ -72,7 +72,7 @@ impl<'a> Render for &'a str {
 impl Render for String {
     #[inline]
     fn render(&self, b: &mut Buffer) -> fmt::Result {
-        b.write_str(self);
+        b.push_str(self);
         Ok(())
     }
 
@@ -87,18 +87,18 @@ impl Render for String {
 impl Render for char {
     #[inline]
     fn render(&self, b: &mut Buffer) -> fmt::Result {
-        b.write_char(*self);
+        b.push(*self);
         Ok(())
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
         match *self {
-            '\"' => b.write_str("&quot;"),
-            '&' => b.write_str("&amp;"),
-            '<' => b.write_str("&lt;"),
-            '>' => b.write_str("&gt;"),
-            _ => b.write_char(*self),
+            '\"' => b.push_str("&quot;"),
+            '&' => b.push_str("&amp;"),
+            '<' => b.push_str("&lt;"),
+            '>' => b.push_str("&gt;"),
+            _ => b.push(*self),
         }
         Ok(())
     }
@@ -108,7 +108,7 @@ impl<'a> Render for &'a Path {
     #[inline]
     fn render(&self, b: &mut Buffer) -> fmt::Result {
         // TODO: speed up on Windows using OsStrExt
-        b.write_str(&*self.to_string_lossy());
+        b.push_str(&*self.to_string_lossy());
         Ok(())
     }
 
@@ -122,7 +122,7 @@ impl<'a> Render for &'a Path {
 impl Render for PathBuf {
     #[inline]
     fn render(&self, b: &mut Buffer) -> fmt::Result {
-        b.write_str(&*self.to_string_lossy());
+        b.push_str(&*self.to_string_lossy());
         Ok(())
     }
 
@@ -167,7 +167,7 @@ impl Render for bool {
         } else {
             "false"
         };
-        b.write_str(s);
+        b.push_str(s);
         Ok(())
     }
 
@@ -185,13 +185,13 @@ macro_rules! render_int {
                 fn render(&self, b: &mut Buffer) -> fmt::Result {
                     let mut buffer = itoa::Buffer::new();
                     let s = buffer.format(*self);
-                    b.write_str(s);
+                    b.push_str(s);
                     Ok(())
                 }
 
                 #[inline]
                 fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
-                    // write_str without escape
+                    // push_str without escape
                     self.render(b)
                 }
             }
@@ -209,7 +209,7 @@ macro_rules! render_float {
                 fn render(&self, b: &mut Buffer) -> fmt::Result {
                     let mut buffer = ryu::Buffer::new();
                     let s = buffer.format(*self);
-                    b.write_str(s);
+                    b.push_str(s);
                     Ok(())
                 }
 

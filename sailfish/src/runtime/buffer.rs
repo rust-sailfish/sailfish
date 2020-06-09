@@ -101,7 +101,7 @@ impl Buffer {
     }
 
     #[inline]
-    pub fn write_str(&mut self, data: &str) {
+    pub fn push_str(&mut self, data: &str) {
         let size = data.len();
         if size > self.capacity - self.len {
             self.reserve(size);
@@ -114,9 +114,9 @@ impl Buffer {
     }
 
     #[inline]
-    pub fn write_char(&mut self, data: char) {
+    pub fn push(&mut self, data: char) {
         let mut buf = [0u8; 4];
-        self.write_str(data.encode_utf8(&mut buf));
+        self.push_str(data.encode_utf8(&mut buf));
     }
 
     unsafe fn realloc(&mut self, cap: usize) {
@@ -143,7 +143,7 @@ impl Drop for Buffer {
 impl fmt::Write for Buffer {
     #[inline]
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        Buffer::write_str(self, s);
+        Buffer::push_str(self, s);
         Ok(())
     }
 }
@@ -176,7 +176,7 @@ impl Add<&str> for Buffer {
 
     #[inline]
     fn add(mut self, other: &str) -> Buffer {
-        self.write_str(other);
+        self.push_str(other);
         self
     }
 }
@@ -184,7 +184,7 @@ impl Add<&str> for Buffer {
 impl AddAssign<&str> for Buffer {
     #[inline]
     fn add_assign(&mut self, other: &str) {
-        self.write_str(other)
+        self.push_str(other)
     }
 }
 
@@ -206,12 +206,12 @@ mod tests {
         assert_eq!(buffer.len, 0);
         assert_eq!(buffer.capacity, 0);
 
-        buffer.write_str("apple");
+        buffer.push_str("apple");
         assert!(!buffer.data.is_null());
         assert_eq!(buffer.len, 5);
         assert_eq!(buffer.capacity, 5);
 
-        buffer.write_str("pie");
+        buffer.push_str("pie");
         assert!(!buffer.data.is_null());
         assert_eq!(buffer.len, 8);
         assert_eq!(buffer.capacity, 10);
@@ -223,7 +223,7 @@ mod tests {
         let s = String::new();
         let mut buf = Buffer::from(s);
         assert_eq!(buf.as_str(), "");
-        buf.write_str("abc");
+        buf.push_str("abc");
         assert_eq!(buf.as_str(), "abc");
 
         // into non-empty string
