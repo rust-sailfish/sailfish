@@ -9,6 +9,8 @@ Simple, small, and extremely fast template engine for Rust
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
 
+[User Guide](https://sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
+
 </div>
 
 ## ✨ Features
