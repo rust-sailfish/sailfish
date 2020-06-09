@@ -1,15 +1,14 @@
-use std::fmt;
 use std::path::{Path, PathBuf};
 
 use super::buffer::Buffer;
-use super::escape;
+use super::{escape, RenderError};
 
 /// types which can be rendered inside buffer block (`<%= %>`)
 pub trait Render {
-    fn render(&self, b: &mut Buffer) -> fmt::Result;
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError>;
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let mut tmp = Buffer::new();
         self.render(&mut tmp)?;
         b.push_str(tmp.as_str());
@@ -21,34 +20,34 @@ pub trait Render {
 // ///
 // /// Explanation can be found [here](https://github.com/dtolnay/case-studies/blob/master/autoref-specialization/README.md)
 // impl<T: Display> Render for &T {
-//     fn render(&self, b: &mut Buffer) -> fmt::Result {
+//     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
 //         fmt::write(b, format_args!("{}", self))
 //     }
-// 
-//     fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+//
+//     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
 //         struct Wrapper<'a>(&'a mut Buffer);
-// 
+//
 //         impl<'a> fmt::Write for Wrapper<'a> {
 //             #[inline]
-//             fn push_str(&mut self, s: &str) -> fmt::Result {
+//             fn push_str(&mut self, s: &str) -> Result<(), RenderError> {
 //                 escape::escape_to_buf(s, self.0);
 //                 Ok(())
 //             }
 //         }
-// 
+//
 //         fmt::write(&mut Wrapper(b), format_args!("{}", self))
 //     }
 // }
 
 impl Render for str {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         b.push_str(self);
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         escape::escape_to_buf(self, b);
         Ok(())
     }
@@ -56,13 +55,13 @@ impl Render for str {
 
 impl<'a> Render for &'a str {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         b.push_str(self);
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // escape string
         escape::escape_to_buf(self, b);
         Ok(())
@@ -71,13 +70,13 @@ impl<'a> Render for &'a str {
 
 impl Render for String {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         b.push_str(self);
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // escape string
         escape::escape_to_buf(self, b);
         Ok(())
@@ -86,13 +85,13 @@ impl Render for String {
 
 impl Render for char {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         b.push(*self);
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         match *self {
             '\"' => b.push_str("&quot;"),
             '&' => b.push_str("&amp;"),
@@ -106,14 +105,14 @@ impl Render for char {
 
 impl<'a> Render for &'a Path {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // TODO: speed up on Windows using OsStrExt
         b.push_str(&*self.to_string_lossy());
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         escape::escape_to_buf(&*self.to_string_lossy(), b);
         Ok(())
     }
@@ -121,13 +120,13 @@ impl<'a> Render for &'a Path {
 
 impl Render for PathBuf {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         b.push_str(&*self.to_string_lossy());
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // escape string
         escape::escape_to_buf(&*self.to_string_lossy(), b);
 
@@ -137,7 +136,7 @@ impl Render for PathBuf {
 
 // impl Render for [u8] {
 //     #[inline]
-//     fn render(&self, b: &mut Buffer) -> fmt::Result {
+//     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
 //         b.write_bytes(self);
 //         Ok(())
 //     }
@@ -145,7 +144,7 @@ impl Render for PathBuf {
 //
 // impl<'a> Render for &'a [u8] {
 //     #[inline]
-//     fn render(&self, b: &mut Buffer) -> fmt::Result {
+//     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
 //         b.write_bytes(self);
 //         Ok(())
 //     }
@@ -153,7 +152,7 @@ impl Render for PathBuf {
 //
 // impl Render for Vec<u8> {
 //     #[inline]
-//     fn render(&self, b: &mut Buffer) -> fmt::Result {
+//     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
 //         b.write_bytes(&**self);
 //         Ok(())
 //     }
@@ -161,18 +160,14 @@ impl Render for PathBuf {
 
 impl Render for bool {
     #[inline]
-    fn render(&self, b: &mut Buffer) -> fmt::Result {
-        let s = if *self {
-            "true"
-        } else {
-            "false"
-        };
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        let s = if *self { "true" } else { "false" };
         b.push_str(s);
         Ok(())
     }
 
     #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         self.render(b)
     }
 }
@@ -182,7 +177,7 @@ macro_rules! render_int {
         $(
             impl Render for $int {
                 #[inline]
-                fn render(&self, b: &mut Buffer) -> fmt::Result {
+                fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     let mut buffer = itoa::Buffer::new();
                     let s = buffer.format(*self);
                     b.push_str(s);
@@ -190,7 +185,7 @@ macro_rules! render_int {
                 }
 
                 #[inline]
-                fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+                fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     // push_str without escape
                     self.render(b)
                 }
@@ -206,7 +201,7 @@ macro_rules! render_float {
         $(
             impl Render for $float {
                 #[inline]
-                fn render(&self, b: &mut Buffer) -> fmt::Result {
+                fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     let mut buffer = ryu::Buffer::new();
                     let s = buffer.format(*self);
                     b.push_str(s);
@@ -214,7 +209,7 @@ macro_rules! render_float {
                 }
 
                 #[inline]
-                fn render_escaped(&self, b: &mut Buffer) -> fmt::Result {
+                fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     // escape string
                     self.render(b)
                 }
