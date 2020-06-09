@@ -1,0 +1,49 @@
+# Project information
+site_name: 'Sailfish Documentation'
+# site_description: 'Sailfish Documentation'
+site_author: 'Ryohei Machida'
+# site_url: 'https://***.com'
+
+# Copyright
+copyright: '&copy; 2020 Ryohei Machida'
+
+# Repository
+repo_name: 'Kogia-sima/sailfish'
+repo_url: 'https://github.com/Kogia-sima/sailfish'
+
+# Configuration
+theme:
+  name: 'material'
+  language: 'en'
+  logo: 'images/logo.svg'
+  palette:
+    scheme: 'default'
+    primary: 'deep purple'
+    accent: 'deep purple'
+  favicon: 'images/favicon.ico'
+  font:
+    text: 'Ubuntu'
+    code: 'Ubuntu Mono'
+
+# Extensions
+markdown_extensions:
+  - codehilite
+  - footnotes
+
+# Customization
+# extra_css:
+#   - 'assets/css/custom.css'
+
+extra:
+  social:
+    - icon: 'fontawesome/brands/github-alt'
+      link: 'https://github.com/Kogia-sima'
+
+# Page tree
+nav:
+  - 'Welcome': 'index.md'
+  - 'Installation': 'installation.md'
+  - 'Getting Started': 'getting-started.md'
+  - 'Options': 'options.md'
+  - 'Syntax':
+    - 'Overview': 'syntax/overview.md'

@@ -1,0 +1,7 @@
+[build]
+command = "python3 scripts/build-docs.py"
+publish = "site"
+
+[[redirects]]
+  from = "/*"
+  to = "/en/:splat"
