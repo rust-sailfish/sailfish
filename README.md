@@ -5,12 +5,11 @@
 Simple, small, and extremely fast template engine for Rust
 
 [![Build Status](https://travis-ci.org/Kogia-sima/sailfish.svg?branch=master)](https://travis-ci.org/Kogia-sima/sailfish)
-[![Build status](https://ci.appveyor.com/api/projects/status/fa3et4rft4dyvdn9?svg=true)](https://ci.appveyor.com/project/Kogiasima/sailfish)
+[![Build status](https://ci.appveyor.com/api/projects/status/fa3et4rft4dyvdn9/branch/master?svg=true)](https://ci.appveyor.com/project/Kogiasima/sailfish/branch/master)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
-[![docs](https://docs.rs/sailfish/badge.svg)](https://docs.rs/sailfish)
-[![codecov](https://codecov.io/gh/Kogia-sima/sailfish/branch/master/graph/badge.svg)](https://codecov.io/gh/Kogia-sima/sailfish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
+[User Guide](https://sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
 
 </div>
 

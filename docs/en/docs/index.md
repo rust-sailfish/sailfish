@@ -1,0 +1,35 @@
+# Welcome to Sailfish Documentation!
+
+Sailfish is a simple, small, and extremely fast template engine for Rust. This documentation guides you how to get started with sailfish.
+
+This documentation mainly focuses on concepts of the library, general usage, and template syntax. If you've read this documentation and need more specific information, you might want to read the [sailfish API docs](https://docs.rs/sailfish).
+
+Currently the documentation is uncompleted. If you want to improve our documentation, feel free to create a [Pull Request](https://github.com/Kogia-sima/sailfish/pulls) on the repository. I'll be happy if someone contributes to writing documents (English is not my first language and creating a documentation is a hard task for me).
+
+## Why Sailfish ?
+
+There are many libraries for template rendering in Rust. Among those libraries, sailfish aims at **rapid development** and **rapid rendering**. Sailfish has many features that other libraries might not support.
+
+- Write a Rust code directly inside templates, supporting many Rust syntax (struct definision, closure, macro invocation, etc.)
+- Relatively small number of dependencies (<15 crates in total)
+- Extremely fast (See [benchmarks](http://github.com/Kogia-sima/sailfish/blob/master/benches))
+- Better error message
+- Template rendering is always type-safe because templates are statically compiled.
+- Syntax highlighting ([vscode](http://github.com/Kogia-sima/sailfish/blob/master/syntax/vscode), [vim](http://github.com/Kogia-sima/sailfish/blob/master/syntax/vim))
+- Automatically re-compile sources when template file is updated.
+
+## Upcoming features
+
+Since sailfish is on early stage of development, there are many upcoming features that is not supported yet. You can find many [RFC](https://github.com/Kogia-sima/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Type%3A+RFC%22)s in my repository. These RFCs include:
+
+- Dynamic Template Loading
+- Filter
+- `Template` trait (which does not consume itself)
+
+If you have any idea about them or want to implement that feature, please send a comment on the issue!
+
+## License
+
+Copyright &copy; 2020 Ryohei Machida
+
+This project is [MIT](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE) licensed
