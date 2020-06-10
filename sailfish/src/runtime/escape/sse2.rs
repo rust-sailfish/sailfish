@@ -8,19 +8,20 @@ use std::slice;
 
 use super::naive;
 use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
+use super::super::Buffer;
 
 const VECTOR_BYTES: usize = std::mem::size_of::<__m128i>();
 const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;
 
 #[target_feature(enable = "sse2")]
 #[inline]
-pub unsafe fn escape<F: FnMut(&str)>(writer: &mut F, bytes: &[u8]) {
+pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
     let len = bytes.len();
     let mut start_ptr = bytes.as_ptr();
     let end_ptr = start_ptr.add(len);
 
     if bytes.len() < VECTOR_BYTES {
-        naive::escape(writer, start_ptr, start_ptr, end_ptr);
+        naive::escape(buffer, start_ptr, start_ptr, end_ptr);
         return;
     }
 
@@ -53,20 +54,20 @@ pub unsafe fn escape<F: FnMut(&str)>(writer: &mut F, bytes: &[u8]) {
             if start_ptr < ptr2 {
                 let slc =
                     slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
-                writer(std::str::from_utf8_unchecked(slc));
+                buffer.push_str(std::str::from_utf8_unchecked(slc));
             }
-            writer(*ESCAPED.get_unchecked(c));
+            buffer.push_str(*ESCAPED.get_unchecked(c));
             start_ptr = ptr2.add(1);
             mask ^= 1 << trailing_zeros;
         }
     }
 
     ptr = aligned_ptr;
-    escape_aligned(writer, start_ptr, ptr, end_ptr);
+    escape_aligned(buffer, start_ptr, ptr, end_ptr);
 }
 
-pub unsafe fn escape_aligned<F: FnMut(&str)>(
-    writer: &mut F,
+pub unsafe fn escape_aligned(
+    buffer: &mut Buffer,
     mut start_ptr: *const u8,
     mut ptr: *const u8,
     end_ptr: *const u8,
@@ -95,9 +96,9 @@ pub unsafe fn escape_aligned<F: FnMut(&str)>(
             if start_ptr < ptr2 {
                 let slc =
                     slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
-                writer(std::str::from_utf8_unchecked(slc));
+                buffer.push_str(std::str::from_utf8_unchecked(slc));
             }
-            writer(*ESCAPED.get_unchecked(c));
+            buffer.push_str(*ESCAPED.get_unchecked(c));
             start_ptr = ptr2.add(1);
             mask ^= 1 << trailing_zeros;
         }
@@ -118,9 +119,9 @@ pub unsafe fn escape_aligned<F: FnMut(&str)>(
             if start_ptr < ptr2 {
                 let slc =
                     slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
-                writer(std::str::from_utf8_unchecked(slc));
+                buffer.push_str(std::str::from_utf8_unchecked(slc));
             }
-            writer(*ESCAPED.get_unchecked(c));
+            buffer.push_str(*ESCAPED.get_unchecked(c));
             start_ptr = ptr2.add(1);
             mask ^= 1 << trailing_zeros;
         }
@@ -130,5 +131,5 @@ pub unsafe fn escape_aligned<F: FnMut(&str)>(
 
     debug_assert!(ptr <= end_ptr);
     debug_assert!(start_ptr <= ptr);
-    naive::escape(writer, start_ptr, ptr, end_ptr);
+    naive::escape(buffer, start_ptr, ptr, end_ptr);
 }

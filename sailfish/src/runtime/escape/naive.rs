@@ -1,25 +1,26 @@
 use core::slice;
 
+use super::super::Buffer;
 use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 
 #[inline]
-pub(super) unsafe fn escape<F: FnMut(&str)>(
-    writer: &mut F,
+pub(super) unsafe fn escape(
+    buffer: &mut Buffer,
     mut start_ptr: *const u8,
     ptr: *const u8,
     end_ptr: *const u8,
 ) {
-    start_ptr = proceed(writer, start_ptr, ptr, end_ptr);
+    start_ptr = proceed(buffer, start_ptr, ptr, end_ptr);
 
     if end_ptr > start_ptr {
         let slc = slice::from_raw_parts(start_ptr, end_ptr as usize - start_ptr as usize);
-        writer(std::str::from_utf8_unchecked(slc));
+        buffer.push_str(std::str::from_utf8_unchecked(slc));
     }
 }
 
 #[inline]
-pub(super) unsafe fn proceed<F: FnMut(&str)>(
-    writer: &mut F,
+pub(super) unsafe fn proceed(
+    buffer: &mut Buffer,
     mut start_ptr: *const u8,
     mut ptr: *const u8,
     end_ptr: *const u8,
@@ -32,9 +33,9 @@ pub(super) unsafe fn proceed<F: FnMut(&str)>(
             if ptr > start_ptr {
                 let slc =
                     slice::from_raw_parts(start_ptr, ptr as usize - start_ptr as usize);
-                writer(std::str::from_utf8_unchecked(slc));
+                buffer.push_str(std::str::from_utf8_unchecked(slc));
             }
-            writer(*ESCAPED.get_unchecked(idx));
+            buffer.push_str(*ESCAPED.get_unchecked(idx));
             start_ptr = ptr.add(1);
         }
         ptr = ptr.add(1);

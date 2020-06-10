@@ -25,33 +25,34 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&str; 4] = ["&quot;", "&amp;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 4;
 
-/// write the escaped contents with custom function
-///
-/// This function is soft-deprecated because using this function causes a large binary size.
-#[inline]
-pub fn escape_with<F: FnMut(&str)>(mut writer: F, feed: &str) {
-    unsafe {
-        #[cfg(target_feature = "avx2")]
-        {
-            avx2::escape(&mut writer, feed.as_bytes());
-        }
-
-        #[cfg(not(target_feature = "avx2"))]
-        {
-            if is_x86_feature_detected!("avx2") {
-                avx2::escape(&mut writer, feed.as_bytes());
-            } else if is_x86_feature_detected!("sse2") {
-                sse2::escape(&mut writer, feed.as_bytes());
-            } else {
-                fallback::escape(&mut writer, feed.as_bytes());
-            }
-        }
-    }
-}
-
 #[doc(hidden)]
 pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
-    escape_with(|e| buf.push_str(e), feed);
+    use std::mem;
+    use std::sync::atomic::{AtomicPtr, Ordering};
+
+    type FnRaw = *mut ();
+
+    static FN: AtomicPtr<()> = AtomicPtr::new(detect as FnRaw);
+
+    fn detect(buffer: &mut Buffer, bytes: &[u8]) {
+        let fun = if is_x86_feature_detected!("avx2") {
+            avx2::escape as FnRaw
+        } else if is_x86_feature_detected!("sse2") {
+            sse2::escape as FnRaw
+        } else {
+            fallback::escape as FnRaw
+        };
+
+        FN.store(fun as FnRaw, Ordering::Relaxed);
+        unsafe {
+            mem::transmute::<FnRaw, fn(&mut Buffer, &[u8])>(fun)(buffer, bytes);
+        }
+    }
+
+    unsafe {
+        let fun = FN.load(Ordering::Relaxed);
+        mem::transmute::<FnRaw, fn(&mut Buffer, &[u8])>(fun)(buf, feed.as_bytes());
+    }
 }
 
 /// write the escaped contents into `String`
@@ -152,13 +153,8 @@ mod tests {
 
             unsafe {
                 escape_to_buf(&*s, &mut buf1);
-                fallback::escape(&mut |s| buf2.push_str(s), s.as_bytes());
-                naive::escape(
-                    &mut |s| buf3.push_str(s),
-                    s.as_ptr(),
-                    s.as_ptr(),
-                    s.as_ptr().add(s.len()),
-                );
+                fallback::escape(&mut buf2, s.as_bytes());
+                naive::escape(&mut buf3, s.as_ptr(), s.as_ptr(), s.as_ptr().add(s.len()));
             }
 
             assert_eq!(buf1.as_str(), buf3.as_str());

@@ -1,6 +1,7 @@
 #![allow(clippy::cast_ptr_alignment)]
 
 use super::naive;
+use super::super::Buffer;
 
 #[cfg(target_pointer_width = "16")]
 const USIZE_BYTES: usize = 2;
@@ -37,13 +38,13 @@ fn contains_key(x: usize) -> bool {
     contains_zero_byte(z1) || contains_zero_byte(z2)
 }
 
-pub unsafe fn escape<F: FnMut(&str)>(writer: &mut F, bytes: &[u8]) {
+pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
     let len = bytes.len();
     let mut start_ptr = bytes.as_ptr();
     let end_ptr = start_ptr.add(len);
 
     if bytes.len() < USIZE_BYTES {
-        naive::escape(writer, start_ptr, start_ptr, end_ptr);
+        naive::escape(buffer, start_ptr, start_ptr, end_ptr);
         return;
     }
 
@@ -54,14 +55,14 @@ pub unsafe fn escape<F: FnMut(&str)>(writer: &mut F, bytes: &[u8]) {
 
     let chunk = (ptr as *const usize).read_unaligned();
     if contains_key(chunk) {
-        start_ptr = naive::proceed(writer, start_ptr, ptr, aligned_ptr);
+        start_ptr = naive::proceed(buffer, start_ptr, ptr, aligned_ptr);
     }
 
-    escape_aligned(writer, start_ptr, aligned_ptr, end_ptr);
+    escape_aligned(buffer, start_ptr, aligned_ptr, end_ptr);
 }
 
-pub unsafe fn escape_aligned<F: FnMut(&str)>(
-    writer: &mut F,
+pub unsafe fn escape_aligned(
+    buffer: &mut Buffer,
     mut start_ptr: *const u8,
     mut ptr: *const u8,
     end_ptr: *const u8,
@@ -73,11 +74,11 @@ pub unsafe fn escape_aligned<F: FnMut(&str)>(
         eprintln!("# {:x}", chunk);
         if contains_key(chunk) {
             eprintln!("true!");
-            start_ptr = naive::proceed(writer, start_ptr, ptr, ptr.add(USIZE_BYTES))
+            start_ptr = naive::proceed(buffer, start_ptr, ptr, ptr.add(USIZE_BYTES))
         }
         ptr = ptr.add(USIZE_BYTES);
     }
     debug_assert!(ptr <= end_ptr);
     debug_assert!(start_ptr <= ptr);
-    naive::escape(writer, start_ptr, ptr, end_ptr);
+    naive::escape(buffer, start_ptr, ptr, end_ptr);
 }
