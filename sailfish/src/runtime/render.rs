@@ -178,9 +178,17 @@ macro_rules! render_int {
             impl Render for $int {
                 #[inline]
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    let mut buffer = itoa::Buffer::new();
-                    let s = buffer.format(*self);
-                    b.push_str(s);
+                    use super::integer::Integer;
+
+                    if Self::MAX_LEN > b.capacity() - b.len() {
+                        b.reserve(Self::MAX_LEN);
+                    }
+
+                    unsafe {
+                        let ptr = b.as_mut_ptr().add(b.len());
+                        let l = self.write_to(ptr);
+                        b.set_len(b.len() + l);
+                    }
                     Ok(())
                 }
 
@@ -231,12 +239,16 @@ mod tests {
         (&&1).render(&mut b).unwrap();
         (&&&1).render(&mut b).unwrap();
         (&&&&1).render(&mut b).unwrap();
+        assert_eq!(b.as_str(), "1111");
+        b.clear();
 
         let v = 2.0;
         (&v).render(&mut b).unwrap();
         (&&v).render(&mut b).unwrap();
         (&&&v).render(&mut b).unwrap();
         (&&&&v).render(&mut b).unwrap();
+        assert_eq!(b.as_str(), "2.02.02.02.0");
+        b.clear();
 
         let s = "apple";
         (&*s).render_escaped(&mut b).unwrap();
@@ -244,10 +256,14 @@ mod tests {
         (&&s).render_escaped(&mut b).unwrap();
         (&&&s).render_escaped(&mut b).unwrap();
         (&&&&s).render_escaped(&mut b).unwrap();
+        assert_eq!(b.as_str(), "appleappleappleappleapple");
+        b.clear();
 
         (&'c').render_escaped(&mut b).unwrap();
         (&&'<').render_escaped(&mut b).unwrap();
         (&&&'&').render_escaped(&mut b).unwrap();
         (&&&&' ').render_escaped(&mut b).unwrap();
+        assert_eq!(b.as_str(), "c&lt;&amp; ");
+        b.clear();
     }
 }

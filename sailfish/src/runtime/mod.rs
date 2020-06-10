@@ -2,6 +2,7 @@
 
 mod buffer;
 pub mod escape;
+mod integer;
 mod macros;
 mod render;
 mod size_hint;
