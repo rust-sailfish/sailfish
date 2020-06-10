@@ -241,6 +241,7 @@ impl_integer!(usize, isize, u32, write_u32, 11);
 #[cfg(target_pointer_width = "64")]
 impl_integer!(usize, isize, u64, write_u64, 20);
 
+#[cfg(test)]
 mod tests {
     // comprehenisive test
     #[test]
