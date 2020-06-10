@@ -25,8 +25,13 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&str; 4] = ["&quot;", "&amp;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 4;
 
-#[doc(hidden)]
-pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+#[cfg(target_feature = "avx2")]
+pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+    unsafe { avx2::escape(buf, feed.as_bytes()) }
+}
+
+#[cfg(not(target_feature = "avx2"))]
+pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
     use std::mem;
     use std::sync::atomic::{AtomicPtr, Ordering};
 
