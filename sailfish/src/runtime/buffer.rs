@@ -49,6 +49,11 @@ impl Buffer {
     }
 
     #[inline]
+    pub fn as_mut_ptr(&self) -> *mut u8 {
+        self.data
+    }
+
+    #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
