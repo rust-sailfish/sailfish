@@ -16,10 +16,10 @@ install:
   - cargo -vV
 
 build_script:
-  - cargo build --all-features --workspace
+  - cargo build --all-features -p sailfish -p sailfish-compiler
 
 test_script:
-  - cargo test --all-features --workspace
+  - cargo test --all-features -p sailfish -p sailfish-compiler -p integration-tests
 
 notifications:
   - provider: Email
