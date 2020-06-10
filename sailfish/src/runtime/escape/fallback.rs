@@ -38,6 +38,7 @@ fn contains_key(x: usize) -> bool {
     contains_zero_byte(z1) || contains_zero_byte(z2)
 }
 
+#[inline]
 pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
     let len = bytes.len();
     let mut start_ptr = bytes.as_ptr();
