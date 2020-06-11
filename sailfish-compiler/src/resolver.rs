@@ -2,7 +2,7 @@ use quote::quote;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use syn::visit_mut::VisitMut;
-use syn::{Block, Expr, ExprBlock, LitStr};
+use syn::{Block, Expr, ExprBlock, ExprMacro, LitStr};
 
 use crate::error::*;
 
@@ -31,41 +31,28 @@ struct ResolverImpl<'s, 'h> {
     include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
 }
 
-impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
-    fn visit_expr_mut(&mut self, i: &mut Expr) {
-        return_if_some!(self.error);
-        let em = matches_or_else!(*i, Expr::Macro(ref mut em), em, {
-            syn::visit_mut::visit_expr_mut(self, i);
-            return;
-        });
-
-        // check if path is `include`
-        if !em.mac.path.is_ident("include") {
-            syn::visit_mut::visit_expr_mut(self, i);
-            return;
-        }
-
-        let arg = match syn::parse2::<LitStr>(em.mac.tokens.clone()) {
+impl<'s, 'h> ResolverImpl<'s, 'h> {
+    fn resolve_include(&mut self, i: &ExprMacro) -> Result<Expr, Error> {
+        let arg = match syn::parse2::<LitStr>(i.mac.tokens.clone()) {
             Ok(l) => l.value(),
             Err(e) => {
                 let mut e = Error::from(e);
                 e.chains.push(ErrorKind::AnalyzeError(
                     "invalid arguments for `include` macro".to_owned(),
                 ));
-                self.error = Some(e);
-                return;
+                return Err(e);
             }
         };
 
         // resolve include! for rust file
         if arg.ends_with(".rs") {
-            if !arg.starts_with('/') {
-                let absolute_path =
-                    self.path_stack.last().unwrap().parent().unwrap().join(arg);
-                let absolute_path_str = absolute_path.to_string_lossy();
-                *i = syn::parse2(quote! { include!(#absolute_path_str) }).unwrap();
-            }
-            return;
+            let absolute_path = if arg.starts_with('/') {
+                self.template_dir.join(&arg[1..])
+            } else {
+                self.path_stack.last().unwrap().parent().unwrap().join(arg)
+            };
+            let absolute_path_str = absolute_path.to_string_lossy();
+            return Ok(syn::parse2(quote! { include!(#absolute_path_str) }).unwrap());
         }
 
         // resolve the template file path
@@ -84,26 +71,40 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
         };
 
         // parse and translate the child template
-        let mut blk = match (*self.include_handler)(&*input_file) {
-            Ok(blk) => blk,
-            Err(mut e) => {
-                e.chains
-                    .push(ErrorKind::Other(format!("Failed to include {}", arg)));
-                self.error = Some(e);
-                return;
-            }
-        };
+        let mut blk = (*self.include_handler)(&*input_file)
+            .chain_err(|| format!("Failed to include {:?}", input_file))?;
 
         self.path_stack.push(input_file);
         self.deps.push(arg);
         syn::visit_mut::visit_block_mut(self, &mut blk);
         self.path_stack.pop();
 
-        *i = Expr::Block(ExprBlock {
+        Ok(Expr::Block(ExprBlock {
             attrs: Vec::new(),
             label: None,
             block: blk,
+        }))
+    }
+}
+
+impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
+    fn visit_expr_mut(&mut self, i: &mut Expr) {
+        return_if_some!(self.error);
+        let em = matches_or_else!(*i, Expr::Macro(ref mut em), em, {
+            syn::visit_mut::visit_expr_mut(self, i);
+            return;
         });
+
+        // resolve `include`
+        if em.mac.path.is_ident("include") {
+            match self.resolve_include(em) {
+                Ok(e) => *i = e,
+                Err(e) => {
+                    self.error = Some(e);
+                    return;
+                }
+            }
+        }
     }
 }
 
