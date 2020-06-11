@@ -63,7 +63,7 @@ impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
                 let absolute_path =
                     self.path_stack.last().unwrap().parent().unwrap().join(arg);
                 let absolute_path_str = absolute_path.to_string_lossy();
-                em.mac.tokens = quote! { include!(#absolute_path_str) };
+                *i = syn::parse2(quote! { include!(#absolute_path_str) }).unwrap();
             }
             return;
         }
