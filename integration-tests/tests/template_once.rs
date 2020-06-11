@@ -173,6 +173,17 @@ fn test_comment() {
     assert_render("comment", Comment{})
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "rust_macro.stpl", rm_whitespace = true)]
+struct RustMacro {
+    value: Option<i32>,
+}
+
+#[test]
+fn test_rust_macro() {
+    assert_render("rust_macro", RustMacro { value: Some(10) });
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;
