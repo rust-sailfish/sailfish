@@ -13,5 +13,4 @@ workspace = ".."
 edition = "2018"
 
 [dependencies]
-itoa = "0.4.5"
 ryu = "1.0.4"

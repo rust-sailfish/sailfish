@@ -1128,7 +1128,6 @@ checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
 name = "sailfish"
 version = "0.0.3"
 dependencies = [
- "itoa",
  "ryu",
 ]
 

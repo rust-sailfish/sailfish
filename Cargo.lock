@@ -1052,7 +1052,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "sailfish"
 version = "0.0.3"
 dependencies = [
- "itoa 0.4.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "ryu 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
