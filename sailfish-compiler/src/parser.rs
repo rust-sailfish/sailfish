@@ -108,7 +108,7 @@ impl<'a> ParseStream<'a> {
     // pub fn new() -> Self {
     //     Self::default()
     // }
-    // 
+    //
     // pub fn is_empty(&self) -> bool {
     //     self.source.is_empty()
     // }

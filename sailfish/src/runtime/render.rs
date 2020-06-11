@@ -223,8 +223,8 @@ mod tests {
 
     #[test]
     fn deref_coercion() {
-        use std::rc::Rc;
         use std::path::PathBuf;
+        use std::rc::Rc;
 
         let mut b = Buffer::new();
         (&String::from("a")).render(&mut b).unwrap();

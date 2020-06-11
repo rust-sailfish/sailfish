@@ -6,9 +6,9 @@ use std::arch::x86::*;
 use std::arch::x86_64::*;
 use std::slice;
 
+use super::super::Buffer;
 use super::naive;
 use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
-use super::super::Buffer;
 
 const VECTOR_BYTES: usize = std::mem::size_of::<__m128i>();
 const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;

@@ -1,7 +1,7 @@
 #![allow(clippy::cast_ptr_alignment)]
 
-use super::naive;
 use super::super::Buffer;
+use super::naive;
 
 #[cfg(target_pointer_width = "16")]
 const USIZE_BYTES: usize = 2;

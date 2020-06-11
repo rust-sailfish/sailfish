@@ -170,7 +170,7 @@ struct Comment {}
 
 #[test]
 fn test_comment() {
-    assert_render("comment", Comment{})
+    assert_render("comment", Comment {})
 }
 
 #[derive(TemplateOnce)]

@@ -167,11 +167,12 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         }
     };
 
-    let out_dir = if std::env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
-        template_dir.parent().unwrap().join("out")
-    } else {
-        PathBuf::from(env!("OUT_DIR"))
-    };
+    let out_dir =
+        if std::env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
+            template_dir.parent().unwrap().join("out")
+        } else {
+            PathBuf::from(env!("OUT_DIR"))
+        };
     let mut output_file = out_dir.clone();
     output_file.push("templates");
     output_file.push(filename);
