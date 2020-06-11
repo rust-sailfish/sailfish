@@ -1,0 +1,29 @@
+error: Failed to compile template.
+Caused by: Rust Syntax Error: LexError
+
+file: unbalanced_brace.stpl
+
+ --> $DIR/unbalanced_brace.rs:9:10
+  |
+9 | #[derive(TemplateOnce)]
+  |          ^^^^^^^^^^^^
+  |
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0422]: cannot find struct, variant or union type `UnclosedDelimiter` in this scope
+  --> $DIR/unbalanced_brace.rs:18:9
+   |
+18 |         UnclosedDelimiter {
+   |         ^^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0106]: missing lifetime specifier
+  --> $DIR/unbalanced_brace.rs:12:18
+   |
+12 |     players: Vec<Player>,
+   |                  ^^^^^^ expected named lifetime parameter
+   |
+help: consider introducing a named lifetime parameter
+   |
+11 | struct UnbalancedBrace<'a> {
+12 |     players: Vec<Player<'a>>,
+   |

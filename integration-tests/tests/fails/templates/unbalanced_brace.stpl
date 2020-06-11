@@ -1,0 +1,3 @@
+<% for player in &players %>
+  <div><%= player.name %>: <%= player.score %></div>
+<% } %>

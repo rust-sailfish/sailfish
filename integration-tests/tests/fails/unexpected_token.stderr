@@ -1,0 +1,30 @@
+error: Failed to compile template.
+Caused by: Rust Syntax Error: expected expression
+
+file: unexpected_token.stpl
+position: line 3, column 17
+
+  |
+3 |   "content": <% =content %>
+  |                 ^
+
+  --> $DIR/unexpected_token.rs:10:10
+   |
+10 | #[derive(TemplateOnce)]
+   |          ^^^^^^^^^^^^
+   |
+   = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0422]: cannot find struct, variant or union type `UnclosedToken` in this scope
+  --> $DIR/unexpected_token.rs:21:9
+   |
+21 |         UnclosedToken {
+   |         ^^^^^^^^^^^^^ not found in this scope
+
+warning: unused import: `sailfish::TemplateOnce`
+ --> $DIR/unexpected_token.rs:1:5
+  |
+1 | use sailfish::TemplateOnce;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

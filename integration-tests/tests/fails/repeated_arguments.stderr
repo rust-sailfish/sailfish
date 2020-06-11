@@ -1,0 +1,26 @@
+error: keyword argument repeated.
+ --> $DIR/repeated_arguments.rs:6:21
+  |
+6 | #[template(escape = false)]
+  |                     ^^^^^
+
+error[E0599]: no method named `render_once` found for struct `InvalidOptionValue` in the current scope
+  --> $DIR/repeated_arguments.rs:12:69
+   |
+7  | struct InvalidOptionValue {
+   | ------------------------- method `render_once` not found for this
+...
+12 |     println!("{}", InvalidOptionValue { name: "Hanako".to_owned() }.render_once().unwrap());
+   |                                                                     ^^^^^^^^^^^ method not found in `InvalidOptionValue`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `render_once`, perhaps you need to implement it:
+           candidate #1: `sailfish::TemplateOnce`
+
+warning: unused import: `sailfish::TemplateOnce`
+ --> $DIR/repeated_arguments.rs:1:5
+  |
+1 | use sailfish::TemplateOnce;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

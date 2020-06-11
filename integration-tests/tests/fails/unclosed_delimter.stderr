@@ -1,0 +1,37 @@
+error: Failed to compile template.
+Caused by: Parse error: Unterminated code block
+
+file: unclosed_delimiter.stpl
+position: line 3, column 5
+
+  |
+3 |     <%= content
+  |     ^
+
+ --> $DIR/unclosed_delimter.rs:4:10
+  |
+4 | #[derive(TemplateOnce)]
+  |          ^^^^^^^^^^^^
+  |
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no method named `render_once` found for struct `UnclosedDelimiter` in the current scope
+  --> $DIR/unclosed_delimter.rs:16:10
+   |
+6  | struct UnclosedDelimiter {
+   | ------------------------ method `render_once` not found for this
+...
+16 |         .render_once()
+   |          ^^^^^^^^^^^ method not found in `UnclosedDelimiter`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `render_once`, perhaps you need to implement it:
+           candidate #1: `sailfish::TemplateOnce`
+
+warning: unused import: `sailfish::TemplateOnce`
+ --> $DIR/unclosed_delimter.rs:1:5
+  |
+1 | use sailfish::TemplateOnce;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
