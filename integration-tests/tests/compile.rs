@@ -20,6 +20,7 @@
 
 #[test]
 fn compile_error() {
+    std::env::set_var("SAILFISH_INTEGRATION_TESTS", "1");
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/fails/*.rs");
 }

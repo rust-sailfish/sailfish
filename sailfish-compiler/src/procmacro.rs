@@ -1,6 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use std::fs;
+use std::env;
 use std::path::{Path, PathBuf};
 use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::punctuated::Punctuated;
@@ -135,6 +135,17 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     ));
     template_dir.push("templates");
 
+    if env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
+        template_dir = template_dir
+            .ancestors()
+            .find(|p| p.join("LICENSE").exists())
+            .unwrap()
+            .join("integration-tests")
+            .join("tests")
+            .join("fails")
+            .join("templates");
+    }
+
     let input_file = match all_options.path {
         Some(ref path) => template_dir.join(path.value()),
         None => {
@@ -156,13 +167,10 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         }
     };
 
-    let out_dir = match std::env::var("SAILFISH_OUTPUT_DIR") {
-        Ok(dir) => {
-            let p = PathBuf::from(dir);
-            fs::create_dir_all(&*p).unwrap();
-            p.canonicalize().unwrap()
-        }
-        Err(_) => PathBuf::from(env!("OUT_DIR")),
+    let out_dir = if std::env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
+        template_dir.parent().unwrap().join("out")
+    } else {
+        PathBuf::from(env!("OUT_DIR"))
     };
     let mut output_file = out_dir.clone();
     output_file.push("templates");

@@ -1,7 +1,8 @@
+use std::env;
 use std::fmt;
 use std::fs;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[non_exhaustive]
 #[derive(Debug)]
@@ -100,6 +101,15 @@ impl fmt::Display for Error {
         f.write_str("\n")?;
 
         if let Some(ref source_file) = self.source_file {
+            let source_file =
+                if env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
+                    match source_file.file_name() {
+                        Some(f) => Path::new(f),
+                        None => Path::new(""),
+                    }
+                } else {
+                    source_file
+                };
             writeln!(f, "file: {}", source_file.display())?;
         }
 
