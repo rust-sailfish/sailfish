@@ -184,17 +184,6 @@ fn test_rust_macro() {
     assert_render("rust_macro", RustMacro { value: Some(10) });
 }
 
-#[derive(TemplateOnce)]
-#[template(path = "include_rust.stpl")]
-struct IncludeRust {
-    value: usize,
-}
-
-#[test]
-fn test_include_rust() {
-    assert_render("include_rust", IncludeRust { value: 58 });
-}
-
 #[cfg(unix)]
 mod unix {
     use super::*;
@@ -208,5 +197,16 @@ mod unix {
     #[test]
     fn test_include_nest() {
         assert_render("include-nest", IncludeNest { s: "foo" });
+    }
+
+    #[derive(TemplateOnce)]
+    #[template(path = "include_rust.stpl")]
+    struct IncludeRust {
+        value: usize,
+    }
+
+    #[test]
+    fn test_include_rust() {
+        assert_render("include_rust", IncludeRust { value: 58 });
     }
 }
