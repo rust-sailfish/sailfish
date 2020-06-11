@@ -55,7 +55,6 @@ unsafe fn write_small_pad(n: u16, buf: *mut u8) {
     ptr::copy_nonoverlapping(lookup!(d2), buf.add(2), 2);
 }
 
-#[inline]
 unsafe fn write_u8(n: u8, buf: *mut u8) -> usize {
     if n < 10 {
         *buf = n + 0x30;
@@ -72,7 +71,6 @@ unsafe fn write_u8(n: u8, buf: *mut u8) -> usize {
     }
 }
 
-#[inline]
 unsafe fn write_u16(n: u16, buf: *mut u8) -> usize {
     if n < 100 {
         if n < 10 {
@@ -106,7 +104,6 @@ unsafe fn write_u16(n: u16, buf: *mut u8) -> usize {
     }
 }
 
-#[inline]
 unsafe fn write_u32(mut n: u32, buf: *mut u8) -> usize {
     if n < 10000 {
         write_small(n as u16, buf)
@@ -138,7 +135,6 @@ unsafe fn write_u32(mut n: u32, buf: *mut u8) -> usize {
     }
 }
 
-#[inline]
 unsafe fn write_u64(mut n: u64, buf: *mut u8) -> usize {
     if n < 10000 {
         write_small(n as u16, buf)

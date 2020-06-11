@@ -79,6 +79,7 @@ impl Buffer {
         self.len == 0
     }
 
+    #[inline(never)]
     pub fn reserve(&mut self, size: usize) {
         if size > self.capacity - self.len {
             unsafe {
