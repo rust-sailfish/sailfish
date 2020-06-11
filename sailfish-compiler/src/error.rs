@@ -249,6 +249,7 @@ mod tests {
             offset = 16usize
         );
         err.chains.push(ErrorKind::Other("some error".to_owned()));
+        assert!(matches!(err.kind(), &ErrorKind::Other(_)));
         assert_eq!(
             err.to_string(),
             r#"some error
