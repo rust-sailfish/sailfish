@@ -209,18 +209,29 @@ mod tests {
     fn test1() {
         let mut buffer = Buffer::new();
         assert!(buffer.data.is_null());
-        assert_eq!(buffer.len, 0);
-        assert_eq!(buffer.capacity, 0);
+        assert_eq!(buffer.len(), 0);
+        assert_eq!(buffer.capacity(), 0);
 
         buffer.push_str("apple");
         assert!(!buffer.data.is_null());
-        assert_eq!(buffer.len, 5);
-        assert_eq!(buffer.capacity, 5);
+        assert_eq!(buffer.len(), 5);
+        assert_eq!(buffer.capacity(), 5);
 
         buffer.push_str("pie");
         assert!(!buffer.data.is_null());
-        assert_eq!(buffer.len, 8);
-        assert_eq!(buffer.capacity, 10);
+        assert_eq!(buffer.len(), 8);
+        assert_eq!(buffer.capacity(), 10);
+    }
+
+    #[test]
+    fn test2() {
+        let mut buffer = Buffer::with_capacity(1);
+        assert!(buffer.is_empty());
+        assert_eq!(buffer.len(), 0);
+        assert!(buffer.capacity() >= 1);
+
+        buffer += "pie";
+        assert!(!buffer.is_empty());
     }
 
     #[test]

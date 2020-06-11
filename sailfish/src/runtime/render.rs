@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use super::buffer::Buffer;
 use super::{escape, RenderError};
@@ -53,36 +53,6 @@ impl Render for str {
     }
 }
 
-impl<'a> Render for &'a str {
-    #[inline]
-    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        b.push_str(self);
-        Ok(())
-    }
-
-    #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        // escape string
-        escape::escape_to_buf(self, b);
-        Ok(())
-    }
-}
-
-impl Render for String {
-    #[inline]
-    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        b.push_str(self);
-        Ok(())
-    }
-
-    #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        // escape string
-        escape::escape_to_buf(self, b);
-        Ok(())
-    }
-}
-
 impl Render for char {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
@@ -103,7 +73,7 @@ impl Render for char {
     }
 }
 
-impl<'a> Render for &'a Path {
+impl Render for Path {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // TODO: speed up on Windows using OsStrExt
@@ -114,22 +84,6 @@ impl<'a> Render for &'a Path {
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         escape::escape_to_buf(&*self.to_string_lossy(), b);
-        Ok(())
-    }
-}
-
-impl Render for PathBuf {
-    #[inline]
-    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        b.push_str(&*self.to_string_lossy());
-        Ok(())
-    }
-
-    #[inline]
-    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        // escape string
-        escape::escape_to_buf(&*self.to_string_lossy(), b);
-
         Ok(())
     }
 }
@@ -265,5 +219,19 @@ mod tests {
         (&&&&' ').render_escaped(&mut b).unwrap();
         assert_eq!(b.as_str(), "c&lt;&amp; ");
         b.clear();
+    }
+
+    #[test]
+    fn deref_coercion() {
+        use std::rc::Rc;
+        use std::path::PathBuf;
+
+        let mut b = Buffer::new();
+        (&String::from("a")).render(&mut b).unwrap();
+        (&&PathBuf::from("b")).render(&mut b).unwrap();
+        (&Rc::new(4u32)).render_escaped(&mut b).unwrap();
+        (&Rc::new(2.3f32)).render_escaped(&mut b).unwrap();
+
+        assert_eq!(b.as_str(), "ab42.3");
     }
 }
