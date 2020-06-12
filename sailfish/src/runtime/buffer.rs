@@ -10,7 +10,6 @@ const MEMORY_LAYOUT: Layout = unsafe { Layout::from_size_align_unchecked(1, 1) }
 ///
 /// This struct is quite simular to `String`, but some methods are
 /// re-implemented for faster buffering.
-#[derive(Clone, Debug)]
 pub struct Buffer {
     data: *mut u8,
     len: usize,
@@ -133,6 +132,23 @@ impl Buffer {
             let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
             self.data = realloc(self.data, old_layout, cap);
         }
+    }
+}
+
+impl Clone for Buffer {
+    fn clone(&self) -> Self {
+        let layout = unsafe { alloc(Layout::from_size_align_unchecked(self.len, 1)) };
+        Self {
+            data: layout,
+            len: self.len,
+            capacity: self.len,
+        }
+    }
+}
+
+impl fmt::Debug for Buffer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.as_str().fmt(f)
     }
 }
 
