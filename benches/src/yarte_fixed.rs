@@ -1,3 +1,5 @@
+use std::mem::MaybeUninit;
+
 use yarte::TemplateFixed;
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
@@ -11,13 +13,11 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     }
     let ctx = BigTable { table };
     b.iter(|| {
-        let mut buf = String::with_capacity(109915);
         unsafe {
-            buf.as_mut_vec().set_len(109915);
-            let b = ctx.call(buf.as_bytes_mut()).unwrap();
-            buf.as_mut_vec().set_len(b);
+            let mut buf: [u8; 109915] = MaybeUninit::uninit().assume_init();
+            let b = ctx.call(&mut buf).unwrap();
+            let _ = &buf[..b];
         }
-        buf
     });
 }
 
@@ -51,13 +51,11 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
         ],
     };
     b.iter(|| {
-        let mut buf = String::with_capacity(239);
         unsafe {
-            buf.as_mut_vec().set_len(239);
-            let b = teams.call(buf.as_bytes_mut()).unwrap();
-            buf.as_mut_vec().set_len(b);
+            let mut buf: [u8; 239] = MaybeUninit::uninit().assume_init();
+            let b = teams.call(&mut buf).unwrap();
+            let _ = &buf[..b];
         }
-        buf
     });
 }
 
