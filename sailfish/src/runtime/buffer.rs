@@ -4,8 +4,6 @@ use std::mem::ManuallyDrop;
 use std::ops::{Add, AddAssign};
 use std::ptr;
 
-const MEMORY_LAYOUT: Layout = unsafe { Layout::from_size_align_unchecked(1, 1) };
-
 /// Buffer for rendered contents
 ///
 /// This struct is quite simular to `String`, but some methods are
@@ -125,7 +123,7 @@ impl Buffer {
     }
 
     unsafe fn realloc(&mut self, cap: usize) {
-        if self.data.is_null() {
+        if self.capacity == 0 {
             let new_layout = Layout::from_size_align_unchecked(cap, 1);
             self.data = alloc(new_layout);
         } else {
@@ -154,9 +152,10 @@ impl fmt::Debug for Buffer {
 
 impl Drop for Buffer {
     fn drop(&mut self) {
-        if !self.data.is_null() {
+        if self.capacity != 0 {
             unsafe {
-                dealloc(self.data, MEMORY_LAYOUT);
+                let layout = Layout::from_size_align_unchecked(self.capacity, 1);
+                dealloc(self.data, layout);
             }
         }
     }
