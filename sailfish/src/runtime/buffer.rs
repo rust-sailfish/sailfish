@@ -27,12 +27,16 @@ impl Buffer {
     #[inline]
     pub fn with_capacity(n: usize) -> Buffer {
         unsafe {
-            let layout = Layout::from_size_align_unchecked(n, 1);
-            let data = alloc(layout);
-            Self {
-                data,
-                len: 0,
-                capacity: n,
+            if n == 0 {
+                Self::new()
+            } else {
+                let layout = Layout::from_size_align_unchecked(n, 1);
+                let data = alloc(layout);
+                Self {
+                    data,
+                    len: 0,
+                    capacity: n,
+                }
             }
         }
     }
@@ -135,11 +139,20 @@ impl Buffer {
 
 impl Clone for Buffer {
     fn clone(&self) -> Self {
-        let layout = unsafe { alloc(Layout::from_size_align_unchecked(self.len, 1)) };
-        Self {
-            data: layout,
-            len: self.len,
-            capacity: self.len,
+        unsafe {
+            if self.capacity == 0 {
+                Self::new()
+            } else {
+                let data = alloc(Layout::from_size_align_unchecked(self.len, 1));
+                let buf = Self {
+                    data,
+                    len: self.len,
+                    capacity: self.len,
+                };
+
+                ptr::copy_nonoverlapping(self.data, buf.data, self.len);
+                buf
+            }
         }
     }
 }
