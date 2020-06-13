@@ -214,7 +214,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 include_bytes!(#input_file_string);
 
                 use sailfish::runtime as sfrt;
-                use sfrt::Render as _;
+                use sfrt::RenderInternal as _;
 
                 static SIZE_HINT: sfrt::SizeHint = sfrt::SizeHint::new();
                 let _size_hint = SIZE_HINT.get();

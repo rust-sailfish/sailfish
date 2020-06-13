@@ -182,6 +182,31 @@ macro_rules! render_float {
 
 render_float!(f32, f64);
 
+// private trait for avoiding method name collision in render* macros
+#[doc(hidden)]
+pub trait RenderInternal {
+    fn _sailfish_render_internal(&self, b: &mut Buffer) -> Result<(), RenderError>;
+    fn _sailfish_render_escaped_internal(
+        &self,
+        b: &mut Buffer,
+    ) -> Result<(), RenderError>;
+}
+
+impl<T: Render + ?Sized> RenderInternal for T {
+    #[inline]
+    fn _sailfish_render_internal(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        self.render(b)
+    }
+
+    #[inline]
+    fn _sailfish_render_escaped_internal(
+        &self,
+        b: &mut Buffer,
+    ) -> Result<(), RenderError> {
+        self.render_escaped(b)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -189,34 +214,34 @@ mod tests {
     #[test]
     fn receiver_coercion() {
         let mut b = Buffer::new();
-        (&1).render(&mut b).unwrap();
-        (&&1).render(&mut b).unwrap();
-        (&&&1).render(&mut b).unwrap();
-        (&&&&1).render(&mut b).unwrap();
+        (&1)._sailfish_render_internal(&mut b).unwrap();
+        (&&1)._sailfish_render_internal(&mut b).unwrap();
+        (&&&1)._sailfish_render_internal(&mut b).unwrap();
+        (&&&&1)._sailfish_render_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "1111");
         b.clear();
 
         let v = 2.0;
-        (&v).render(&mut b).unwrap();
-        (&&v).render(&mut b).unwrap();
-        (&&&v).render(&mut b).unwrap();
-        (&&&&v).render(&mut b).unwrap();
+        (&v)._sailfish_render_internal(&mut b).unwrap();
+        (&&v)._sailfish_render_internal(&mut b).unwrap();
+        (&&&v)._sailfish_render_internal(&mut b).unwrap();
+        (&&&&v)._sailfish_render_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "2.02.02.02.0");
         b.clear();
 
         let s = "apple";
-        (&*s).render_escaped(&mut b).unwrap();
-        (&s).render_escaped(&mut b).unwrap();
-        (&&s).render_escaped(&mut b).unwrap();
-        (&&&s).render_escaped(&mut b).unwrap();
-        (&&&&s).render_escaped(&mut b).unwrap();
+        (&*s)._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&s)._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&&s)._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&&&s)._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&&&&s)._sailfish_render_escaped_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "appleappleappleappleapple");
         b.clear();
 
-        (&'c').render_escaped(&mut b).unwrap();
-        (&&'<').render_escaped(&mut b).unwrap();
-        (&&&'&').render_escaped(&mut b).unwrap();
-        (&&&&' ').render_escaped(&mut b).unwrap();
+        (&'c')._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&&'<')._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&&&'&')._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&&&&' ')._sailfish_render_escaped_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "c&lt;&amp; ");
         b.clear();
     }
@@ -227,10 +252,18 @@ mod tests {
         use std::rc::Rc;
 
         let mut b = Buffer::new();
-        (&String::from("a")).render(&mut b).unwrap();
-        (&&PathBuf::from("b")).render(&mut b).unwrap();
-        (&Rc::new(4u32)).render_escaped(&mut b).unwrap();
-        (&Rc::new(2.3f32)).render_escaped(&mut b).unwrap();
+        (&String::from("a"))
+            ._sailfish_render_internal(&mut b)
+            .unwrap();
+        (&&PathBuf::from("b"))
+            ._sailfish_render_internal(&mut b)
+            .unwrap();
+        (&Rc::new(4u32))
+            ._sailfish_render_escaped_internal(&mut b)
+            .unwrap();
+        (&Rc::new(2.3f32))
+            ._sailfish_render_escaped_internal(&mut b)
+            .unwrap();
 
         assert_eq!(b.as_str(), "ab42.3");
     }
