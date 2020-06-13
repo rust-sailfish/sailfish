@@ -23,10 +23,14 @@ macro_rules! return_if_some {
     };
 }
 
+pub struct ResolveReport {
+    pub deps: Vec<PathBuf>,
+}
+
 struct ResolverImpl<'s, 'h> {
     template_dir: &'s Path,
     path_stack: Vec<PathBuf>,
-    deps: Vec<String>,
+    deps: Vec<PathBuf>,
     error: Option<Error>,
     include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
 }
@@ -57,7 +61,7 @@ impl<'s, 'h> ResolverImpl<'s, 'h> {
 
         // resolve the template file path
         // TODO: How should arguments be interpreted on Windows?
-        let input_file = if arg.starts_with('/') {
+        let child_template_file = if arg.starts_with('/') {
             // absolute imclude
             self.template_dir.join(&arg[1..])
         } else {
@@ -71,13 +75,17 @@ impl<'s, 'h> ResolverImpl<'s, 'h> {
         };
 
         // parse and translate the child template
-        let mut blk = (*self.include_handler)(&*input_file)
-            .chain_err(|| format!("Failed to include {:?}", input_file))?;
+        let mut blk = (*self.include_handler)(&*child_template_file).chain_err(|| {
+            format!("Failed to include {:?}", child_template_file.clone())
+        })?;
 
-        self.path_stack.push(input_file);
-        self.deps.push(arg);
+        self.path_stack.push(child_template_file);
         syn::visit_mut::visit_block_mut(self, &mut blk);
-        self.path_stack.pop();
+
+        let child_template_file = self.path_stack.pop().unwrap();
+        if self.deps.iter().all(|p| p != &child_template_file) {
+            self.deps.push(child_template_file);
+        }
 
         Ok(Expr::Block(ExprBlock {
             attrs: Vec::new(),
@@ -140,7 +148,7 @@ impl<'h> Resolver<'h> {
         template_dir: &Path,
         input_file: &Path,
         ast: &mut Block,
-    ) -> Result<(), Error> {
+    ) -> Result<ResolveReport, Error> {
         let mut child = ResolverImpl {
             template_dir,
             path_stack: vec![input_file.to_owned()],
@@ -153,7 +161,7 @@ impl<'h> Resolver<'h> {
         if let Some(e) = child.error {
             Err(e)
         } else {
-            Ok(())
+            Ok(ResolveReport { deps: child.deps })
         }
     }
 }

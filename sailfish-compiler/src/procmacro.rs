@@ -6,11 +6,11 @@ use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
-use crate::compiler::Compiler;
+use crate::compiler::{CompilationReport, Compiler};
 use crate::config::Config;
 use crate::error::*;
 
-// arguments for include_template* macros
+// options for `template` attributes
 #[derive(Default)]
 struct DeriveTemplateOptions {
     path: Option<LitStr>,
@@ -103,7 +103,7 @@ fn compile(
     input_file: &Path,
     output_file: &Path,
     options: &DeriveTemplateOptions,
-) -> Result<(), Error> {
+) -> Result<CompilationReport, Error> {
     let mut config = Config::default();
     if let Some(ref delimiter) = options.delimiter {
         config.delimiter = delimiter.value();
@@ -177,11 +177,17 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     output_file.push("templates");
     output_file.push(filename);
 
-    compile(&*template_dir, &*input_file, &*output_file, &all_options)
+    let report = compile(&*template_dir, &*input_file, &*output_file, &all_options)
         .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
     let input_file_string = input_file.to_string_lossy();
     let output_file_string = output_file.to_string_lossy();
+
+    let mut include_bytes_seq = quote! { include_bytes!(#input_file_string); };
+    for dep in report.deps {
+        let dep_string = dep.to_string_lossy();
+        include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
+    }
 
     // Generate tokens
 
@@ -211,7 +217,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     let tokens = quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
             fn render_once(self) -> sailfish::runtime::RenderResult {
-                include_bytes!(#input_file_string);
+                #include_bytes_seq;
 
                 use sailfish::runtime as sfrt;
                 use sfrt::RenderInternal as _;

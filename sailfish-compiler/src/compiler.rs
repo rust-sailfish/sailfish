@@ -1,6 +1,6 @@
 use quote::ToTokens;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use crate::config::Config;
@@ -10,6 +10,10 @@ use crate::parser::Parser;
 use crate::resolver::Resolver;
 use crate::translator::{TranslatedSource, Translator};
 use crate::util::{read_to_string, rustfmt_block};
+
+pub struct CompilationReport {
+    pub deps: Vec<PathBuf>,
+}
 
 #[derive(Default)]
 pub struct Compiler {
@@ -40,7 +44,7 @@ impl Compiler {
         template_dir: &Path,
         input: &Path,
         output: &Path,
-    ) -> Result<(), Error> {
+    ) -> Result<CompilationReport, Error> {
         // TODO: introduce cache system
 
         let input = input.canonicalize()?;
@@ -52,23 +56,27 @@ impl Compiler {
         let resolver = Resolver::new().include_handler(include_handler);
         let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
 
-        let compile_file = |input: &Path, output: &Path| -> Result<(), Error> {
-            let mut tsource = self.translate_file_contents(input)?;
+        let compile_file =
+            |input: &Path, output: &Path| -> Result<CompilationReport, Error> {
+                let mut tsource = self.translate_file_contents(input)?;
+                let mut report = CompilationReport { deps: Vec::new() };
 
-            resolver.resolve(template_dir, &*input, &mut tsource.ast)?;
-            optimizer.optimize(&mut tsource.ast);
+                let r = resolver.resolve(template_dir, &*input, &mut tsource.ast)?;
+                report.deps = r.deps;
 
-            if let Some(parent) = output.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            if output.exists() {
-                fs::remove_file(output)?;
-            }
+                optimizer.optimize(&mut tsource.ast);
 
-            let string = tsource.ast.into_token_stream().to_string();
-            fs::write(output, rustfmt_block(&*string).unwrap_or(string))?;
-            Ok(())
-        };
+                if let Some(parent) = output.parent() {
+                    fs::create_dir_all(parent)?;
+                }
+                if output.exists() {
+                    fs::remove_file(output)?;
+                }
+
+                let string = tsource.ast.into_token_stream().to_string();
+                fs::write(output, rustfmt_block(&*string).unwrap_or(string))?;
+                Ok(report)
+            };
 
         compile_file(&*input, &*output)
             .chain_err(|| "Failed to compile template.")
@@ -76,8 +84,6 @@ impl Compiler {
                 e.source = fs::read_to_string(&*input).ok();
                 e.source_file = Some(input.to_owned());
                 e
-            })?;
-
-        Ok(())
+            })
     }
 }
