@@ -27,6 +27,13 @@ fn assert_render<T: TemplateOnce>(name: &str, template: T) {
     assert_render_result(name, template.render_once());
 }
 
+trait ConflictWithSailFishRender {
+    fn render() {}
+}
+
+impl ConflictWithSailFishRender for u8 {}
+impl ConflictWithSailFishRender for u16 {}
+
 #[derive(TemplateOnce)]
 #[template(path = "empty.stpl")]
 struct Empty {}
