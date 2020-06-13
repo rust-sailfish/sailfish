@@ -1,3 +1,7 @@
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/logo.png"
+)]
+
 pub mod runtime;
 
 pub use runtime::{RenderError, RenderResult};
