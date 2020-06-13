@@ -1,5 +1,5 @@
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/logo.png"
+    html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/icon.png"
 )]
 
 pub mod runtime;
