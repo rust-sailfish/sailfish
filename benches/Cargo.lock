@@ -159,7 +159,7 @@ checksum = "53d1ccbaf7d9ec9537465a97bf19edc1a4e158ecb49fc16178202238c569cc42"
 
 [[package]]
 name = "benches"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "askama",
  "criterion",
@@ -1126,14 +1126,14 @@ checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
 
 [[package]]
 name = "sailfish"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "ryu",
 ]
 
 [[package]]
 name = "sailfish-compiler"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "memchr",
  "proc-macro2",
@@ -1143,7 +1143,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-macros"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "proc-macro2",
  "sailfish-compiler",
