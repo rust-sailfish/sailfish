@@ -44,6 +44,6 @@ nav:
   - 'Welcome': 'index.md'
   - 'Installation': 'installation.md'
   - 'Getting Started': 'getting-started.md'
-  - 'Options': 'options.md'
+  - 'Configuration': 'options.md'
   - 'Syntax':
     - 'Overview': 'syntax/overview.md'
