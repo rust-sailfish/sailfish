@@ -17,12 +17,14 @@ name = "sailfish_compiler"
 doctest = false
 
 [features]
-default = []
+default = ["config"]
 procmacro = []
+config = ["yaml-rust"]
 
 [dependencies]
 memchr = "2.3.3"
 quote = { version = "1.0.6", default-features = false }
+yaml-rust = { version = "0.4.4", optional = true }
 
 [dependencies.syn]
 version = "1.0.21"

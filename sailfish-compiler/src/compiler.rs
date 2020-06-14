@@ -41,7 +41,6 @@ impl Compiler {
 
     pub fn compile_file(
         &self,
-        template_dir: &Path,
         input: &Path,
         output: &Path,
     ) -> Result<CompilationReport, Error> {
@@ -64,7 +63,7 @@ impl Compiler {
             let mut tsource = self.translate_file_contents(input)?;
             let mut report = CompilationReport { deps: Vec::new() };
 
-            let r = resolver.resolve(template_dir, &*input, &mut tsource.ast)?;
+            let r = resolver.resolve(&*input, &mut tsource.ast)?;
             report.deps = r.deps;
 
             optimizer.optimize(&mut tsource.ast);

@@ -20,6 +20,15 @@ proc-macro = true
 test = false
 doctest = false
 
+[features]
+default = ["config"]
+config = ["sailfish-compiler/config"]
+
 [dependencies]
-sailfish-compiler = { path = "../sailfish-compiler", version = "0.0.5", features = ["procmacro"] }
 proc-macro2 = "1.0.17"
+
+[dependencies.sailfish-compiler]
+path = "../sailfish-compiler"
+version = "0.0.5"
+default-features = false
+features = ["procmacro"]
