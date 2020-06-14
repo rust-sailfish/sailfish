@@ -23,6 +23,7 @@ procmacro = []
 [dependencies]
 memchr = "2.3.3"
 quote = { version = "1.0.6", default-features = false }
+yaml-rust = "0.4.4"
 
 [dependencies.syn]
 version = "1.0.21"
