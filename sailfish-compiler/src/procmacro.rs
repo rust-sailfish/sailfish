@@ -181,12 +181,16 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         }
     }
 
-    let mut config = Config::search_file_and_read(&*PathBuf::from(
-        std::env::var("CARGO_MANIFEST_DIR").expect(
-            "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
-        ),
-    ))
-    .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect(
+        "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
+    ));
+
+    #[cfg(feature = "config")]
+    let mut config = Config::search_file_and_read(&*manifest_dir)
+        .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+
+    #[cfg(not(feature = "config"))]
+    let mut config = Config::default();
 
     if env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
         let template_dir = env::current_dir()
