@@ -1,6 +1,6 @@
-use std::alloc::{alloc, dealloc, realloc, Layout};
+use std::alloc::{alloc, dealloc, handle_alloc_error, realloc, Layout};
 use std::fmt;
-use std::mem::ManuallyDrop;
+use std::mem::{align_of, ManuallyDrop};
 use std::ops::{Add, AddAssign};
 use std::ptr;
 
@@ -18,7 +18,7 @@ impl Buffer {
     #[inline]
     pub const fn new() -> Buffer {
         Self {
-            data: ptr::null_mut(),
+            data: align_of::<u8>() as *mut u8, // dangling pointer
             len: 0,
             capacity: 0,
         }
@@ -32,6 +32,10 @@ impl Buffer {
             } else {
                 let layout = Layout::from_size_align_unchecked(n, 1);
                 let data = alloc(layout);
+                if data.is_null() {
+                    handle_alloc_error(layout);
+                }
+
                 Self {
                     data,
                     len: 0,
@@ -98,13 +102,8 @@ impl Buffer {
 
     #[inline]
     pub fn into_string(self) -> String {
-        if self.capacity == 0 {
-            std::mem::forget(self);
-            String::new()
-        } else {
-            let buf = ManuallyDrop::new(self);
-            unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
-        }
+        let buf = ManuallyDrop::new(self);
+        unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
     }
 
     #[inline]
@@ -134,6 +133,10 @@ impl Buffer {
             let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
             self.data = realloc(self.data, old_layout, cap);
         }
+
+        if self.data.is_null() {
+            handle_alloc_error(Layout::from_size_align_unchecked(cap, 1));
+        }
     }
 }
 
@@ -143,7 +146,12 @@ impl Clone for Buffer {
             if self.capacity == 0 {
                 Self::new()
             } else {
-                let data = alloc(Layout::from_size_align_unchecked(self.len, 1));
+                let layout = Layout::from_size_align_unchecked(self.len, 1);
+                let data = alloc(layout);
+                if data.is_null() {
+                    handle_alloc_error(layout);
+                }
+
                 let buf = Self {
                     data,
                     len: self.len,
@@ -185,15 +193,11 @@ impl fmt::Write for Buffer {
 impl From<String> for Buffer {
     #[inline]
     fn from(other: String) -> Buffer {
-        if other.capacity() > 0 {
-            let mut other = ManuallyDrop::new(other);
-            Buffer {
-                data: other.as_mut_ptr(),
-                len: other.len(),
-                capacity: other.capacity(),
-            }
-        } else {
-            Buffer::new()
+        let mut other = ManuallyDrop::new(other);
+        Buffer {
+            data: other.as_mut_ptr(),
+            len: other.len(),
+            capacity: other.capacity(),
         }
     }
 }
@@ -236,17 +240,14 @@ mod tests {
     #[test]
     fn test1() {
         let mut buffer = Buffer::new();
-        assert!(buffer.data.is_null());
         assert_eq!(buffer.len(), 0);
         assert_eq!(buffer.capacity(), 0);
 
         buffer.push_str("apple");
-        assert!(!buffer.data.is_null());
         assert_eq!(buffer.len(), 5);
         assert_eq!(buffer.capacity(), 5);
 
         buffer.push_str("pie");
-        assert!(!buffer.data.is_null());
         assert_eq!(buffer.len(), 8);
         assert_eq!(buffer.capacity(), 10);
     }
