@@ -47,7 +47,9 @@ impl Compiler {
     ) -> Result<CompilationReport, Error> {
         // TODO: introduce cache system
 
-        let input = input.canonicalize()?;
+        let input = input
+            .canonicalize()
+            .map_err(|_| format!("Template file not found: {:?}", input))?;
 
         let include_handler = Arc::new(|child_file: &Path| -> Result<_, Error> {
             Ok(self.translate_file_contents(&*child_file)?.ast)
@@ -56,27 +58,31 @@ impl Compiler {
         let resolver = Resolver::new().include_handler(include_handler);
         let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
 
-        let compile_file =
-            |input: &Path, output: &Path| -> Result<CompilationReport, Error> {
-                let mut tsource = self.translate_file_contents(input)?;
-                let mut report = CompilationReport { deps: Vec::new() };
+        let compile_file = |input: &Path,
+                            output: &Path|
+         -> Result<CompilationReport, Error> {
+            let mut tsource = self.translate_file_contents(input)?;
+            let mut report = CompilationReport { deps: Vec::new() };
 
-                let r = resolver.resolve(template_dir, &*input, &mut tsource.ast)?;
-                report.deps = r.deps;
+            let r = resolver.resolve(template_dir, &*input, &mut tsource.ast)?;
+            report.deps = r.deps;
 
-                optimizer.optimize(&mut tsource.ast);
+            optimizer.optimize(&mut tsource.ast);
 
-                if let Some(parent) = output.parent() {
-                    fs::create_dir_all(parent)?;
-                }
-                if output.exists() {
-                    fs::remove_file(output)?;
-                }
+            if let Some(parent) = output.parent() {
+                fs::create_dir_all(parent)
+                    .chain_err(|| format!("Failed to save artifacts in {:?}", parent))?;
+            }
+            if output.exists() {
+                fs::remove_file(output)
+                    .chain_err(|| format!("Failed to remove artifact {:?}", output))?;
+            }
 
-                let string = tsource.ast.into_token_stream().to_string();
-                fs::write(output, rustfmt_block(&*string).unwrap_or(string))?;
-                Ok(report)
-            };
+            let string = tsource.ast.into_token_stream().to_string();
+            fs::write(output, rustfmt_block(&*string).unwrap_or(string))
+                .chain_err(|| format!("Failed to save artifact in {:?}", output))?;
+            Ok(report)
+        };
 
         compile_file(&*input, &*output)
             .chain_err(|| "Failed to compile template.")
