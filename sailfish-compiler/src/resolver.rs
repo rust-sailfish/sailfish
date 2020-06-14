@@ -27,15 +27,14 @@ pub struct ResolveReport {
     pub deps: Vec<PathBuf>,
 }
 
-struct ResolverImpl<'s, 'h> {
-    template_dir: &'s Path,
+struct ResolverImpl<'h> {
     path_stack: Vec<PathBuf>,
     deps: Vec<PathBuf>,
     error: Option<Error>,
     include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
 }
 
-impl<'s, 'h> ResolverImpl<'s, 'h> {
+impl<'h> ResolverImpl<'h> {
     fn resolve_include(&mut self, i: &ExprMacro) -> Result<Expr, Error> {
         let arg = match syn::parse2::<LitStr>(i.mac.tokens.clone()) {
             Ok(l) => l.value(),
@@ -50,8 +49,8 @@ impl<'s, 'h> ResolverImpl<'s, 'h> {
 
         // resolve include! for rust file
         if arg.ends_with(".rs") {
-            let absolute_path = if arg.starts_with('/') {
-                self.template_dir.join(&arg[1..])
+            let absolute_path = if Path::new(&*arg).is_absolute() {
+                PathBuf::from(&arg[1..])
             } else {
                 self.path_stack.last().unwrap().parent().unwrap().join(arg)
             };
@@ -61,9 +60,9 @@ impl<'s, 'h> ResolverImpl<'s, 'h> {
 
         // resolve the template file path
         // TODO: How should arguments be interpreted on Windows?
-        let child_template_file = if arg.starts_with('/') {
+        let child_template_file = if Path::new(&*arg).is_absolute() {
             // absolute imclude
-            self.template_dir.join(&arg[1..])
+            PathBuf::from(&arg[1..])
         } else {
             // relative include
             self.path_stack
@@ -95,7 +94,7 @@ impl<'s, 'h> ResolverImpl<'s, 'h> {
     }
 }
 
-impl<'s, 'h> VisitMut for ResolverImpl<'s, 'h> {
+impl<'h> VisitMut for ResolverImpl<'h> {
     fn visit_expr_mut(&mut self, i: &mut Expr) {
         return_if_some!(self.error);
         let em = matches_or_else!(*i, Expr::Macro(ref mut em), em, {
@@ -134,23 +133,20 @@ impl<'h> Resolver<'h> {
 
     #[inline]
     pub fn include_handler(
-        self,
+        mut self,
         new: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
     ) -> Resolver<'h> {
-        Self {
-            include_handler: new,
-        }
+        self.include_handler = new;
+        self
     }
 
     #[inline]
     pub fn resolve(
         &self,
-        template_dir: &Path,
         input_file: &Path,
         ast: &mut Block,
     ) -> Result<ResolveReport, Error> {
         let mut child = ResolverImpl {
-            template_dir,
             path_stack: vec![input_file.to_owned()],
             deps: Vec::new(),
             error: None,

@@ -98,13 +98,7 @@ impl DeriveTemplateOptions {
     }
 }
 
-fn compile(
-    template_dir: &Path,
-    input_file: &Path,
-    output_file: &Path,
-    options: &DeriveTemplateOptions,
-) -> Result<CompilationReport, Error> {
-    let mut config = Config::default();
+fn merge_config_options(config: &mut Config, options: &DeriveTemplateOptions) {
     if let Some(ref delimiter) = options.delimiter {
         config.delimiter = delimiter.value();
     }
@@ -114,9 +108,66 @@ fn compile(
     if let Some(ref rm_whitespace) = options.rm_whitespace {
         config.rm_whitespace = rm_whitespace.value;
     }
+}
 
+fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBuf> {
+    for template_dir in template_dirs.iter().rev() {
+        let p = template_dir.join(path);
+        if p.is_file() {
+            return Some(p);
+        }
+    }
+
+    let mut fallback = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect(
+        "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
+    ));
+    fallback.push("templates");
+    fallback.push(path);
+
+    if fallback.is_file() {
+        return Some(fallback);
+    }
+
+    None
+}
+
+fn filename_hash(path: &Path) -> String {
+    use std::fmt::Write;
+
+    const FNV_PRIME: u64 = 1_099_511_628_211;
+    const FNV_OFFSET_BASIS: u64 = 14_695_981_039_346_656_037;
+
+    let mut hash = String::with_capacity(16);
+
+    if let Some(n) = path.file_name() {
+        let mut filename = &*n.to_string_lossy();
+        if let Some(p) = filename.find('.') {
+            filename = &filename[..p];
+        }
+        hash.push_str(filename);
+        hash.push('-');
+    }
+
+    // calculate 64bit hash
+    let mut h = FNV_OFFSET_BASIS;
+    for b in (&*path.to_string_lossy()).bytes() {
+        h = h.wrapping_mul(FNV_PRIME);
+        h ^= b as u64;
+    }
+
+    // convert 64bit hash into ascii
+    let _ = write!(hash, "{:016x}", h);
+
+    hash
+}
+
+fn compile(
+    input_file: &Path,
+    output_file: &Path,
+    config: Config,
+) -> Result<CompilationReport, Error> {
     let compiler = Compiler::with_config(config);
-    compiler.compile_file(template_dir, input_file, &*output_file)
+    compiler.compile_file(input_file, &*output_file)
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
@@ -130,13 +181,16 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         }
     }
 
-    let mut template_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").expect(
-        "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
-    ));
-    template_dir.push("templates");
+    let mut config = Config::search_file_and_read(&*PathBuf::from(
+        std::env::var("CARGO_MANIFEST_DIR").expect(
+            "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
+        ),
+    ))
+    .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
     if env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
-        template_dir = template_dir
+        let template_dir = env::current_dir()
+            .unwrap()
             .ancestors()
             .find(|p| p.join("LICENSE").exists())
             .unwrap()
@@ -144,40 +198,30 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             .join("tests")
             .join("fails")
             .join("templates");
+        config.template_dirs.push(template_dir);
     }
 
-    let input_file = match all_options.path {
-        Some(ref path) => template_dir.join(path.value()),
-        None => {
-            return Err(syn::Error::new(
-                Span::call_site(),
-                "`path` option must be specified.",
-            )
-            .into())
-        }
+    let input_file = {
+        let path = all_options.path.as_ref().ok_or_else(|| {
+            syn::Error::new(Span::call_site(), "`path` option must be specified.")
+        })?;
+        resolve_template_file(&*path.value(), &*config.template_dirs).ok_or_else(
+            || {
+                syn::Error::new(
+                    path.span(),
+                    format!("Template file {:?} not found", path.value()),
+                )
+            },
+        )?
     };
 
-    let filename = match input_file.file_name() {
-        Some(f) => f,
-        None => {
-            return Err(syn::Error::new(
-                Span::call_site(),
-                format!("Invalid file name: {:?}", input_file),
-            ))
-        }
-    };
-
-    let out_dir =
-        if std::env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |s| s == "1") {
-            template_dir.parent().unwrap().join("out")
-        } else {
-            PathBuf::from(env!("OUT_DIR"))
-        };
+    let out_dir = PathBuf::from(env!("OUT_DIR"));
     let mut output_file = out_dir.clone();
     output_file.push("templates");
-    output_file.push(filename);
+    output_file.push(filename_hash(&*input_file));
 
-    let report = compile(&*template_dir, &*input_file, &*output_file, &all_options)
+    merge_config_options(&mut config, &all_options);
+    let report = compile(&*input_file, &*output_file, config)
         .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
     let input_file_string = input_file.to_string_lossy();
