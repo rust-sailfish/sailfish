@@ -431,12 +431,12 @@ dependencies = [
 
 [[package]]
 name = "examples"
-version = "0.0.5"
+version = "0.1.0"
 dependencies = [
  "actix-rt 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sailfish 0.0.5",
- "sailfish-macros 0.0.5",
+ "sailfish 0.1.0",
+ "sailfish-macros 0.1.0",
 ]
 
 [[package]]
@@ -671,11 +671,11 @@ dependencies = [
 
 [[package]]
 name = "integration-tests"
-version = "0.0.5"
+version = "0.1.0"
 dependencies = [
  "pretty_assertions 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "sailfish 0.0.5",
- "sailfish-macros 0.0.5",
+ "sailfish 0.1.0",
+ "sailfish-macros 0.1.0",
  "trybuild 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1050,14 +1050,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "sailfish"
-version = "0.0.5"
+version = "0.1.0"
 dependencies = [
  "ryu 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "sailfish-compiler"
-version = "0.0.5"
+version = "0.1.0"
 dependencies = [
  "memchr 2.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "pretty_assertions 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1069,10 +1069,10 @@ dependencies = [
 
 [[package]]
 name = "sailfish-macros"
-version = "0.0.5"
+version = "0.1.0"
 dependencies = [
  "proc-macro2 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
- "sailfish-compiler 0.0.5",
+ "sailfish-compiler 0.1.0",
 ]
 
 [[package]]

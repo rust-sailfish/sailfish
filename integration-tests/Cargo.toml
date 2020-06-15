@@ -1,6 +1,6 @@
 [package]
 name = "integration-tests"
-version = "0.0.5"
+version = "0.1.0"
 authors = ["Kogia-sima <orcinus4627@gmail.com>"]
 edition = "2018"
 publish = false
