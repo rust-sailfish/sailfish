@@ -2,18 +2,31 @@
 name = "benches"
 version = "0.1.0"
 authors = ["Dirkjan Ochtman <dirkjan@ochtman.nl>", "Ryohei Machida <orcinus4627@gmail.com>"]
+build = "src/build.rs"
 edition = "2018"
 publish = false
 
 [dependencies]
-horrorshow = "0.8.3"
-markup = "0.4.1"
-askama = "0.9.0"
-criterion = "0.3.2"
-yarte = { version = "0.9.8", features = ["fixed"] }
+askama = { git = "https://github.com/djc/askama" }
+criterion = "0.3"
+fomat-macros = { git = "https://github.com/krdln/fomat-macros" }
+handlebars = { git = "https://github.com/sunng87/handlebars-rust" }
+horrorshow = { git = "https://github.com/Stebalien/horrorshow-rs" }
+liquid = "0.19.0"
+markup = { git = "https://github.com/utkarshkukreti/markup.rs" }
+maud = "0.21.0"
+ramhorns = { git = "https://github.com/maciejhirsz/ramhorns" }
 sailfish = { path = "../sailfish" }
 sailfish-macros = { path = "../sailfish-macros" }
-fomat-macros = "0.3.1"
+serde = "1"
+serde_derive = "1"
+serde_json = "1"
+serde_yaml = "0.8"
+tera = { git = "https://github.com/Keats/tera" }
+yarte = { git = "https://github.com/botika/yarte", features = ["fixed"] }
+
+[build-dependencies]
+ructe = { git = "https://github.com/kaj/ructe" }
 
 [[bench]]
 name = "all"
