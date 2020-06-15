@@ -26,9 +26,9 @@ fn contains_zero_byte(x: usize) -> bool {
 
 #[inline]
 fn contains_key(x: usize) -> bool {
-    const INDEPENDENTS1: usize = 0x0404_0404_0404_0404_u64 as usize;
+    const INDEPENDENTS1: usize = 0x0505_0505_0505_0505_u64 as usize;
     const INDEPENDENTS2: usize = 0x0202_0202_0202_0202_u64 as usize;
-    const KEY1: usize = 0x2626_2626_2626_2626_u64 as usize;
+    const KEY1: usize = 0x2727_2727_2727_2727_u64 as usize;
     const KEY2: usize = 0x3e3e_3e3e_3e3e_3e3e_u64 as usize;
 
     let y1 = x | INDEPENDENTS1;
@@ -72,9 +72,7 @@ pub unsafe fn escape_aligned(
         debug_assert_eq!((ptr as usize) % USIZE_BYTES, 0);
 
         let chunk = *(ptr as *const usize);
-        eprintln!("# {:x}", chunk);
         if contains_key(chunk) {
-            eprintln!("true!");
             start_ptr = naive::proceed(buffer, start_ptr, ptr, ptr.add(USIZE_BYTES))
         }
         ptr = ptr.add(USIZE_BYTES);

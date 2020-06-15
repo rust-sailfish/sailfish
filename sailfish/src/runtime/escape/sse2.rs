@@ -27,9 +27,9 @@ pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
     let mut start_ptr = bytes.as_ptr();
     let end_ptr = start_ptr.add(len);
 
-    let v_independent1 = _mm_set1_epi8(4);
+    let v_independent1 = _mm_set1_epi8(5);
     let v_independent2 = _mm_set1_epi8(2);
-    let v_key1 = _mm_set1_epi8(0x26);
+    let v_key1 = _mm_set1_epi8(0x27);
     let v_key2 = _mm_set1_epi8(0x3e);
 
     let maskgen = |x: __m128i| -> i32 {
@@ -52,14 +52,17 @@ pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
             }
 
             let c = ESCAPE_LUT[*ptr2 as usize] as usize;
-            debug_assert!(c < ESCAPED_LEN);
-            if start_ptr < ptr2 {
-                let slc =
-                    slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
-                buffer.push_str(std::str::from_utf8_unchecked(slc));
+            if c < ESCAPED_LEN {
+                if start_ptr < ptr2 {
+                    let slc = slice::from_raw_parts(
+                        start_ptr,
+                        ptr2 as usize - start_ptr as usize,
+                    );
+                    buffer.push_str(std::str::from_utf8_unchecked(slc));
+                }
+                buffer.push_str(*ESCAPED.get_unchecked(c));
+                start_ptr = ptr2.add(1);
             }
-            buffer.push_str(*ESCAPED.get_unchecked(c));
-            start_ptr = ptr2.add(1);
             mask ^= 1 << trailing_zeros;
         }
     }
@@ -77,9 +80,9 @@ pub unsafe fn escape_aligned(
     end_ptr: *const u8,
 ) {
     let mut next_ptr = ptr.add(VECTOR_BYTES);
-    let v_independent1 = _mm_set1_epi8(4);
+    let v_independent1 = _mm_set1_epi8(5);
     let v_independent2 = _mm_set1_epi8(2);
-    let v_key1 = _mm_set1_epi8(0x26);
+    let v_key1 = _mm_set1_epi8(0x27);
     let v_key2 = _mm_set1_epi8(0x3e);
 
     let maskgen = |x: __m128i| -> i32 {
@@ -96,14 +99,17 @@ pub unsafe fn escape_aligned(
             let trailing_zeros = mask.trailing_zeros() as usize;
             let ptr2 = ptr.add(trailing_zeros);
             let c = ESCAPE_LUT[*ptr2 as usize] as usize;
-            debug_assert!(c < ESCAPED_LEN);
-            if start_ptr < ptr2 {
-                let slc =
-                    slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
-                buffer.push_str(std::str::from_utf8_unchecked(slc));
+            if c < ESCAPED_LEN {
+                if start_ptr < ptr2 {
+                    let slc = slice::from_raw_parts(
+                        start_ptr,
+                        ptr2 as usize - start_ptr as usize,
+                    );
+                    buffer.push_str(std::str::from_utf8_unchecked(slc));
+                }
+                buffer.push_str(*ESCAPED.get_unchecked(c));
+                start_ptr = ptr2.add(1);
             }
-            buffer.push_str(*ESCAPED.get_unchecked(c));
-            start_ptr = ptr2.add(1);
             mask ^= 1 << trailing_zeros;
         }
 
@@ -119,14 +125,17 @@ pub unsafe fn escape_aligned(
             let trailing_zeros = mask.trailing_zeros() as usize;
             let ptr2 = ptr.add(trailing_zeros);
             let c = ESCAPE_LUT[*ptr2 as usize] as usize;
-            debug_assert!(c < ESCAPED_LEN);
-            if start_ptr < ptr2 {
-                let slc =
-                    slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
-                buffer.push_str(std::str::from_utf8_unchecked(slc));
+            if c < ESCAPED_LEN {
+                if start_ptr < ptr2 {
+                    let slc = slice::from_raw_parts(
+                        start_ptr,
+                        ptr2 as usize - start_ptr as usize,
+                    );
+                    buffer.push_str(std::str::from_utf8_unchecked(slc));
+                }
+                buffer.push_str(*ESCAPED.get_unchecked(c));
+                start_ptr = ptr2.add(1);
             }
-            buffer.push_str(*ESCAPED.get_unchecked(c));
-            start_ptr = ptr2.add(1);
             mask ^= 1 << trailing_zeros;
         }
 
