@@ -22,6 +22,7 @@ Simple, small, and extremely fast template engine for Rust
 - Template rendering is always type-safe because templates are statically compiled.
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
 - Automatically re-compile sources when template file is updated.
+- Works on Rust 1.42 or later
 
 ## 🐟 Example
 
