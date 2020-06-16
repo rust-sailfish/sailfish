@@ -16,7 +16,10 @@ if [ "$TRAVIS_RUST_VERSION" = "nightly" ] && [ -z "$TRAVIS_TAG" ]; then
 fi
 
 cargo build $CARGO_OPTIONS
-cargo test $CARGO_OPTIONS
+
+if [ "$TRAVIS_RUST_VERSION" != "1.42.0" ]; then
+  cargo test $CARGO_OPTIONS
+fi
 
 if [ "$TRAVIS_RUST_VERSION" = "nightly" ] && [ -z "$TRAVIS_TAG" ]; then
   zip -0 ccov.zip `find . \( -name "sailfish*.gc*" -o -name "test-*.gc*" \) -print`
