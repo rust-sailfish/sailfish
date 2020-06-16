@@ -134,9 +134,7 @@ macro_rules! render_int {
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     use super::integer::Integer;
 
-                    if Self::MAX_LEN > b.capacity() - b.len() {
-                        b.reserve(Self::MAX_LEN);
-                    }
+                    b.reserve(Self::MAX_LEN);
 
                     unsafe {
                         let ptr = b.as_mut_ptr().add(b.len());

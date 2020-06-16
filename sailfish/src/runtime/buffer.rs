@@ -84,14 +84,10 @@ impl Buffer {
         self.len == 0
     }
 
-    #[inline(never)]
+    #[inline]
     pub fn reserve(&mut self, size: usize) {
         if size > self.capacity - self.len {
-            unsafe {
-                let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
-                self.realloc(new_capacity);
-                self.capacity = new_capacity;
-            }
+            self.reserve_internal(size);
         }
     }
 
@@ -110,7 +106,7 @@ impl Buffer {
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
         if size > self.capacity - self.len {
-            self.reserve(size);
+            self.reserve_internal(size);
         }
         unsafe {
             let p = self.data.add(self.len);
@@ -123,6 +119,15 @@ impl Buffer {
     pub fn push(&mut self, data: char) {
         let mut buf = [0u8; 4];
         self.push_str(data.encode_utf8(&mut buf));
+    }
+
+    #[inline(never)]
+    fn reserve_internal(&mut self, size: usize) {
+        unsafe {
+            let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
+            self.realloc(new_capacity);
+            self.capacity = new_capacity;
+        }
     }
 
     unsafe fn realloc(&mut self, cap: usize) {
