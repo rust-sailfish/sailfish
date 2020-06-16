@@ -13,6 +13,7 @@ pub mod sailfish;
 pub mod std_write;
 pub mod tera;
 pub mod yarte_bench;
+pub mod yarte_bytes;
 pub mod yarte_fixed;
 
 include!(concat!(env!("OUT_DIR"), "/templates.rs"));

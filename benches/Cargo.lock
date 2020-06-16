@@ -169,9 +169,9 @@ checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
 
 [[package]]
 name = "base64"
-version = "0.12.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53d1ccbaf7d9ec9537465a97bf19edc1a4e158ecb49fc16178202238c569cc42"
+checksum = "e223af0dc48c96d4f8342ec01a4974f139df863896b316681efd36742f22cc67"
 
 [[package]]
 name = "beef"
@@ -286,6 +286,12 @@ name = "byteorder"
 version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
+
+[[package]]
+name = "bytes"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "130aac562c0dd69c56b3b1cc8ffd2e17be31d0b6c25b61c96b76231aa23e39e1"
 
 [[package]]
 name = "cast"
@@ -835,7 +841,7 @@ dependencies = [
 [[package]]
 name = "handlebars"
 version = "3.1.1-alpha.0"
-source = "git+https://github.com/sunng87/handlebars-rust#87b25985c4cd1a7babc78ccf28a592a44474c133"
+source = "git+https://github.com/sunng87/handlebars-rust#3a5e50b24e471a1ea49c7a33dcfc89f68db385c4"
 dependencies = [
  "log",
  "pest",
@@ -1362,7 +1368,7 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b336d94e8e4ce29bf15bba393164629764744c567e8ad306cc1fdd0119967fd"
 dependencies = [
- "base64 0.12.1",
+ "base64 0.12.2",
  "chrono",
  "indexmap",
  "line-wrap",
@@ -1562,10 +1568,11 @@ dependencies = [
 
 [[package]]
 name = "rayon"
-version = "1.3.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db6ce3297f9c85e16621bb8cca38a06779ffc31bb8184e1be4bed2be4678a098"
+checksum = "62f02856753d04e03e26929f820d0a0a337ebe71f849801eea335d464b349080"
 dependencies = [
+ "autocfg",
  "crossbeam-deque",
  "either",
  "rayon-core",
@@ -1573,9 +1580,9 @@ dependencies = [
 
 [[package]]
 name = "rayon-core"
-version = "1.7.0"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08a89b46efaf957e52b18062fb2f4660f8b8a4dde1807ca002690868ef2c85a9"
+checksum = "e92e15d89083484e11353891f1af602cc661426deb9564c298b270c726973280"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-queue",
@@ -1642,7 +1649,7 @@ name = "ructe"
 version = "0.11.5-PRE"
 source = "git+https://github.com/kaj/ructe#0d8ffc1a4e920fc591f19c7fcc126825c3da8745"
 dependencies = [
- "base64 0.12.1",
+ "base64 0.12.2",
  "bytecount",
  "itertools 0.9.0",
  "md5",
@@ -2323,8 +2330,9 @@ dependencies = [
 [[package]]
 name = "yarte"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#7210239d274aced48e8f7c3466058784202eb941"
+source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
 dependencies = [
+ "bytes",
  "yarte_derive",
  "yarte_helpers",
 ]
@@ -2332,7 +2340,7 @@ dependencies = [
 [[package]]
 name = "yarte_codegen"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#7210239d274aced48e8f7c3466058784202eb941"
+source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.7",
@@ -2344,7 +2352,7 @@ dependencies = [
 [[package]]
 name = "yarte_derive"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#7210239d274aced48e8f7c3466058784202eb941"
+source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
 dependencies = [
  "prettyprint",
  "proc-macro2 1.0.18",
@@ -2361,7 +2369,7 @@ dependencies = [
 [[package]]
 name = "yarte_helpers"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#7210239d274aced48e8f7c3466058784202eb941"
+source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
 dependencies = [
  "dtoa",
  "itoa",
@@ -2373,7 +2381,7 @@ dependencies = [
 [[package]]
 name = "yarte_hir"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#7210239d274aced48e8f7c3466058784202eb941"
+source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
 dependencies = [
  "derive_more",
  "proc-macro2 1.0.18",
@@ -2388,7 +2396,7 @@ dependencies = [
 [[package]]
 name = "yarte_parser"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#7210239d274aced48e8f7c3466058784202eb941"
+source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
 dependencies = [
  "annotate-snippets",
  "derive_more",

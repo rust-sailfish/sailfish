@@ -1,8 +1,8 @@
-use criterion::{criterion_group, criterion_main, Criterion};
 use benches::{
     askama_bench, fomat, handlebars, horrorshow_bench, liquid, markup_bench, maud_bench,
-    ramhorns, ructe, sailfish, std_write, tera, yarte_bench, yarte_fixed,
+    ramhorns, ructe, sailfish, std_write, tera, yarte_bench, yarte_bytes, yarte_fixed,
 };
+use criterion::{criterion_group, criterion_main, Criterion};
 
 fn big_table(c: &mut Criterion) {
     let mut g = c.benchmark_group("Big table");
@@ -18,7 +18,8 @@ fn big_table(c: &mut Criterion) {
     g.bench_function("Sailfish", |b| sailfish::big_table(b, &100));
     g.bench_function("Tera", |b| tera::big_table(b, &100));
     g.bench_function("Yarte", |b| yarte_bench::big_table(b, &100));
-    g.bench_function("Yarte Fixed", |b| yarte_fixed::big_table(b, &100));
+    g.bench_function("Yarte Send", |b| yarte_bytes::big_table(b, &100));
+    g.bench_function("Yarte ?Send", |b| yarte_fixed::big_table(b, &100));
     g.bench_function("write", |b| std_write::big_table(b, &100));
     g.finish();
 }
@@ -37,7 +38,8 @@ fn teams(c: &mut Criterion) {
     g.bench_function("Sailfish", |b| sailfish::teams(b));
     g.bench_function("Tera", |b| tera::teams(b, &0));
     g.bench_function("Yarte", |b| yarte_bench::teams(b));
-    g.bench_function("Yarte Fixed", |b| yarte_fixed::teams(b));
+    g.bench_function("Yarte Send", |b| yarte_bytes::teams(b));
+    g.bench_function("Yarte ?Send", |b| yarte_fixed::teams(b));
     g.bench_function("write", |b| std_write::teams(b, &0));
     g.finish();
 }
