@@ -25,7 +25,7 @@ default = ["config"]
 config = ["sailfish-compiler/config"]
 
 [dependencies]
-proc-macro2 = "1.0.17"
+proc-macro2 = "1.0.11"
 
 [dependencies.sailfish-compiler]
 path = "../sailfish-compiler"
