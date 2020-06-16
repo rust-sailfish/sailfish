@@ -13,7 +13,7 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     }
     let t = BigTable { table };
     b.iter(|| {
-        black_box(t.call(&mut [MaybeUninit::uninit(); 109915]).unwrap());
+        black_box(unsafe { t.call(&mut [MaybeUninit::uninit(); 109915]) }.unwrap());
     });
 }
 
@@ -47,7 +47,7 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
         ],
     };
     b.iter(|| {
-        black_box(t.call(&mut [MaybeUninit::uninit(); 239]).unwrap());
+        black_box(unsafe { t.call(&mut [MaybeUninit::uninit(); 239]) }.unwrap());
     });
 }
 
