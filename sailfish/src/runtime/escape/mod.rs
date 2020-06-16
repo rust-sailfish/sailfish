@@ -1,6 +1,6 @@
 //! HTML escaping
 //!
-//! By default sailfish replaces the characters `&"<>` with the equivalent html.
+//! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
 mod avx2;
 mod fallback;
