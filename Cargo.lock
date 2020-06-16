@@ -430,16 +430,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "examples"
-version = "0.1.0"
-dependencies = [
- "actix-rt 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "sailfish 0.1.0",
- "sailfish-macros 0.1.0",
-]
-
-[[package]]
 name = "failure"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1065,6 +1055,16 @@ dependencies = [
  "quote 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 1.0.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "yaml-rust 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "sailfish-examples"
+version = "0.1.0"
+dependencies = [
+ "actix-rt 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sailfish 0.1.0",
+ "sailfish-macros 0.1.0",
 ]
 
 [[package]]
