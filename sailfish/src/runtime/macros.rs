@@ -2,7 +2,7 @@
 #[doc(hidden)]
 macro_rules! render {
     ($ctx:ident, $value:expr) => {
-        (&($value))._sailfish_render_internal(&mut $ctx.buf)?
+        (&($value))._sf_r_internal(&mut $ctx.buf)?
     };
 }
 
@@ -10,7 +10,7 @@ macro_rules! render {
 #[doc(hidden)]
 macro_rules! render_escaped {
     ($ctx:ident, $value:expr) => {
-        (&($value))._sailfish_render_escaped_internal(&mut $ctx.buf)?
+        (&($value))._sf_re_internal(&mut $ctx.buf)?
     };
 }
 
