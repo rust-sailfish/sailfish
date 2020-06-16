@@ -1,6 +1,4 @@
-use std::mem::MaybeUninit;
-
-use yarte::TemplateFixed;
+use yarte::TemplateBytes;
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     let mut table = Vec::with_capacity(*size);
@@ -11,24 +9,20 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
         }
         table.push(inner);
     }
-    let ctx = BigTable { table };
+    let t = BigTable { table };
     b.iter(|| {
-        unsafe {
-            let mut buf: [u8; 109915] = MaybeUninit::uninit().assume_init();
-            let b = ctx.call(&mut buf).unwrap();
-            let _ = &buf[..b];
-        }
+        t.call(109915).unwrap()
     });
 }
 
-#[derive(TemplateFixed)]
-#[template(path = "big-table.hbs")]
+#[derive(TemplateBytes)]
+#[template(path = "big-table")]
 struct BigTable {
     table: Vec<Vec<usize>>,
 }
 
 pub fn teams(b: &mut criterion::Bencher<'_>) {
-    let teams = Teams {
+    let t = Teams {
         year: 2015,
         teams: vec![
             Team {
@@ -51,16 +45,12 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
         ],
     };
     b.iter(|| {
-        unsafe {
-            let mut buf: [u8; 239] = MaybeUninit::uninit().assume_init();
-            let b = teams.call(&mut buf).unwrap();
-            let _ = &buf[..b];
-        }
+        t.call(239).unwrap()
     });
 }
 
-#[derive(TemplateFixed)]
-#[template(path = "teams.hbs")]
+#[derive(TemplateBytes)]
+#[template(path = "teams")]
 struct Teams {
     year: u16,
     teams: Vec<Team>,
