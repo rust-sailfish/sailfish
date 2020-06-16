@@ -16,7 +16,7 @@ matrix:
 
     # minimum supported version
     - os: linux
-      rust: 1.42
+      rust: 1.42.0
 
     - os: osx
       rust: stable
