@@ -1,4 +1,6 @@
-use yarte::TemplateBytes;
+use criterion::black_box;
+use std::mem::MaybeUninit;
+use yarte::TemplateFixed;
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     let mut table = Vec::with_capacity(*size);
@@ -11,11 +13,11 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     }
     let t = BigTable { table };
     b.iter(|| {
-        t.call(109915).unwrap()
+        black_box(t.call(&mut [MaybeUninit::uninit(); 109915]).unwrap());
     });
 }
 
-#[derive(TemplateBytes)]
+#[derive(TemplateFixed)]
 #[template(path = "big-table")]
 struct BigTable {
     table: Vec<Vec<usize>>,
@@ -45,11 +47,11 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
         ],
     };
     b.iter(|| {
-        t.call(239).unwrap()
+        black_box(t.call(&mut [MaybeUninit::uninit(); 239]).unwrap());
     });
 }
 
-#[derive(TemplateBytes)]
+#[derive(TemplateFixed)]
 #[template(path = "teams")]
 struct Teams {
     year: u16,

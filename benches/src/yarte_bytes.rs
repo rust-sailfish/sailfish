@@ -1,5 +1,4 @@
-use sailfish::TemplateOnce;
-use sailfish_macros::TemplateOnce;
+use yarte::TemplateBytes;
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     let mut table = Vec::with_capacity(*size);
@@ -10,14 +9,18 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
         }
         table.push(inner);
     }
-    b.iter(|| {
-        let ctx = BigTable { table: &table };
-        ctx.render_once().unwrap()
-    });
+    let t = BigTable { table };
+    b.iter(|| t.call(109915).unwrap());
+}
+
+#[derive(TemplateBytes)]
+#[template(path = "big-table")]
+struct BigTable {
+    table: Vec<Vec<usize>>,
 }
 
 pub fn teams(b: &mut criterion::Bencher<'_>) {
-    let teams = Teams {
+    let t = Teams {
         year: 2015,
         teams: vec![
             Team {
@@ -39,30 +42,11 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
             },
         ],
     };
-    b.iter(|| {
-        let teams = TeamsTemplate {
-            year: teams.year,
-            teams: &teams.teams,
-        };
-        teams.render_once().unwrap()
-    });
+    b.iter(|| t.call(239).unwrap());
 }
 
-#[derive(TemplateOnce)]
-#[template(path = "big-table.stpl")]
-#[template(rm_whitespace = true)]
-struct BigTable<'a> {
-    table: &'a [Vec<usize>],
-}
-
-#[derive(TemplateOnce)]
-#[template(path = "teams.stpl")]
-#[template(rm_whitespace = true)]
-struct TeamsTemplate<'a> {
-    year: u16,
-    teams: &'a [Team],
-}
-
+#[derive(TemplateBytes)]
+#[template(path = "teams")]
 struct Teams {
     year: u16,
     teams: Vec<Team>,
