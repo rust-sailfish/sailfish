@@ -1,5 +1,5 @@
 [package]
-name = "examples"
+name = "sailfish-examples"
 version = "0.1.0"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 edition = "2018"
