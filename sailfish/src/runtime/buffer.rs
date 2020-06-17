@@ -135,6 +135,7 @@ impl Buffer {
             let new_layout = Layout::from_size_align_unchecked(cap, 1);
             self.data = alloc(new_layout);
         } else {
+            assert!(cap <= std::usize::MAX / 2, "capacity is too large");
             let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
             self.data = realloc(self.data, old_layout, cap);
         }
