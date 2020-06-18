@@ -30,8 +30,8 @@ Dependencies:
 
 ```toml
 [dependencies]
-sailfish = "0.1.0"
-sailfish-macros = "0.1.0"
+sailfish = "0.1.1"
+sailfish-macros = "0.1.1"
 ```
 
 Template file (templates/hello.stpl):
