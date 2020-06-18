@@ -41,8 +41,15 @@ pub mod runtime;
 pub use runtime::{RenderError, RenderResult};
 
 /// Template that can be rendered with consuming itself.
-pub trait TemplateOnce {
-    fn render_once(self) -> runtime::RenderResult;
+pub trait TemplateOnce: Sized {
+    #[inline]
+    fn render_once(self) -> runtime::RenderResult {
+        let mut buf = String::new();
+        self.render_once_to_string(&mut buf)?;
+        Ok(buf)
+    }
+
+    fn render_once_to_string(self, buf: &mut String) -> Result<(), RenderError>;
 }
 
 /// WIP
