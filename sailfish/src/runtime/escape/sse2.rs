@@ -72,7 +72,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
 }
 
 #[target_feature(enable = "sse2")]
-#[inline]
+#[cfg_attr(feature = "perf-inline", inline)]
 pub unsafe fn escape_aligned(
     buffer: &mut Buffer,
     mut start_ptr: *const u8,

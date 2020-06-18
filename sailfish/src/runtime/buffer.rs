@@ -38,7 +38,7 @@ impl Buffer {
         }
     }
 
-    #[inline]
+    #[cfg_attr(feature = "perf-inline", inline)]
     pub fn with_capacity(n: usize) -> Buffer {
         unsafe {
             if n == 0 {
@@ -133,7 +133,7 @@ impl Buffer {
         self.push_str(data.encode_utf8(&mut buf));
     }
 
-    #[inline]
+    #[cfg_attr(feature = "perf-inline", inline)]
     fn reserve_internal(&mut self, size: usize) {
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
@@ -142,7 +142,7 @@ impl Buffer {
         }
     }
 
-    #[inline]
+    #[cfg_attr(feature = "perf-inline", inline)]
     unsafe fn realloc(&self, cap: usize) -> *mut u8 {
         let data = if unlikely!(self.capacity == 0) {
             let new_layout = Layout::from_size_align_unchecked(cap, 1);

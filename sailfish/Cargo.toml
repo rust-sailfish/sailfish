@@ -12,6 +12,10 @@ license = "MIT"
 workspace = ".."
 edition = "2018"
 
+[features]
+default = ["perf-inline"]
+perf-inline = []
+
 [dependencies]
 ryu = "1.0.4"
 
