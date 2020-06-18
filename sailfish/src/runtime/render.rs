@@ -156,29 +156,61 @@ macro_rules! render_int {
 
 render_int!(u8, u16, u32, u64, i8, i16, i32, i64, usize, isize);
 
-macro_rules! render_float {
-    ($($float:ty),*) => {
-        $(
-            impl Render for $float {
-                #[inline]
-                fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    let mut buffer = ryu::Buffer::new();
-                    let s = buffer.format(*self);
-                    b.push_str(s);
-                    Ok(())
-                }
-
-                #[inline]
-                fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    // escape string
-                    self.render(b)
-                }
+impl Render for f32 {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        if self.is_finite() {
+            unsafe {
+                b.reserve(16);
+                let ptr = b.as_mut_ptr().add(b.len());
+                let l = ryu::raw::format32(*self, ptr);
+                b.set_len(b.len() + l);
             }
-        )*
+        } else if self.is_nan() {
+            b.push_str("NaN");
+        } else if *self > 0.0 {
+            b.push_str("inf");
+        } else {
+            b.push_str("-inf");
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        // escape string
+        self.render(b)
     }
 }
 
-render_float!(f32, f64);
+impl Render for f64 {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        if self.is_finite() {
+            unsafe {
+                b.reserve(24);
+                let ptr = b.as_mut_ptr().add(b.len());
+                let l = ryu::raw::format64(*self, ptr);
+                b.set_len(b.len() + l);
+            }
+        } else if self.is_nan() {
+            b.push_str("NaN");
+        } else if *self > 0.0 {
+            b.push_str("inf");
+        } else {
+            b.push_str("-inf");
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        // escape string
+        self.render(b)
+    }
+}
 
 // private trait for avoiding method name collision in render* macros
 #[doc(hidden)]
