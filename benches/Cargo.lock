@@ -590,9 +590,9 @@ dependencies = [
 
 [[package]]
 name = "derive_more"
-version = "0.99.7"
+version = "0.99.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2127768764f1556535c01b5326ef94bd60ff08dcfbdc544d53e69ed155610f5d"
+checksum = "bc655351f820d774679da6cdc23355a93de496867d8203496675162e17b1d671"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.7",
@@ -660,9 +660,9 @@ checksum = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
 
 [[package]]
 name = "dtoa"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4358a9e11b9a09cf52383b451b49a169e8d797b68aa02301ff586d70d9661ea3"
+checksum = "134951f4028bdadb9b84baf4232681efbf277da25144b9b0ad65df75946c422b"
 
 [[package]]
 name = "either"
@@ -841,7 +841,7 @@ dependencies = [
 [[package]]
 name = "handlebars"
 version = "3.1.1-alpha.0"
-source = "git+https://github.com/sunng87/handlebars-rust#3a5e50b24e471a1ea49c7a33dcfc89f68db385c4"
+source = "git+https://github.com/sunng87/handlebars-rust#5baca53242721339075edd5c70685a9c37d5dff8"
 dependencies = [
  "log",
  "pest",
@@ -935,9 +935,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "0.4.5"
+version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8b7a7c0c47db5545ed3fef7468ee7bb5b74691498139e4b3f6a20685dc6dd8e"
+checksum = "dc6f3ad7b9d11a0c00842ff8de1b60ee58661048eb8049ed33c73594f359d7e6"
 
 [[package]]
 name = "js-sys"
@@ -1697,14 +1697,15 @@ checksum = "ef703b7cb59335eae2eb93ceb664c0eb7ea6bf567079d843e09420219668e072"
 
 [[package]]
 name = "sailfish"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ryu",
+ "version_check 0.9.2",
 ]
 
 [[package]]
 name = "sailfish-compiler"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "memchr",
  "proc-macro2 1.0.18",
@@ -1715,7 +1716,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-macros"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2 1.0.18",
  "sailfish-compiler",
@@ -1822,12 +1823,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "smallvec"
-version = "1.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7cb5678e1615754284ec264d9bb5b4c27d2018577fd90ac0ceb578591ed5ee4"
-
-[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1905,7 +1900,7 @@ dependencies = [
 [[package]]
 name = "tera"
 version = "1.3.1"
-source = "git+https://github.com/Keats/tera#1fda20f7da3b9aa59faabf1efaf90709b2a14aac"
+source = "git+https://github.com/Keats/tera#5dc12afc4e0e506183898fc56d3bdc9ce6a0b6d7"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -1979,6 +1974,12 @@ dependencies = [
  "serde",
  "serde_json",
 ]
+
+[[package]]
+name = "tinyvec"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "53953d2d3a5ad81d9f844a32f14ebb121f50b650cd59d0ee2a07cf13c617efed"
 
 [[package]]
 name = "toml"
@@ -2084,11 +2085,11 @@ dependencies = [
 
 [[package]]
 name = "unicode-normalization"
-version = "0.1.12"
+version = "0.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5479532badd04e128284890390c1e876ef7a993d0570b3597ae43dfa1d59afa4"
+checksum = "6fb19cf769fa8c6a80a162df694621ebeb4dafb606470b2b2fce0be40a98a977"
 dependencies = [
- "smallvec",
+ "tinyvec",
 ]
 
 [[package]]
@@ -2134,9 +2135,9 @@ checksum = "b4ae116fef2b7fea257ed6440d3cfcff7f190865f170cdad00bb6465bf18ecba"
 
 [[package]]
 name = "v_escape"
-version = "0.9.4"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b90e2c1bf53e87c761e39031b5eb6cc05c66dc691f011075b3514593e846600"
+checksum = "7f19b80184ed94715a263c37cb86453358d31550c1d181ab9a276f5085332750"
 dependencies = [
  "v_escape_derive",
 ]
@@ -2165,9 +2166,9 @@ dependencies = [
 
 [[package]]
 name = "v_htmlescape"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5079f410fbdd6b7aafe03012fb0c0c3e991276e724db25e23c6b1c2f3d99965e"
+checksum = "9dfa3371df45d2cc6ab2c97c2996e6c2a11169db7e0e847d75511634fbc1318e"
 dependencies = [
  "cfg-if",
  "v_escape",
@@ -2330,7 +2331,7 @@ dependencies = [
 [[package]]
 name = "yarte"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
+source = "git+https://github.com/botika/yarte#7f60ea23a13fa89031d9a15cc83c1cc5526b4f85"
 dependencies = [
  "bytes",
  "yarte_derive",
@@ -2340,7 +2341,7 @@ dependencies = [
 [[package]]
 name = "yarte_codegen"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
+source = "git+https://github.com/botika/yarte#7f60ea23a13fa89031d9a15cc83c1cc5526b4f85"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.7",
@@ -2352,7 +2353,7 @@ dependencies = [
 [[package]]
 name = "yarte_derive"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
+source = "git+https://github.com/botika/yarte#7f60ea23a13fa89031d9a15cc83c1cc5526b4f85"
 dependencies = [
  "prettyprint",
  "proc-macro2 1.0.18",
@@ -2369,10 +2370,11 @@ dependencies = [
 [[package]]
 name = "yarte_helpers"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
+source = "git+https://github.com/botika/yarte#7f60ea23a13fa89031d9a15cc83c1cc5526b4f85"
 dependencies = [
  "dtoa",
  "itoa",
+ "ryu",
  "serde",
  "toml",
  "v_htmlescape",
@@ -2381,7 +2383,7 @@ dependencies = [
 [[package]]
 name = "yarte_hir"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
+source = "git+https://github.com/botika/yarte#7f60ea23a13fa89031d9a15cc83c1cc5526b4f85"
 dependencies = [
  "derive_more",
  "proc-macro2 1.0.18",
@@ -2396,7 +2398,7 @@ dependencies = [
 [[package]]
 name = "yarte_parser"
 version = "0.10.0"
-source = "git+https://github.com/botika/yarte#dbd1a379fc333e995bfc2c055761fea48f566808"
+source = "git+https://github.com/botika/yarte#7f60ea23a13fa89031d9a15cc83c1cc5526b4f85"
 dependencies = [
  "annotate-snippets",
  "derive_more",
