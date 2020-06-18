@@ -1,5 +1,4 @@
-use sailfish::TemplateOnce;
-use sailfish_macros::TemplateOnce;
+use ramhorns::{Template, Content};
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     let mut table = Vec::with_capacity(*size);
@@ -10,65 +9,81 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
         }
         table.push(inner);
     }
+    let tpl = Template::new(SOURCE).unwrap();
+    let ctx = BigTable { table };
     b.iter(|| {
-        let ctx = BigTable { table: &table };
-        ctx.render_once().unwrap()
+        tpl.render(&ctx)
     });
 }
 
+#[derive(Content)]
+struct BigTable {
+    table: Vec<Vec<usize>>,
+}
+
+static SOURCE: &'static str = "<html>
+    {{#table}}
+        <tr>{{#.}}<td>{{.}}</td>{{/.}}</tr>
+    {{/table}}
+</html>";
+
 pub fn teams(b: &mut criterion::Bencher<'_>) {
+    let tpl = Template::new(TEAMS_TEMPLATE).unwrap();
     let teams = Teams {
         year: 2015,
         teams: vec![
             Team {
                 name: "Jiangsu".into(),
-
+                class: "champion".into(),
                 score: 43,
             },
             Team {
                 name: "Beijing".into(),
+                class: String::new(),
                 score: 27,
             },
             Team {
                 name: "Guangzhou".into(),
+                class: String::new(),
                 score: 22,
             },
             Team {
                 name: "Shandong".into(),
+                class: String::new(),
                 score: 12,
             },
         ],
     };
     b.iter(|| {
-        let teams = TeamsTemplate {
-            year: teams.year,
-            teams: &teams.teams,
-        };
-        teams.render_once().unwrap()
+        tpl.render(&teams)
     });
 }
 
-#[derive(TemplateOnce)]
-#[template(path = "big-table.stpl")]
-#[template(rm_whitespace = true)]
-struct BigTable<'a> {
-    table: &'a [Vec<usize>],
-}
-
-#[derive(TemplateOnce)]
-#[template(path = "teams.stpl")]
-#[template(rm_whitespace = true)]
-struct TeamsTemplate<'a> {
-    year: u16,
-    teams: &'a [Team],
-}
-
+#[derive(Content)]
 struct Teams {
     year: u16,
     teams: Vec<Team>,
 }
 
+#[derive(Content)]
 struct Team {
     name: String,
+    class: String,
     score: u8,
 }
+
+static TEAMS_TEMPLATE: &'static str = "<html>
+  <head>
+    <title>{{year}}</title>
+  </head>
+  <body>
+    <h1>CSL {{year}}</h1>
+    <ul>
+    {{#teams}}
+      <li class=\"{{class}}\">
+      <b>{{name}}</b>: {{score}}
+      </li>
+    {{/teams}}
+    </ul>
+  </body>
+</html>";

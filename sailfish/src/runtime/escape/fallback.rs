@@ -39,12 +39,12 @@ fn contains_key(x: usize) -> bool {
 }
 
 #[inline]
-pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
-    let len = bytes.len();
-    let mut start_ptr = bytes.as_ptr();
+pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+    let len = feed.len();
+    let mut start_ptr = feed.as_ptr();
     let end_ptr = start_ptr.add(len);
 
-    if bytes.len() < USIZE_BYTES {
+    if feed.len() < USIZE_BYTES {
         naive::escape(buffer, start_ptr, start_ptr, end_ptr);
         return;
     }

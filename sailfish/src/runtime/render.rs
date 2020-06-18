@@ -134,9 +134,7 @@ macro_rules! render_int {
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     use super::integer::Integer;
 
-                    if Self::MAX_LEN > b.capacity() - b.len() {
-                        b.reserve(Self::MAX_LEN);
-                    }
+                    b.reserve(Self::MAX_LEN);
 
                     unsafe {
                         let ptr = b.as_mut_ptr().add(b.len());
@@ -158,51 +156,77 @@ macro_rules! render_int {
 
 render_int!(u8, u16, u32, u64, i8, i16, i32, i64, usize, isize);
 
-macro_rules! render_float {
-    ($($float:ty),*) => {
-        $(
-            impl Render for $float {
-                #[inline]
-                fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    let mut buffer = ryu::Buffer::new();
-                    let s = buffer.format(*self);
-                    b.push_str(s);
-                    Ok(())
-                }
-
-                #[inline]
-                fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    // escape string
-                    self.render(b)
-                }
+impl Render for f32 {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        if self.is_finite() {
+            unsafe {
+                b.reserve(16);
+                let ptr = b.as_mut_ptr().add(b.len());
+                let l = ryu::raw::format32(*self, ptr);
+                b.set_len(b.len() + l);
             }
-        )*
+        } else if self.is_nan() {
+            b.push_str("NaN");
+        } else if *self > 0.0 {
+            b.push_str("inf");
+        } else {
+            b.push_str("-inf");
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        // escape string
+        self.render(b)
     }
 }
 
-render_float!(f32, f64);
+impl Render for f64 {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        if self.is_finite() {
+            unsafe {
+                b.reserve(24);
+                let ptr = b.as_mut_ptr().add(b.len());
+                let l = ryu::raw::format64(*self, ptr);
+                b.set_len(b.len() + l);
+            }
+        } else if self.is_nan() {
+            b.push_str("NaN");
+        } else if *self > 0.0 {
+            b.push_str("inf");
+        } else {
+            b.push_str("-inf");
+        }
+
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        // escape string
+        self.render(b)
+    }
+}
 
 // private trait for avoiding method name collision in render* macros
 #[doc(hidden)]
 pub trait RenderInternal {
-    fn _sailfish_render_internal(&self, b: &mut Buffer) -> Result<(), RenderError>;
-    fn _sailfish_render_escaped_internal(
-        &self,
-        b: &mut Buffer,
-    ) -> Result<(), RenderError>;
+    fn _sf_r_internal(&self, b: &mut Buffer) -> Result<(), RenderError>;
+    fn _sf_re_internal(&self, b: &mut Buffer) -> Result<(), RenderError>;
 }
 
 impl<T: Render + ?Sized> RenderInternal for T {
     #[inline]
-    fn _sailfish_render_internal(&self, b: &mut Buffer) -> Result<(), RenderError> {
+    fn _sf_r_internal(&self, b: &mut Buffer) -> Result<(), RenderError> {
         self.render(b)
     }
 
     #[inline]
-    fn _sailfish_render_escaped_internal(
-        &self,
-        b: &mut Buffer,
-    ) -> Result<(), RenderError> {
+    fn _sf_re_internal(&self, b: &mut Buffer) -> Result<(), RenderError> {
         self.render_escaped(b)
     }
 }
@@ -214,34 +238,34 @@ mod tests {
     #[test]
     fn receiver_coercion() {
         let mut b = Buffer::new();
-        (&1)._sailfish_render_internal(&mut b).unwrap();
-        (&&1)._sailfish_render_internal(&mut b).unwrap();
-        (&&&1)._sailfish_render_internal(&mut b).unwrap();
-        (&&&&1)._sailfish_render_internal(&mut b).unwrap();
+        (&1)._sf_r_internal(&mut b).unwrap();
+        (&&1)._sf_r_internal(&mut b).unwrap();
+        (&&&1)._sf_r_internal(&mut b).unwrap();
+        (&&&&1)._sf_r_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "1111");
         b.clear();
 
         let v = 2.0;
-        (&v)._sailfish_render_internal(&mut b).unwrap();
-        (&&v)._sailfish_render_internal(&mut b).unwrap();
-        (&&&v)._sailfish_render_internal(&mut b).unwrap();
-        (&&&&v)._sailfish_render_internal(&mut b).unwrap();
+        (&v)._sf_r_internal(&mut b).unwrap();
+        (&&v)._sf_r_internal(&mut b).unwrap();
+        (&&&v)._sf_r_internal(&mut b).unwrap();
+        (&&&&v)._sf_r_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "2.02.02.02.0");
         b.clear();
 
         let s = "apple";
-        (&*s)._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&s)._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&&s)._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&&&s)._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&&&&s)._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&*s)._sf_re_internal(&mut b).unwrap();
+        (&s)._sf_re_internal(&mut b).unwrap();
+        (&&s)._sf_re_internal(&mut b).unwrap();
+        (&&&s)._sf_re_internal(&mut b).unwrap();
+        (&&&&s)._sf_re_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "appleappleappleappleapple");
         b.clear();
 
-        (&'c')._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&&'<')._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&&&'&')._sailfish_render_escaped_internal(&mut b).unwrap();
-        (&&&&' ')._sailfish_render_escaped_internal(&mut b).unwrap();
+        (&'c')._sf_re_internal(&mut b).unwrap();
+        (&&'<')._sf_re_internal(&mut b).unwrap();
+        (&&&'&')._sf_re_internal(&mut b).unwrap();
+        (&&&&' ')._sf_re_internal(&mut b).unwrap();
         assert_eq!(b.as_str(), "c&lt;&amp; ");
         b.clear();
     }
@@ -252,18 +276,10 @@ mod tests {
         use std::rc::Rc;
 
         let mut b = Buffer::new();
-        (&String::from("a"))
-            ._sailfish_render_internal(&mut b)
-            .unwrap();
-        (&&PathBuf::from("b"))
-            ._sailfish_render_internal(&mut b)
-            .unwrap();
-        (&Rc::new(4u32))
-            ._sailfish_render_escaped_internal(&mut b)
-            .unwrap();
-        (&Rc::new(2.3f32))
-            ._sailfish_render_escaped_internal(&mut b)
-            .unwrap();
+        (&String::from("a"))._sf_r_internal(&mut b).unwrap();
+        (&&PathBuf::from("b"))._sf_r_internal(&mut b).unwrap();
+        (&Rc::new(4u32))._sf_re_internal(&mut b).unwrap();
+        (&Rc::new(2.3f32))._sf_re_internal(&mut b).unwrap();
 
         assert_eq!(b.as_str(), "ab42.3");
     }

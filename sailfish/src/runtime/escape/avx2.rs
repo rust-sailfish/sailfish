@@ -14,20 +14,20 @@ const VECTOR_BYTES: usize = std::mem::size_of::<__m256i>();
 const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;
 
 #[target_feature(enable = "avx2")]
-pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
-    let len = bytes.len();
+pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+    let len = feed.len();
 
     if len < 8 {
-        let start_ptr = bytes.as_ptr();
+        let start_ptr = feed.as_ptr();
         let end_ptr = start_ptr.add(len);
         naive::escape(buffer, start_ptr, start_ptr, end_ptr);
         return;
     } else if len < VECTOR_BYTES {
-        sse2::escape(buffer, bytes);
+        sse2::escape(feed, buffer);
         return;
     }
 
-    let mut start_ptr = bytes.as_ptr();
+    let mut start_ptr = feed.as_ptr();
     let end_ptr = start_ptr.add(len);
 
     let v_independent1 = _mm256_set1_epi8(5);

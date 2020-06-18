@@ -34,6 +34,7 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/icon.png"
 )]
+#![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
 
 pub mod runtime;
 

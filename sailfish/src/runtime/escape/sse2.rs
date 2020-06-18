@@ -15,16 +15,16 @@ const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;
 
 #[target_feature(enable = "sse2")]
 #[inline]
-pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
-    let len = bytes.len();
+pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+    let len = feed.len();
     if len < VECTOR_BYTES {
-        let start_ptr = bytes.as_ptr();
+        let start_ptr = feed.as_ptr();
         let end_ptr = start_ptr.add(len);
         naive::escape(buffer, start_ptr, start_ptr, end_ptr);
         return;
     }
 
-    let mut start_ptr = bytes.as_ptr();
+    let mut start_ptr = feed.as_ptr();
     let end_ptr = start_ptr.add(len);
 
     let v_independent1 = _mm_set1_epi8(5);
@@ -72,7 +72,7 @@ pub unsafe fn escape(buffer: &mut Buffer, bytes: &[u8]) {
 }
 
 #[target_feature(enable = "sse2")]
-#[inline]
+#[cfg_attr(feature = "perf-inline", inline)]
 pub unsafe fn escape_aligned(
     buffer: &mut Buffer,
     mut start_ptr: *const u8,

@@ -1,13 +1,18 @@
 //! HTML escaping
 //!
-//! By default sailfish replaces the characters `&"<>` with the equivalent html.
+//! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
 mod avx2;
 mod fallback;
 mod naive;
 mod sse2;
 
+use std::mem;
+use std::sync::atomic::{AtomicPtr, Ordering};
+
 use super::buffer::Buffer;
+
+type FnRaw = *mut ();
 
 static ESCAPE_LUT: [u8; 256] = [
     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
@@ -25,38 +30,37 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 5;
 
+static FN: AtomicPtr<()> = AtomicPtr::new(escape as FnRaw);
+
 #[cfg(target_feature = "avx2")]
-pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+pub fn escape(feed: &str, buf: &mut Buffer) {
     unsafe { avx2::escape(buf, feed.as_bytes()) }
 }
 
+/// default escape function
 #[cfg(not(target_feature = "avx2"))]
+pub fn escape(feed: &str, buf: &mut Buffer) {
+    let fun = if is_x86_feature_detected!("avx2") {
+        avx2::escape
+    } else if is_x86_feature_detected!("sse2") {
+        sse2::escape
+    } else {
+        fallback::escape
+    };
+
+    FN.store(fun as FnRaw, Ordering::Relaxed);
+    unsafe { fun(feed, buf) };
+}
+
+pub fn register_escape_fn(fun: fn(&str, &mut Buffer)) {
+    FN.store(fun as FnRaw, Ordering::Relaxed);
+}
+
+#[inline]
 pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
-    use std::mem;
-    use std::sync::atomic::{AtomicPtr, Ordering};
-
-    type FnRaw = *mut ();
-
-    static FN: AtomicPtr<()> = AtomicPtr::new(detect as FnRaw);
-
-    fn detect(buffer: &mut Buffer, bytes: &[u8]) {
-        let fun = if is_x86_feature_detected!("avx2") {
-            avx2::escape as FnRaw
-        } else if is_x86_feature_detected!("sse2") {
-            sse2::escape as FnRaw
-        } else {
-            fallback::escape as FnRaw
-        };
-
-        FN.store(fun as FnRaw, Ordering::Relaxed);
-        unsafe {
-            mem::transmute::<FnRaw, fn(&mut Buffer, &[u8])>(fun)(buffer, bytes);
-        }
-    }
-
     unsafe {
         let fun = FN.load(Ordering::Relaxed);
-        mem::transmute::<FnRaw, fn(&mut Buffer, &[u8])>(fun)(buf, feed.as_bytes());
+        mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
     }
 }
 
@@ -157,8 +161,8 @@ mod tests {
             buf3.clear();
 
             unsafe {
-                escape_to_buf(&*s, &mut buf1);
-                fallback::escape(&mut buf2, s.as_bytes());
+                escape_to_buf(s, &mut buf1);
+                fallback::escape(s, &mut buf2);
                 naive::escape(&mut buf3, s.as_ptr(), s.as_ptr(), s.as_ptr().add(s.len()));
             }
 

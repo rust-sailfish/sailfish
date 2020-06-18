@@ -245,7 +245,7 @@ mod tests {
         use super::Integer;
         let mut buf = Vec::with_capacity(i8::MAX_LEN);
 
-        for n in i8::MIN..=i8::MAX {
+        for n in std::i8::MIN..=std::i8::MAX {
             unsafe {
                 let l = n.write_to(buf.as_mut_ptr());
                 buf.set_len(l);
@@ -350,8 +350,8 @@ mod tests {
         18446744073709551615
     );
 
-    make_test!(test_i8, i8, i8::MIN, i8::MAX);
-    make_test!(test_i16, i16, i16::MIN, i16::MAX);
-    make_test!(test_i32, i32, i32::MIN, i32::MAX);
-    make_test!(test_i64, i64, i64::MIN, i64::MAX);
+    make_test!(test_i8, i8, std::i8::MIN, std::i8::MAX);
+    make_test!(test_i16, i16, std::i16::MIN, std::i16::MAX);
+    make_test!(test_i32, i32, std::i32::MIN, std::i32::MAX);
+    make_test!(test_i64, i64, std::i64::MIN, std::i64::MAX);
 }

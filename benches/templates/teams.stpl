@@ -5,7 +5,7 @@
   <body>
     <h1>CSL <%= year %></h1>
     <ul>
-      <% for (i, team) in teams.iter().enumerate() { %><li class="<% if i == 0 { %>champion<% } %>"><b><%- team.name %></b>: <%= team.score %></li><% } %>
+      <% for (i, team) in teams.iter().enumerate() { %><li class="<% if i == 0 { %>champion<% } %>"><b><%= team.name %></b>: <%= team.score %></li><% } %>
     </ul>
   </body>
 </html>
