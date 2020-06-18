@@ -4,6 +4,20 @@ use std::mem::{align_of, ManuallyDrop};
 use std::ops::{Add, AddAssign};
 use std::ptr;
 
+#[cfg(sailfish_nightly)]
+macro_rules! unlikely {
+    ($val:expr) => {
+        std::intrinsics::unlikely($val)
+    };
+}
+
+#[cfg(not(sailfish_nightly))]
+macro_rules! unlikely {
+    ($val:expr) => {
+        $val
+    };
+}
+
 /// Buffer for rendered contents
 ///
 /// This struct is quite simular to `String`, but some methods are
@@ -86,7 +100,7 @@ impl Buffer {
 
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if size > self.capacity - self.len {
+        if unlikely!(self.len + size > self.capacity) {
             self.reserve_internal(size);
         }
     }
@@ -105,9 +119,7 @@ impl Buffer {
     #[inline]
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
-        if size > self.capacity - self.len {
-            self.reserve_internal(size);
-        }
+        self.reserve(size);
         unsafe {
             let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
@@ -121,28 +133,31 @@ impl Buffer {
         self.push_str(data.encode_utf8(&mut buf));
     }
 
-    #[inline(never)]
+    #[inline]
     fn reserve_internal(&mut self, size: usize) {
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
-            self.realloc(new_capacity);
+            self.data = self.realloc(new_capacity);
             self.capacity = new_capacity;
         }
     }
 
-    unsafe fn realloc(&mut self, cap: usize) {
-        if self.capacity == 0 {
+    #[inline]
+    unsafe fn realloc(&self, cap: usize) -> *mut u8 {
+        let data = if unlikely!(self.capacity == 0) {
             let new_layout = Layout::from_size_align_unchecked(cap, 1);
-            self.data = alloc(new_layout);
+            alloc(new_layout)
         } else {
-            assert!(cap <= std::usize::MAX / 2, "capacity is too large");
+            debug_assert!(cap <= std::usize::MAX / 2, "capacity is too large");
             let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
-            self.data = realloc(self.data, old_layout, cap);
-        }
+            realloc(self.data, old_layout, cap)
+        };
 
-        if self.data.is_null() {
+        if data.is_null() {
             handle_alloc_error(Layout::from_size_align_unchecked(cap, 1));
         }
+
+        data
     }
 }
 
