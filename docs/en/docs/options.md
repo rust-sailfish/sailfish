@@ -47,7 +47,7 @@ If a key is specified in both configuration file and derive options, then the va
 
 ### Configuration file format
 
-Configuration files are written in the YAML 1.2 format. The default configuration is described below.
+Configuration files are written in the YAML 1.2 format. Here is the default configuration.
 
 ```
 template_dir: "templates"

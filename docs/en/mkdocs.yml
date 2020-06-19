@@ -27,6 +27,7 @@ theme:
 
 # Extensions
 markdown_extensions:
+  - admonition
   - codehilite
   - footnotes
 
@@ -47,3 +48,5 @@ nav:
   - 'Configuration': 'options.md'
   - 'Syntax':
     - 'Overview': 'syntax/overview.md'
+    - 'Tags': 'syntax/tags.md'
+    - 'Includes': 'syntax/includes.md'

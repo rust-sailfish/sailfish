@@ -40,9 +40,9 @@ Define the template struct to be rendered:
 ```rust
 #[derive(TemplateOnce)]  // automatically implement `TemplateOnce` trait
 #[template(path = "hello.stpl")]  // specify the path to template
-struct HelloTemplate<'a> {
+struct HelloTemplate {
     // data to be passed to the template
-    messages: &'a [String],
+    messages: Vec<String>,
 }
 ```
 
@@ -51,7 +51,7 @@ And render the data with `render_once()` method.
 ```rust
 fn main() {
     let ctx = HelloTemplate {
-        messages: &[String::from("foo"), String::from("bar")];
+        messages: vec![String::from("foo"), String::from("bar")];
     }
 
     // Now render templates with given data
