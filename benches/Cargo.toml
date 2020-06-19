@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 askama = { git = "https://github.com/djc/askama" }
-criterion = "0.3"
+criterion = { version = "0.3", features = ["real_blackbox"] }
 fomat-macros = { git = "https://github.com/krdln/fomat-macros" }
 handlebars = { git = "https://github.com/sunng87/handlebars-rust" }
 horrorshow = { git = "https://github.com/Stebalien/horrorshow-rs" }
