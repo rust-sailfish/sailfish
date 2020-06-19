@@ -37,10 +37,11 @@ sailfish-macros = "0.1.1"
 Template file (templates/hello.stpl):
 
 ```erb
-<DOCTYPE! html>
 <html>
   <body>
-    <%= content %>
+    <% for msg in &messages { %>
+      <div><%= msg %></div>
+    <% } %>
   </body>
 </html>
 ```
@@ -55,12 +56,15 @@ use sailfish::TemplateOnce;
 
 #[derive(TemplateOnce)]
 #[template(path = "hello.stpl")]
-struct Hello {
-    content: String
+struct HelloTemplate {
+    messages: Vec<String>
 }
 
 fn main() {
-    println!("{}", Hello { content: String::from("Hello, world!") }.render_once().unwrap());
+    let ctx = HelloTemplate {
+        messages: vec![String::from("foo"), String::from("bar")]
+    }
+    println!("{}", ctx.render_once().unwrap());
 }
 ```
 
@@ -71,7 +75,6 @@ You can find more examples in [examples](./examples) directory.
 - `Template` trait ([RFC](https://github.com/Kogia-sima/sailfish/issues/3))
 - Template inheritance (block, partials, etc.)
 - Whitespace suppressing
-- Filters ([RFC](https://github.com/Kogia-sima/sailfish/issues/2))
 - Dynamic template compilation ([RFC](https://github.com/Kogia-sima/sailfish/issues/1))
 - `format_templates!(fmt, args..)` macro
 
@@ -85,7 +88,9 @@ You can find more examples in [examples](./examples) directory.
 
 Contributions, issues and feature requests are welcome!
 
-Feel free to check [issues page](https://github.com/Kogia-sima/sailfish/issues). 
+Since sailfish is an immature library, there are many [planned features](https://github.com/Kogia-sima/sailfish/labels/Type%3A%20RFC) that is on a stage of RFC. Please leave a comment if you have an idea about its design!
+
+Also I welcome any pull requests to improve sailfish! Find issue with [Status: PR Welcome](https://github.com/Kogia-sima/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+PR+Welcome%22) label, and [let's create a new pull request](https://github.com/Kogia-sima/sailfish/pulls)!
 
 ## Show your support
 
