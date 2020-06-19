@@ -42,6 +42,10 @@ pub use runtime::{RenderError, RenderResult};
 
 /// Template that can be rendered with consuming itself.
 pub trait TemplateOnce: Sized {
+    /// Render the template and return the rendering result as `RenderResult`
+    ///
+    /// This method never returns `Err`, unless you manually implement `Render` trait
+    /// for custom type and return `Err` inside it.
     #[inline]
     fn render_once(self) -> runtime::RenderResult {
         let mut buf = String::new();
@@ -49,6 +53,7 @@ pub trait TemplateOnce: Sized {
         Ok(buf)
     }
 
+    /// Render the template and append the result to `buf`.
     fn render_once_to_string(self, buf: &mut String) -> Result<(), RenderError>;
 }
 

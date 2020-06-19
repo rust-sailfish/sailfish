@@ -110,6 +110,9 @@ impl Buffer {
         self.len = 0;
     }
 
+    /// Converts a `Buffer` into a `String`.
+    ///
+    /// This consumes the `Buffer`, so we do not need to copy its contents.
     #[inline]
     pub fn into_string(self) -> String {
         let buf = ManuallyDrop::new(self);
