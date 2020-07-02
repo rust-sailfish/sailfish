@@ -19,7 +19,7 @@ Simple, small, and extremely fast template engine for Rust
 - Relatively small number of dependencies (<15 crates in total)
 - Extremely fast (See [benchmarks](./benches/README.md))
 - Better error message
-- Template rendering is always type-safe because templates are statically compiled.
+- Template rendering NEVER fails unless you explicitly return error.
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
 - Automatically re-compile sources when template file is updated.
 - Works on Rust 1.42 or later
@@ -80,7 +80,7 @@ You can find more examples in [examples](./examples) directory.
 
 ## 👤 Author
 
-:jp: **Ryohei Machida**
+🇯🇵 **Ryohei Machida**
 
 * Github: [@Kogia-sima](https://github.com/Kogia-sima)
 
@@ -95,7 +95,6 @@ Also I welcome any pull requests to improve sailfish! Find issue with [Status: P
 ## Show your support
 
 Give a ⭐️ if this project helped you!
-
 
 ## 📝 License
 
