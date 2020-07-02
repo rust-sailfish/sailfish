@@ -33,26 +33,13 @@ const ESCAPED_LEN: usize = 5;
 static FN: AtomicPtr<()> = AtomicPtr::new(escape as FnRaw);
 
 #[cfg(target_feature = "avx2")]
-pub fn escape(feed: &str, buf: &mut Buffer) {
-    unsafe { avx2::escape(buf, feed.as_bytes()) }
+#[inline]
+fn escape(feed: &str, buf: &mut Buffer) {
+    unsafe { avx2::escape(feed, buf) }
 }
 
-/// default escape function
-///
-/// This function appends the escaped contents of `feed` into `buf`.
-///
-/// # Examples
-///
-/// ```
-/// use sailfish::runtime::Buffer;
-/// use sailfish::runtime::escape::escape;
-///
-/// let mut buf = Buffer::new();
-/// escape("<h1>Hello, world!</h1>", &mut buf);
-/// assert_eq!(buf.as_str(), "&lt;h1&gt;Hello, world!&lt;/h1&gt;");
-/// ```
 #[cfg(not(target_feature = "avx2"))]
-pub fn escape(feed: &str, buf: &mut Buffer) {
+fn escape(feed: &str, buf: &mut Buffer) {
     let fun = if is_x86_feature_detected!("avx2") {
         avx2::escape
     } else if is_x86_feature_detected!("sse2") {
@@ -66,13 +53,18 @@ pub fn escape(feed: &str, buf: &mut Buffer) {
 }
 
 /// Change the default escape function
-pub fn register_escape_fn(fun: fn(&str, &mut Buffer)) {
-    FN.store(fun as FnRaw, Ordering::Relaxed);
-}
+#[deprecated(since = "0.1.2", note = "This function does not anything any more")]
+pub fn register_escape_fn(_fun: fn(&str, &mut Buffer)) {}
 
-#[inline]
 pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
     unsafe {
+        if feed.len() < 16 {
+            let start_ptr = feed.as_ptr();
+            let end_ptr = start_ptr.add(feed.len());
+            naive::escape(buf, start_ptr, start_ptr, end_ptr);
+            return;
+        }
+
         let fun = FN.load(Ordering::Relaxed);
         mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
     }
