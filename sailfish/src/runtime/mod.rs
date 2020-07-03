@@ -16,29 +16,51 @@ use std::fmt;
 #[doc(hidden)]
 pub use crate::{render, render_escaped, render_noop, render_text};
 
+#[derive(Clone, Debug)]
+enum RenderErrorKind {
+    Msg(String),
+    Fmt(fmt::Error),
+}
+
 /// The error type which is returned from template function
 #[derive(Clone, Debug)]
 pub struct RenderError {
     // currently RenderError simply wraps the fmt::Error
-    inner: fmt::Error,
+    kind: RenderErrorKind,
+}
+
+impl RenderError {
+    pub fn new(msg: &str) -> Self {
+        Self {
+            kind: RenderErrorKind::Msg(msg.to_owned()),
+        }
+    }
 }
 
 impl fmt::Display for RenderError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        self.inner.fmt(f)
+        match self.kind {
+            RenderErrorKind::Msg(ref s) => f.write_str(&**s),
+            RenderErrorKind::Fmt(ref e) => fmt::Display::fmt(e, f),
+        }
     }
 }
 
 impl std::error::Error for RenderError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.inner)
+        match self.kind {
+            RenderErrorKind::Msg(_) => None,
+            RenderErrorKind::Fmt(ref e) => Some(e),
+        }
     }
 }
 
 impl From<fmt::Error> for RenderError {
     #[inline]
     fn from(other: fmt::Error) -> Self {
-        Self { inner: other }
+        Self {
+            kind: RenderErrorKind::Fmt(other),
+        }
     }
 }
 

@@ -264,23 +264,27 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let tokens = quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once(self) -> sailfish::runtime::RenderResult {
+            fn render_once_to_string(self, buf: &mut String) -> Result<(), sailfish::runtime::RenderError> {
                 #include_bytes_seq;
 
                 use sailfish::runtime as sfrt;
                 use sfrt::RenderInternal as _;
 
                 static SIZE_HINT: sfrt::SizeHint = sfrt::SizeHint::new();
-                let _size_hint = SIZE_HINT.get();
+
                 let mut _ctx = sfrt::Context {
-                    buf: sfrt::Buffer::with_capacity(_size_hint)
+                    buf: sfrt::Buffer::from(std::mem::take(buf))
                 };
+
+                let _size_hint = SIZE_HINT.get();
+                _ctx.buf.reserve(_size_hint);
 
                 let #name { #field_names } = self;
                 include!(#output_file_string);
 
                 SIZE_HINT.update(_ctx.buf.len());
-                _ctx.into_result()
+                *buf = _ctx.buf.into_string();
+                Ok(())
             }
         }
     };

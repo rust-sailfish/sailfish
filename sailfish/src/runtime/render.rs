@@ -4,6 +4,24 @@ use super::buffer::Buffer;
 use super::{escape, RenderError};
 
 /// types which can be rendered inside buffer block (`<%= %>`)
+///
+/// If you want to render the custom data, you must implement this trait and specify
+/// the behaviour.
+///
+/// # Examples
+///
+/// ```
+/// use sailfish::runtime::{Buffer, Render, RenderError};
+///
+/// struct MyU64(u64);
+///
+/// impl Render for MyU64 {
+///     #[inline]
+///     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+///         self.0.render(b)
+///     }
+/// }
+/// ```
 pub trait Render {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError>;
 
@@ -154,7 +172,7 @@ macro_rules! render_int {
     }
 }
 
-render_int!(u8, u16, u32, u64, i8, i16, i32, i64, usize, isize);
+render_int!(u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize);
 
 impl Render for f32 {
     #[inline]
