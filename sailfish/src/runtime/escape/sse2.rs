@@ -17,13 +17,6 @@ const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;
 #[inline]
 pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
     let len = feed.len();
-    if len < VECTOR_BYTES {
-        let start_ptr = feed.as_ptr();
-        let end_ptr = start_ptr.add(len);
-        naive::escape(buffer, start_ptr, start_ptr, end_ptr);
-        return;
-    }
-
     let mut start_ptr = feed.as_ptr();
     let end_ptr = start_ptr.add(len);
 

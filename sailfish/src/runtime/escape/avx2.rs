@@ -7,7 +7,7 @@ use std::arch::x86_64::*;
 use std::slice;
 
 use super::super::Buffer;
-use super::{naive, sse2};
+use super::sse2;
 use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 
 const VECTOR_BYTES: usize = std::mem::size_of::<__m256i>();
@@ -17,12 +17,7 @@ const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;
 pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
     let len = feed.len();
 
-    if len < 8 {
-        let start_ptr = feed.as_ptr();
-        let end_ptr = start_ptr.add(len);
-        naive::escape(buffer, start_ptr, start_ptr, end_ptr);
-        return;
-    } else if len < VECTOR_BYTES {
+    if len < VECTOR_BYTES {
         sse2::escape(feed, buffer);
         return;
     }

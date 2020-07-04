@@ -25,7 +25,7 @@ impl SizeHint {
     /// as the value passed on update()
     #[inline]
     pub fn update(&self, mut value: usize) {
-        value = value + value / 8;
+        value = value + value / 4;
         if self.get() < value {
             self.value.store(value, Ordering::Release);
         }
