@@ -137,31 +137,32 @@ impl Buffer {
     }
 
     #[cfg_attr(feature = "perf-inline", inline)]
+    #[cold]
     fn reserve_internal(&mut self, size: usize) {
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
-            self.data = self.realloc(new_capacity);
+            self.data = safe_realloc(self.data, self.capacity, new_capacity);
             self.capacity = new_capacity;
         }
     }
+}
 
-    #[cfg_attr(feature = "perf-inline", inline)]
-    unsafe fn realloc(&self, cap: usize) -> *mut u8 {
-        let data = if unlikely!(self.capacity == 0) {
-            let new_layout = Layout::from_size_align_unchecked(cap, 1);
-            alloc(new_layout)
-        } else {
-            debug_assert!(cap <= std::usize::MAX / 2, "capacity is too large");
-            let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
-            realloc(self.data, old_layout, cap)
-        };
+#[cold]
+unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+    assert!(new_capacity <= std::usize::MAX / 2, "capacity is too large");
+    let data = if unlikely!(capacity == 0) {
+        let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
+        alloc(new_layout)
+    } else {
+        let old_layout = Layout::from_size_align_unchecked(new_capacity, 1);
+        realloc(ptr, old_layout, new_capacity)
+    };
 
-        if data.is_null() {
-            handle_alloc_error(Layout::from_size_align_unchecked(cap, 1));
-        }
-
-        data
+    if data.is_null() {
+        handle_alloc_error(Layout::from_size_align_unchecked(new_capacity, 1));
     }
+
+    data
 }
 
 impl Clone for Buffer {

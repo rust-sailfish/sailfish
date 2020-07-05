@@ -58,7 +58,7 @@ fn escape(feed: &str, buf: &mut Buffer) {
 #[deprecated(since = "0.1.2", note = "This function does not anything any more")]
 pub fn register_escape_fn(_fun: fn(&str, &mut Buffer)) {}
 
-#[inline]
+#[cfg_attr(feature = "perf-inline", inline)]
 pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
     unsafe {
         if feed.len() < 16 {
