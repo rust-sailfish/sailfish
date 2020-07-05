@@ -101,6 +101,7 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize {
 
 /// memcpy implementation based on glibc (https://github.molgen.mpg.de/git-mirror/glibc/blob/master/sysdeps/x86_64/multiarch/memcpy-avx-unaligned.S)
 #[cfg_attr(feature = "perf-inline", inline)]
+#[allow(clippy::cast_ptr_alignment)]
 unsafe fn memcpy_small(src: *const u8, dst: *mut u8, len: usize) {
     debug_assert!(len <= 16);
     if len >= 8 {

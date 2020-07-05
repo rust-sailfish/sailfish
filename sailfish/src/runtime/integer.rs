@@ -1,6 +1,8 @@
+#![allow(clippy::many_single_char_names)]
+
 use std::ptr;
 
-const DEC_DIGITS_LUT: &'static [u8] = b"\
+const DEC_DIGITS_LUT: &[u8] = b"\
       0001020304050607080910111213141516171819\
       2021222324252627282930313233343536373839\
       4041424344454647484950515253545556575859\
@@ -26,20 +28,18 @@ unsafe fn write_small(n: u16, buf: *mut u8) -> usize {
             ptr::copy_nonoverlapping(lookup!(n), buf, 2);
             2
         }
+    } else if n < 1000 {
+        let d1 = (n / 100) as u8;
+        let d2 = n % 100;
+        *buf = d1 + 0x30;
+        ptr::copy_nonoverlapping(lookup!(d2), buf.add(1), 2);
+        3
     } else {
-        if n < 1000 {
-            let d1 = (n / 100) as u8;
-            let d2 = n % 100;
-            *buf = d1 + 0x30;
-            ptr::copy_nonoverlapping(lookup!(d2), buf.add(1), 2);
-            3
-        } else {
-            let d1 = n / 100;
-            let d2 = n % 100;
-            ptr::copy_nonoverlapping(lookup!(d1), buf, 2);
-            ptr::copy_nonoverlapping(lookup!(d2), buf.add(2), 2);
-            4
-        }
+        let d1 = n / 100;
+        let d2 = n % 100;
+        ptr::copy_nonoverlapping(lookup!(d1), buf, 2);
+        ptr::copy_nonoverlapping(lookup!(d2), buf.add(2), 2);
+        4
     }
 }
 
@@ -107,7 +107,7 @@ unsafe fn write_u16(n: u16, buf: *mut u8) -> usize {
 unsafe fn write_u32(mut n: u32, buf: *mut u8) -> usize {
     if n < 10000 {
         write_small(n as u16, buf)
-    } else if n < 100000000 {
+    } else if n < 100_000_000 {
         let b = n / 10000;
         let c = n % 10000;
 
@@ -115,8 +115,8 @@ unsafe fn write_u32(mut n: u32, buf: *mut u8) -> usize {
         write_small_pad(c as u16, buf.add(l));
         l + 4
     } else {
-        let a = n / 100000000; // 1 to 42
-        n %= 100000000;
+        let a = n / 100_000_000; // 1 to 42
+        n %= 100_000_000;
 
         let l = if a >= 10 {
             ptr::copy_nonoverlapping(lookup!(a), buf, 2);
@@ -138,7 +138,7 @@ unsafe fn write_u32(mut n: u32, buf: *mut u8) -> usize {
 unsafe fn write_u64(mut n: u64, buf: *mut u8) -> usize {
     if n < 10000 {
         write_small(n as u16, buf)
-    } else if n < 100000000 {
+    } else if n < 100_000_000 {
         let n = n as u32;
         let b = n / 10000;
         let c = n % 10000;
@@ -146,9 +146,9 @@ unsafe fn write_u64(mut n: u64, buf: *mut u8) -> usize {
         let l = write_small(b as u16, buf);
         write_small_pad(c as u16, buf.add(l));
         l + 4
-    } else if n < 10000000000000000 {
-        let v0 = n / 100000000;
-        let v1 = (n % 100000000) as u32;
+    } else if n < 10_000_000_000_000_000 {
+        let v0 = n / 100_000_000;
+        let v1 = (n % 100_000_000) as u32;
 
         let l = if v0 < 10000 {
             write_small(v0 as u16, buf)
@@ -168,11 +168,11 @@ unsafe fn write_u64(mut n: u64, buf: *mut u8) -> usize {
 
         l + 8
     } else {
-        let a = n / 10000000000000000; // 1 to 1844
-        n %= 10000000000000000;
+        let a = n / 10_000_000_000_000_000; // 1 to 1844
+        n %= 10_000_000_000_000_000;
 
-        let v0 = (n / 100000000) as u32;
-        let v1 = (n % 100000000) as u32;
+        let v0 = (n / 100_000_000) as u32;
+        let v1 = (n % 100_000_000) as u32;
 
         let b0 = v0 / 10000;
         let c0 = v0 % 10000;
@@ -192,12 +192,12 @@ unsafe fn write_u64(mut n: u64, buf: *mut u8) -> usize {
 unsafe fn write_u128(n: u128, buf: *mut u8) -> usize {
     if n <= std::u64::MAX as u128 {
         write_u64(n as u64, buf)
-    } else if n < 100000000000000000000000000000000 {
-        let a0 = (n / 10000000000000000) as u64;
-        let a1 = (n % 10000000000000000) as u64;
+    } else if n < 100_000_000_000_000_000_000_000_000_000_000 {
+        let a0 = (n / 10_000_000_000_000_000) as u64;
+        let a1 = (n % 10_000_000_000_000_000) as u64;
 
-        let b0 = (a1 / 100000000) as u32;
-        let b1 = (a1 / 100000000) as u32;
+        let b0 = (a1 / 100_000_000) as u32;
+        let b1 = (a1 / 100_000_000) as u32;
 
         let c0 = (b0 / 10000) as u16;
         let c1 = (b0 % 10000) as u16;
@@ -211,16 +211,16 @@ unsafe fn write_u128(n: u128, buf: *mut u8) -> usize {
         write_small_pad(c3, buf.add(l + 12));
         l + 16
     } else {
-        let a0 = (n / 100000000000000000000000000000000) as u32; // 1 to 3402823
-        let a1 = n % 100000000000000000000000000000000;
+        let a0 = (n / 100_000_000_000_000_000_000_000_000_000_000) as u32; // 1 to 3402823
+        let a1 = n % 100_000_000_000_000_000_000_000_000_000_000;
 
-        let b0 = (a1 / 10000000000000000) as u64;
-        let b1 = (a1 % 10000000000000000) as u64;
+        let b0 = (a1 / 10_000_000_000_000_000) as u64;
+        let b1 = (a1 % 10_000_000_000_000_000) as u64;
 
-        let c0 = (b0 / 100000000) as u32;
-        let c1 = (b0 % 100000000) as u32;
-        let c2 = (b1 / 100000000) as u32;
-        let c3 = (b1 % 100000000) as u32;
+        let c0 = (b0 / 100_000_000) as u32;
+        let c1 = (b0 % 100_000_000) as u32;
+        let c2 = (b1 / 100_000_000) as u32;
+        let c3 = (b1 % 100_000_000) as u32;
 
         let d0 = (c0 / 10000) as u16;
         let d1 = (c0 % 10000) as u16;
