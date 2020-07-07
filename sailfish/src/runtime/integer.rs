@@ -189,10 +189,10 @@ unsafe fn write_u64(mut n: u64, buf: *mut u8) -> usize {
     }
 }
 
-unsafe fn write_u128(n: u128, buf: *mut u8) -> usize {
-    if n <= std::u64::MAX as u128 {
-        write_u64(n as u64, buf)
-    } else if n < 100_000_000_000_000_000_000_000_000_000_000 {
+unsafe fn write_u128_big(n: u128, buf: *mut u8) -> usize {
+    debug_assert!(n > std::u64::MAX as u128);
+
+    if n < 100_000_000_000_000_000_000_000_000_000_000 {
         let a0 = (n / 10_000_000_000_000_000) as u64;
         let a1 = (n % 10_000_000_000_000_000) as u64;
 
@@ -251,6 +251,15 @@ unsafe fn write_u128(n: u128, buf: *mut u8) -> usize {
         write_small_pad(d7, buf.add(l + 28));
 
         l + 32
+    }
+}
+
+#[inline]
+unsafe fn write_u128(n: u128, buf: *mut u8) -> usize {
+    if n <= std::u64::MAX as u128 {
+        write_u64(n as u64, buf)
+    } else {
+        write_u128_big(n, buf)
     }
 }
 
