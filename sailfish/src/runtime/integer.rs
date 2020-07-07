@@ -304,10 +304,10 @@ impl_integer!(u64, i64, u64, write_u64, 20);
 impl_integer!(u128, i128, u128, write_u128, 39);
 
 #[cfg(target_pointer_width = "16")]
-impl_integer!(usize, isize, u16, write_u16, 6);
+impl_integer!(usize, isize, u16, write_u16, 5);
 
 #[cfg(target_pointer_width = "32")]
-impl_integer!(usize, isize, u32, write_u32, 11);
+impl_integer!(usize, isize, u32, write_u32, 10);
 
 #[cfg(target_pointer_width = "64")]
 impl_integer!(usize, isize, u64, write_u64, 20);
