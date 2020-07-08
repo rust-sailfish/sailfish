@@ -150,13 +150,13 @@ macro_rules! render_int {
             impl Render for $int {
                 #[cfg_attr(feature = "perf-inline", inline)]
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    use super::integer::Integer;
+                    use itoap::Integer;
 
                     b.reserve(Self::MAX_LEN);
 
                     unsafe {
                         let ptr = b.as_mut_ptr().add(b.len());
-                        let l = self.write_to(ptr);
+                        let l = itoap::write_to_ptr(ptr, *self);
                         b.set_len(b.len() + l);
                     }
                     Ok(())
