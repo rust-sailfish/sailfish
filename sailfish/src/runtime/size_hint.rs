@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Dynamically updated size hint
-#[derive(Debug, Default)]
+#[doc(hidden)]
 pub struct SizeHint {
     value: AtomicUsize,
 }

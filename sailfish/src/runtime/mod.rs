@@ -65,6 +65,7 @@ impl From<fmt::Error> for RenderError {
 
 pub type RenderResult = Result<String, RenderError>;
 
+#[doc(hidden)]
 pub struct Context {
     #[doc(hidden)]
     pub buf: Buffer,
