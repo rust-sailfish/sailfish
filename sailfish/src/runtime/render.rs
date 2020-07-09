@@ -85,6 +85,7 @@ impl Render for char {
             '&' => b.push_str("&amp;"),
             '<' => b.push_str("&lt;"),
             '>' => b.push_str("&gt;"),
+            '\'' => b.push_str("&#039;"),
             _ => b.push(*self),
         }
         Ok(())
