@@ -29,7 +29,7 @@ pub trait Render {
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let mut tmp = Buffer::new();
         self.render(&mut tmp)?;
-        b.push_str(tmp.as_str());
+        escape::escape_to_buf(tmp.as_str(), b);
         Ok(())
     }
 }
