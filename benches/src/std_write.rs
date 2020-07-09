@@ -1,4 +1,5 @@
 use std::io::Write;
+use v_htmlescape::escape;
 
 use criterion;
 
@@ -68,8 +69,8 @@ pub fn teams(b: &mut criterion::Bencher<'_>, _: &usize) {
                 &mut output,
                 "<li class=\"{champion}\">
                 <b>{name}</b>: {score}",
-                champion = champion,
-                name = team.name,
+                champion = escape(champion),
+                name = escape(&team.name),
                 score = team.score
             )
             .unwrap();
