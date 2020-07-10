@@ -160,6 +160,7 @@ macro_rules! render_int {
                         let l = itoap::write_to_ptr(ptr, *self);
                         b.set_len(b.len() + l);
                     }
+                    debug_assert!(b.len() <= b.capacity());
                     Ok(())
                 }
 
@@ -184,6 +185,7 @@ impl Render for f32 {
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format32(*self, ptr);
                 b.set_len(b.len() + l);
+                debug_assert!(b.len() <= b.capacity());
             }
         } else if self.is_nan() {
             b.push_str("NaN");
@@ -212,6 +214,7 @@ impl Render for f64 {
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format64(*self, ptr);
                 b.set_len(b.len() + l);
+                debug_assert!(b.len() <= b.capacity());
             }
         } else if self.is_nan() {
             b.push_str("NaN");

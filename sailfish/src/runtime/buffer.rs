@@ -103,6 +103,7 @@ impl Buffer {
         if unlikely!(self.len + size > self.capacity) {
             self.reserve_internal(size);
         }
+        debug_assert!(self.len + size <= self.capacity);
     }
 
     #[inline]
@@ -115,6 +116,7 @@ impl Buffer {
     /// This consumes the `Buffer`, so we do not need to copy its contents.
     #[inline]
     pub fn into_string(self) -> String {
+        debug_assert!(self.len <= self.capacity);
         let buf = ManuallyDrop::new(self);
         unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
     }
@@ -128,6 +130,7 @@ impl Buffer {
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
             self.len += size;
         }
+        debug_assert!(self.len <= self.capacity);
     }
 
     #[inline]
@@ -141,9 +144,12 @@ impl Buffer {
     fn reserve_internal(&mut self, size: usize) {
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
+            debug_assert!(new_capacity > self.capacity);
             self.data = safe_realloc(self.data, self.capacity, new_capacity);
             self.capacity = new_capacity;
         }
+        debug_assert!(!self.data.is_null());
+        debug_assert!(self.len <= self.capacity);
     }
 }
 
