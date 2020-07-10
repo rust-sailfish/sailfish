@@ -4,20 +4,6 @@ use std::mem::{align_of, ManuallyDrop};
 use std::ops::{Add, AddAssign};
 use std::ptr;
 
-#[cfg(sailfish_nightly)]
-macro_rules! unlikely {
-    ($val:expr) => {
-        std::intrinsics::unlikely($val)
-    };
-}
-
-#[cfg(not(sailfish_nightly))]
-macro_rules! unlikely {
-    ($val:expr) => {
-        $val
-    };
-}
-
 /// Buffer for rendered contents
 ///
 /// This struct is quite simular to `String`, but some methods are
@@ -41,7 +27,7 @@ impl Buffer {
     #[cfg_attr(feature = "perf-inline", inline)]
     pub fn with_capacity(n: usize) -> Buffer {
         unsafe {
-            if n == 0 {
+            if unlikely!(n == 0) {
                 Self::new()
             } else {
                 let layout = Layout::from_size_align_unchecked(n, 1);

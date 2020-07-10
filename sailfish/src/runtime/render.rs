@@ -179,7 +179,7 @@ render_int!(u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize);
 impl Render for f32 {
     #[cfg_attr(feature = "perf-inline", inline)]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        if self.is_finite() {
+        if likely!(self.is_finite()) {
             unsafe {
                 b.reserve(16);
                 let ptr = b.as_mut_ptr().add(b.len());
@@ -208,7 +208,7 @@ impl Render for f32 {
 impl Render for f64 {
     #[cfg_attr(feature = "perf-inline", inline)]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        if self.is_finite() {
+        if likely!(self.is_finite()) {
             unsafe {
                 b.reserve(24);
                 let ptr = b.as_mut_ptr().add(b.len());

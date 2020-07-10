@@ -1,5 +1,8 @@
 //! Sailfish runtime
 
+#[macro_use]
+mod utils;
+
 mod buffer;
 pub mod escape;
 mod macros;

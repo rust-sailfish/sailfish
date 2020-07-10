@@ -26,7 +26,7 @@ impl SizeHint {
     #[inline]
     pub fn update(&self, mut value: usize) {
         value = value + value / 4;
-        if self.get() < value {
+        if unlikely!(self.get() < value) {
             self.value.store(value, Ordering::Release);
         }
     }
