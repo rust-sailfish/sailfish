@@ -2,9 +2,11 @@
 //!
 //! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod avx2;
 mod fallback;
 mod naive;
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod sse2;
 
 use std::mem;
@@ -30,16 +32,10 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 5;
 
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 static FN: AtomicPtr<()> = AtomicPtr::new(escape as FnRaw);
 
-#[cfg(target_feature = "avx2")]
-#[inline]
-fn escape(feed: &str, buf: &mut Buffer) {
-    debug_assert!(feed.len() >= 16);
-    unsafe { avx2::escape(feed, buf) }
-}
-
-#[cfg(not(target_feature = "avx2"))]
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 fn escape(feed: &str, buf: &mut Buffer) {
     debug_assert!(feed.len() >= 16);
     let fun = if is_x86_feature_detected!("avx2") {
@@ -66,8 +62,24 @@ pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
             let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
             buf.set_len(buf.len() + l);
         } else {
-            let fun = FN.load(Ordering::Relaxed);
-            mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
+            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+            {
+                #[cfg(target_feature = "avx2")]
+                {
+                    avx2::escape(feed, buf);
+                }
+
+                #[cfg(not(target_feature = "avx2"))]
+                {
+                    let fun = FN.load(Ordering::Relaxed);
+                    mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
+                }
+            }
+
+            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
+            {
+                fallback::escape(feed, buf);
+            }
         }
     }
 }
@@ -151,31 +163,38 @@ mod tests {
         let mut buf3 = Buffer::new();
 
         for len in 0..100 {
-            data.clear();
-            for _ in 0..len {
-                // xorshift
-                state ^= state << 13;
-                state ^= state >> 7;
-                state ^= state << 17;
+            for _ in 0..10 {
+                data.clear();
+                for _ in 0..len {
+                    // xorshift
+                    state ^= state << 13;
+                    state ^= state >> 7;
+                    state ^= state << 17;
 
-                let idx = state as usize % ASCII_CHARS.len();
-                data.push(ASCII_CHARS[idx]);
+                    let idx = state as usize % ASCII_CHARS.len();
+                    data.push(ASCII_CHARS[idx]);
+                }
+
+                let s = unsafe { std::str::from_utf8_unchecked(&*data) };
+
+                buf1.clear();
+                buf2.clear();
+                buf3.clear();
+
+                unsafe {
+                    escape_to_buf(s, &mut buf1);
+                    fallback::escape(s, &mut buf2);
+                    naive::escape(
+                        &mut buf3,
+                        s.as_ptr(),
+                        s.as_ptr(),
+                        s.as_ptr().add(s.len()),
+                    );
+                }
+
+                assert_eq!(buf1.as_str(), buf3.as_str());
+                assert_eq!(buf2.as_str(), buf3.as_str());
             }
-
-            let s = unsafe { std::str::from_utf8_unchecked(&*data) };
-
-            buf1.clear();
-            buf2.clear();
-            buf3.clear();
-
-            unsafe {
-                escape_to_buf(s, &mut buf1);
-                fallback::escape(s, &mut buf2);
-                naive::escape(&mut buf3, s.as_ptr(), s.as_ptr(), s.as_ptr().add(s.len()));
-            }
-
-            assert_eq!(buf1.as_str(), buf3.as_str());
-            assert_eq!(buf2.as_str(), buf3.as_str());
         }
     }
 }
