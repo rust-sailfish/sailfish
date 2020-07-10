@@ -154,7 +154,7 @@ unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *m
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
         alloc(new_layout)
     } else {
-        let old_layout = Layout::from_size_align_unchecked(new_capacity, 1);
+        let old_layout = Layout::from_size_align_unchecked(capacity, 1);
         realloc(ptr, old_layout, new_capacity)
     };
 
