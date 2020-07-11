@@ -1,4 +1,4 @@
-//! HTML escaping
+//! HTML escaping utilities
 //!
 //! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
@@ -51,11 +51,12 @@ fn escape(feed: &str, buf: &mut Buffer) {
 }
 
 /// Change the default escape function
-#[deprecated(since = "0.1.2", note = "This function does not anything any more")]
+#[doc(hidden)]
 pub fn register_escape_fn(_fun: fn(&str, &mut Buffer)) {}
 
+/// write the escaped contents into `Buffer`
 #[cfg_attr(feature = "perf-inline", inline)]
-pub(crate) fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
     unsafe {
         if feed.len() < 16 {
             buf.reserve(feed.len() * 6);

@@ -23,8 +23,10 @@ use super::{escape, RenderError};
 /// }
 /// ```
 pub trait Render {
+    /// render to `Buffer` without escaping
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError>;
 
+    /// render to `Buffer` with HTML escaping
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let mut tmp = Buffer::new();

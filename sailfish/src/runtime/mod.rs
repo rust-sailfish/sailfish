@@ -32,6 +32,7 @@ pub struct RenderError {
 }
 
 impl RenderError {
+    /// Construct a new error with custom message
     pub fn new(msg: &str) -> Self {
         Self {
             kind: RenderErrorKind::Msg(msg.to_owned()),
