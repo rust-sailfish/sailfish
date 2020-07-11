@@ -4,8 +4,8 @@ In order to use sailfish templates, you have add two dependencies in your `Cargo
 
 ```toml
 [dependencies]
-sailfish = "0.1.2"
-sailfish-macros = "0.1.2"
+sailfish = "0.1.3"
+sailfish-macros = "0.1.3"
 ```
 
 `sailfish` crate contains runtime for rendering contents, and `sailfish-macros` serves you derive macros to compile and import the template files.

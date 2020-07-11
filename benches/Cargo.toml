@@ -1,6 +1,6 @@
 [package]
 name = "benches"
-version = "0.1.0"
+version = "0.1.3"
 authors = ["Dirkjan Ochtman <dirkjan@ochtman.nl>", "Ryohei Machida <orcinus4627@gmail.com>"]
 build = "src/build.rs"
 edition = "2018"
