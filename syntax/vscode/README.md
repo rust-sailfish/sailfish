@@ -2,6 +2,8 @@
 
 This directory contains Syntax Highlighting extension for sailfish templates in Visual Studio Code.
 
+The extension is available at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?itemName=kogia-sima.vscode-sailfish).
+
 ## Features
 
 - Full Rust syntax highlighting rules inside code blocks

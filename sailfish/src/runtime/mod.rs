@@ -1,8 +1,10 @@
 //! Sailfish runtime
 
+#[macro_use]
+mod utils;
+
 mod buffer;
 pub mod escape;
-mod integer;
 mod macros;
 mod render;
 mod size_hint;
@@ -30,6 +32,7 @@ pub struct RenderError {
 }
 
 impl RenderError {
+    /// Construct a new error with custom message
     pub fn new(msg: &str) -> Self {
         Self {
             kind: RenderErrorKind::Msg(msg.to_owned()),
@@ -66,6 +69,7 @@ impl From<fmt::Error> for RenderError {
 
 pub type RenderResult = Result<String, RenderError>;
 
+#[doc(hidden)]
 pub struct Context {
     #[doc(hidden)]
     pub buf: Buffer,

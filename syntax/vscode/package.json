@@ -4,6 +4,8 @@
     "description": "Syntax highlighting for sailfish templates in VSCode",
     "version": "0.1.0",
     "author": "Ryohei Machida <orcinus4627@gmail.com>",
+    "publisher": "kogia-sima",
+    "repository": "Kogia-sima/sailfish",
     "license": "MIT",
     "engines": {
         "vscode": "^1.45.0"

@@ -49,7 +49,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         return;
     }
 
-    let ptr = start_ptr;
+    let mut ptr = start_ptr;
     let aligned_ptr = ptr.add(USIZE_BYTES - (start_ptr as usize & USIZE_ALIGN));
     debug_assert_eq!(aligned_ptr as usize % USIZE_BYTES, 0);
     debug_assert!(aligned_ptr <= end_ptr);
@@ -59,15 +59,8 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         start_ptr = naive::proceed(buffer, start_ptr, ptr, aligned_ptr);
     }
 
-    escape_aligned(buffer, start_ptr, aligned_ptr, end_ptr);
-}
+    ptr = aligned_ptr;
 
-pub unsafe fn escape_aligned(
-    buffer: &mut Buffer,
-    mut start_ptr: *const u8,
-    mut ptr: *const u8,
-    end_ptr: *const u8,
-) {
     while ptr.add(USIZE_BYTES) <= end_ptr {
         debug_assert_eq!((ptr as usize) % USIZE_BYTES, 0);
 

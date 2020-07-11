@@ -42,5 +42,7 @@ $ cargo bench
 
 ## License
 
+Copyright (c) 2020 Dirkjan Ochtman and Ryohei Machida
+
 This benchmark code is distributed under the special permission granted by [Dirkjan Ochtman](https://github.com/djc) (See [this issue](https://github.com/djc/template-benchmarks-rs/issues/26)).
 **You cannot modify or redistribute the source code without an explicit permission**.

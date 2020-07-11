@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Dynamically updated size hint
-#[derive(Debug, Default)]
+#[doc(hidden)]
 pub struct SizeHint {
     value: AtomicUsize,
 }
@@ -25,8 +25,8 @@ impl SizeHint {
     /// as the value passed on update()
     #[inline]
     pub fn update(&self, mut value: usize) {
-        value = value + value / 8;
-        if self.get() < value {
+        value = value + value / 4;
+        if unlikely!(self.get() < value) {
             self.value.store(value, Ordering::Release);
         }
     }

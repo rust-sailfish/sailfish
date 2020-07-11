@@ -23,13 +23,15 @@ use super::{escape, RenderError};
 /// }
 /// ```
 pub trait Render {
+    /// render to `Buffer` without escaping
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError>;
 
+    /// render to `Buffer` with HTML escaping
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let mut tmp = Buffer::new();
         self.render(&mut tmp)?;
-        b.push_str(tmp.as_str());
+        escape::escape_to_buf(tmp.as_str(), b);
         Ok(())
     }
 }
@@ -85,6 +87,7 @@ impl Render for char {
             '&' => b.push_str("&amp;"),
             '<' => b.push_str("&lt;"),
             '>' => b.push_str("&gt;"),
+            '\'' => b.push_str("&#039;"),
             _ => b.push(*self),
         }
         Ok(())
@@ -148,17 +151,18 @@ macro_rules! render_int {
     ($($int:ty),*) => {
         $(
             impl Render for $int {
-                #[inline]
+                #[cfg_attr(feature = "perf-inline", inline)]
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-                    use super::integer::Integer;
+                    use itoap::Integer;
 
                     b.reserve(Self::MAX_LEN);
 
                     unsafe {
                         let ptr = b.as_mut_ptr().add(b.len());
-                        let l = self.write_to(ptr);
+                        let l = itoap::write_to_ptr(ptr, *self);
                         b.set_len(b.len() + l);
                     }
+                    debug_assert!(b.len() <= b.capacity());
                     Ok(())
                 }
 
@@ -175,14 +179,15 @@ macro_rules! render_int {
 render_int!(u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize);
 
 impl Render for f32 {
-    #[inline]
+    #[cfg_attr(feature = "perf-inline", inline)]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        if self.is_finite() {
+        if likely!(self.is_finite()) {
             unsafe {
                 b.reserve(16);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format32(*self, ptr);
                 b.set_len(b.len() + l);
+                debug_assert!(b.len() <= b.capacity());
             }
         } else if self.is_nan() {
             b.push_str("NaN");
@@ -203,14 +208,15 @@ impl Render for f32 {
 }
 
 impl Render for f64 {
-    #[inline]
+    #[cfg_attr(feature = "perf-inline", inline)]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        if self.is_finite() {
+        if likely!(self.is_finite()) {
             unsafe {
                 b.reserve(24);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format64(*self, ptr);
                 b.set_len(b.len() + l);
+                debug_assert!(b.len() <= b.capacity());
             }
         } else if self.is_nan() {
             b.push_str("NaN");

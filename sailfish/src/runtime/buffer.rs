@@ -4,20 +4,6 @@ use std::mem::{align_of, ManuallyDrop};
 use std::ops::{Add, AddAssign};
 use std::ptr;
 
-#[cfg(sailfish_nightly)]
-macro_rules! unlikely {
-    ($val:expr) => {
-        std::intrinsics::unlikely($val)
-    };
-}
-
-#[cfg(not(sailfish_nightly))]
-macro_rules! unlikely {
-    ($val:expr) => {
-        $val
-    };
-}
-
 /// Buffer for rendered contents
 ///
 /// This struct is quite simular to `String`, but some methods are
@@ -41,7 +27,7 @@ impl Buffer {
     #[cfg_attr(feature = "perf-inline", inline)]
     pub fn with_capacity(n: usize) -> Buffer {
         unsafe {
-            if n == 0 {
+            if unlikely!(n == 0) {
                 Self::new()
             } else {
                 let layout = Layout::from_size_align_unchecked(n, 1);
@@ -103,6 +89,7 @@ impl Buffer {
         if unlikely!(self.len + size > self.capacity) {
             self.reserve_internal(size);
         }
+        debug_assert!(self.len + size <= self.capacity);
     }
 
     #[inline]
@@ -115,6 +102,7 @@ impl Buffer {
     /// This consumes the `Buffer`, so we do not need to copy its contents.
     #[inline]
     pub fn into_string(self) -> String {
+        debug_assert!(self.len <= self.capacity);
         let buf = ManuallyDrop::new(self);
         unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
     }
@@ -128,6 +116,7 @@ impl Buffer {
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
             self.len += size;
         }
+        debug_assert!(self.len <= self.capacity);
     }
 
     #[inline]
@@ -137,31 +126,35 @@ impl Buffer {
     }
 
     #[cfg_attr(feature = "perf-inline", inline)]
+    #[cold]
     fn reserve_internal(&mut self, size: usize) {
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
-            self.data = self.realloc(new_capacity);
+            debug_assert!(new_capacity > self.capacity);
+            self.data = safe_realloc(self.data, self.capacity, new_capacity);
             self.capacity = new_capacity;
         }
+        debug_assert!(!self.data.is_null());
+        debug_assert!(self.len <= self.capacity);
+    }
+}
+
+#[cold]
+unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+    assert!(new_capacity <= std::usize::MAX / 2, "capacity is too large");
+    let data = if unlikely!(capacity == 0) {
+        let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
+        alloc(new_layout)
+    } else {
+        let old_layout = Layout::from_size_align_unchecked(capacity, 1);
+        realloc(ptr, old_layout, new_capacity)
+    };
+
+    if data.is_null() {
+        handle_alloc_error(Layout::from_size_align_unchecked(new_capacity, 1));
     }
 
-    #[cfg_attr(feature = "perf-inline", inline)]
-    unsafe fn realloc(&self, cap: usize) -> *mut u8 {
-        let data = if unlikely!(self.capacity == 0) {
-            let new_layout = Layout::from_size_align_unchecked(cap, 1);
-            alloc(new_layout)
-        } else {
-            debug_assert!(cap <= std::usize::MAX / 2, "capacity is too large");
-            let old_layout = Layout::from_size_align_unchecked(self.capacity, 1);
-            realloc(self.data, old_layout, cap)
-        };
-
-        if data.is_null() {
-            handle_alloc_error(Layout::from_size_align_unchecked(cap, 1));
-        }
-
-        data
-    }
+    data
 }
 
 impl Clone for Buffer {
