@@ -131,7 +131,7 @@ impl Buffer {
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
             debug_assert!(new_capacity > self.capacity);
-            self.data = safe_realloc(self.data, self.capacity, new_capacity);
+            self.data = safe_realloc(self.data, self.capacity, new_capacity, size);
             self.capacity = new_capacity;
         }
         debug_assert!(!self.data.is_null());
@@ -140,7 +140,13 @@ impl Buffer {
 }
 
 #[cold]
-unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+unsafe fn safe_realloc(
+    ptr: *mut u8,
+    capacity: usize,
+    new_capacity: usize,
+    size: usize,
+) -> *mut u8 {
+    assert!(size <= std::usize::MAX / 2, "capacity is too large");
     assert!(new_capacity <= std::usize::MAX / 2, "capacity is too large");
     let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
