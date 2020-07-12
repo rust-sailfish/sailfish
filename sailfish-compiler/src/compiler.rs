@@ -1,5 +1,6 @@
 use quote::ToTokens;
 use std::fs;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -72,14 +73,13 @@ impl Compiler {
                 fs::create_dir_all(parent)
                     .chain_err(|| format!("Failed to save artifacts in {:?}", parent))?;
             }
-            if output.exists() {
-                fs::remove_file(output)
-                    .chain_err(|| format!("Failed to remove artifact {:?}", output))?;
-            }
 
             let string = tsource.ast.into_token_stream().to_string();
-            fs::write(output, rustfmt_block(&*string).unwrap_or(string))
-                .chain_err(|| format!("Failed to save artifact in {:?}", output))?;
+
+            let mut f = fs::File::create(output)
+                .chain_err(|| format!("Failed to create artifact: {:?}", output))?;
+            writeln!(f, "{}", rustfmt_block(&*string).unwrap_or(string))
+                .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
             Ok(report)
         };
 
