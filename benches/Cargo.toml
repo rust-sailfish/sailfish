@@ -25,6 +25,7 @@ serde_yaml = "0.8"
 tera = { git = "https://github.com/Keats/tera" }
 v_htmlescape = "0.9.1"
 yarte = { git = "https://github.com/botika/yarte", features = ["bytes-buf", "fixed"] }
+bytes = "0.5.5"
 
 [build-dependencies]
 ructe = { git = "https://github.com/kaj/ructe" }
