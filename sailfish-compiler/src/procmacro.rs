@@ -275,9 +275,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
 
                 let mut __sf_buf = __sf_rt::Buffer::from(std::mem::take(buf));
-
-                let _size_hint = SIZE_HINT.get();
-                __sf_buf.reserve(_size_hint);
+                __sf_buf.reserve(SIZE_HINT.get());
 
                 let #name { #field_names } = self;
                 include!(#output_file_string);
