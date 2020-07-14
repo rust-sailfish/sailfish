@@ -10,3 +10,4 @@ publish = false
 [dependencies]
 afl = "0.8.0"
 sailfish = { path = "../sailfish" }
+sailfish-compiler = { path = "../sailfish-compiler" }
