@@ -3,6 +3,7 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use syn::Block;
 
 use crate::config::Config;
 use crate::error::*;
@@ -88,6 +89,40 @@ impl Compiler {
             .map_err(|mut e| {
                 e.source = fs::read_to_string(&*input).ok();
                 e.source_file = Some(input.to_owned());
+                e
+            })
+    }
+
+    pub fn compile_str(&self, input: &str) -> Result<String, Error> {
+        let dummy_path = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+        let include_handler = Arc::new(|_: &Path| -> Result<Block, Error> {
+            Err(make_error!(
+                ErrorKind::AnalyzeError(
+                    "include! macro is not allowed in inline template".to_owned()
+                ),
+                source = input.to_owned()
+            ))
+        });
+
+        let parser = Parser::new().delimiter(self.config.delimiter);
+        let translator = Translator::new().escape(self.config.escape);
+        let resolver = Resolver::new().include_handler(include_handler);
+        let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
+
+        let compile = || -> Result<String, Error> {
+            let stream = parser.parse(input);
+            let mut tsource = translator.translate(stream)?;
+            resolver.resolve(dummy_path, &mut tsource.ast)?;
+
+            optimizer.optimize(&mut tsource.ast);
+            Ok(tsource.ast.into_token_stream().to_string())
+        };
+
+        compile()
+            .chain_err(|| "Failed to compile template.")
+            .map_err(|mut e| {
+                e.source = Some(input.to_owned());
                 e
             })
     }
