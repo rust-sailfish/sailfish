@@ -5,6 +5,7 @@ mod utils;
 
 mod buffer;
 pub mod escape;
+pub mod filter;
 mod macros;
 mod render;
 mod size_hint;
