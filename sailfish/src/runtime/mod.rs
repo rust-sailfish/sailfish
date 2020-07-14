@@ -69,19 +69,6 @@ impl From<fmt::Error> for RenderError {
 
 pub type RenderResult = Result<String, RenderError>;
 
-#[doc(hidden)]
-pub struct Context {
-    #[doc(hidden)]
-    pub buf: Buffer,
-}
-
-impl Context {
-    #[inline]
-    pub fn into_result(self) -> RenderResult {
-        Ok(self.buf.into_string())
-    }
-}
-
 // #[inline(never)]
 // pub fn _instantiate(table: Vec<Vec<usize>>) -> String {
 //     let mut buffer = Buffer::with_capacity(130000);
