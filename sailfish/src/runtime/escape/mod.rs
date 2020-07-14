@@ -50,10 +50,6 @@ fn escape(feed: &str, buf: &mut Buffer) {
     unsafe { fun(feed, buf) };
 }
 
-/// Change the default escape function
-#[doc(hidden)]
-pub fn register_escape_fn(_fun: fn(&str, &mut Buffer)) {}
-
 /// write the escaped contents into `Buffer`
 #[cfg_attr(feature = "perf-inline", inline)]
 pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
