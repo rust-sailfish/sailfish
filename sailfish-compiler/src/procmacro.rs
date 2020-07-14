@@ -200,6 +200,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             .ancestors()
             .find(|p| p.join("LICENSE").exists())
             .unwrap()
+            .join("sailfish-tests")
             .join("integration-tests")
             .join("tests")
             .join("fails")

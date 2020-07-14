@@ -6,9 +6,9 @@ edition = "2018"
 publish = false
 
 [dependencies]
-sailfish = { path = "../sailfish" }
-sailfish-macros = { path = "../sailfish-macros" }
-sailfish-compiler = { path = "../sailfish-compiler" }
+sailfish = { path = "../../sailfish" }
+sailfish-macros = { path = "../../sailfish-macros" }
+sailfish-compiler = { path = "../../sailfish-compiler" }
 
 [dev-dependencies]
 trybuild = "1.0.28"

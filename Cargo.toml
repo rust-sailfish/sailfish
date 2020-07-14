@@ -4,9 +4,10 @@ members = [
   "sailfish-compiler",
   "sailfish-macros",
   "examples",
-  "integration-tests"
+  "sailfish-tests/integration-tests"
 ]
 exclude = [
+  "sailfish-tests/fuzzing-tests",
   "benches"
 ]
 
