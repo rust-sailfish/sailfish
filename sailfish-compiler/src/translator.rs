@@ -1,4 +1,5 @@
 use proc_macro2::Span;
+use quote::ToTokens;
 use syn::parse::{Parse, ParseStream as SynParseStream, Result as ParseResult};
 use syn::spanned::Spanned;
 use syn::{BinOp, Block, Expr};
@@ -31,7 +32,7 @@ impl Parse for CodeBlock {
         let main = s.parse::<Expr>()?;
 
         let code_block = match main {
-            Expr::Binary(b) if matches!(b.op, BinOp::Or(_)) => {
+            Expr::Binary(b) if matches!(b.op, BinOp::BitOr(_)) => {
                 match *b.right {
                     Expr::Call(c) => {
                         if let Expr::Path(ref p) = *c.func {
@@ -123,6 +124,18 @@ struct SourceBuilder {
 }
 
 impl SourceBuilder {
+    fn new(escape: bool) -> SourceBuilder {
+        SourceBuilder {
+            escape,
+            source: String::from("{\n"),
+            source_map: SourceMap::default(),
+        }
+    }
+
+    fn reserve(&mut self, additional: usize) {
+        self.source.reserve(additional);
+    }
+
     fn write_token<'a>(&mut self, token: &Token<'a>) {
         let entry = SourceMapEntry {
             original: token.offset(),
@@ -156,16 +169,12 @@ impl SourceBuilder {
         escape: bool,
     ) -> Result<(), Error> {
         // parse and split off filter
-        let code_block = syn::parse_str::<CodeBlock>(token.as_str()).map_err(|e| e)?;
-
-        if let Some(filter) = code_block.filter {
-            let mut err = make_error!(ErrorKind::Unimplemented(
-                "Filter is not implemented".to_owned()
-            ));
-            err.offset = into_offset(token.as_str(), filter.span());
-            return Err(err);
-        }
-
+        let code_block = syn::parse_str::<CodeBlock>(token.as_str()).map_err(|e| {
+            let span = e.span();
+            let mut err = make_error!(ErrorKind::RustSyntaxError(e));
+            err.offset = into_offset(token.as_str(), span).map(|p| token.offset() + p);
+            err
+        })?;
         let method = if self.escape && escape {
             "render_escaped"
         } else {
@@ -175,8 +184,46 @@ impl SourceBuilder {
         self.source.push_str("__sf_rt::");
         self.source.push_str(method);
         self.source.push_str("!(__sf_buf, ");
-        self.write_token(token);
+
+        if let Some(filter) = code_block.filter {
+            let expr_str = code_block.expr.into_token_stream().to_string();
+            let (name, extra_args) = match filter {
+                Filter::Ident(i) => (i.to_string(), None),
+                Filter::Call(c) => (
+                    c.func.into_token_stream().to_string(),
+                    Some(c.args.into_token_stream().to_string()),
+                ),
+            };
+
+            self.source.push_str("sailfish::runtime::filter::");
+            self.source.push_str(&*name);
+            self.source.push_str("(");
+
+            // arguments to filter function
+            {
+                self.source.push_str("&(");
+                let entry = SourceMapEntry {
+                    original: token.offset(),
+                    new: self.source.len(),
+                    length: expr_str.len(),
+                };
+                self.source_map.entries.push(entry);
+                self.source.push_str(&expr_str);
+                self.source.push_str(")");
+
+                if let Some(extra_args) = extra_args {
+                    self.source.push_str(", ");
+                    self.source.push_str(&*extra_args);
+                }
+            }
+
+            self.source.push_str(")");
+        } else {
+            self.write_token(token);
+        }
+
         self.source.push_str(");\n");
+
         Ok(())
     }
 
@@ -286,13 +333,8 @@ impl Translator {
     ) -> Result<TranslatedSource, Error> {
         let original_source = token_iter.original_source;
 
-        let mut source = String::with_capacity(original_source.len());
-        source.push_str("{\n");
-        let mut ps = SourceBuilder {
-            escape: self.escape,
-            source,
-            source_map: SourceMap::default(),
-        };
+        let mut ps = SourceBuilder::new(self.escape);
+        ps.reserve(original_source.len());
         ps.feed_tokens(token_iter)?;
 
         Ok(ps.finalize()?)
