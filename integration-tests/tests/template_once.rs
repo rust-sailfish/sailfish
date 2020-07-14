@@ -191,6 +191,15 @@ fn test_rust_macro() {
     assert_render("rust_macro", RustMacro { value: Some(10) });
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "formatting.stpl", escape = false)]
+struct Formatting;
+
+#[test]
+fn test_formatting() {
+    assert_render("formatting", Formatting);
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;
