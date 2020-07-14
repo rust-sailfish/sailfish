@@ -22,7 +22,7 @@ impl Parse for RenderTextMacroArgument {
 fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
     let mut it = i.mac.path.segments.iter();
 
-    if it.next().map_or(false, |s| s.ident == "sfrt")
+    if it.next().map_or(false, |s| s.ident == "__sf_rt")
         && it.next().map_or(false, |s| s.ident == "render_text")
         && it.next().is_none()
     {
@@ -74,12 +74,12 @@ impl VisitMut for OptmizerImpl {
 
         fl.body.stmts.remove(0);
         *fl.body.stmts.last_mut().unwrap() = syn::parse2(quote! {
-            sfrt::render_text!(_ctx, #concat);
+            __sf_rt::render_text!(_ctx, #concat);
         })
         .unwrap();
 
         let new_expr = syn::parse2(quote! {{
-            sfrt::render_text!(_ctx, #sf);
+            __sf_rt::render_text!(_ctx, #sf);
             #fl;
             unsafe { _ctx.buf.set_len(_ctx.buf.len() - #sf_len); }
         }})

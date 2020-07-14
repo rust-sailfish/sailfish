@@ -106,7 +106,7 @@ impl SourceBuilder {
     fn write_text<'a>(&mut self, token: &Token<'a>) {
         use std::fmt::Write;
 
-        self.source.push_str("sfrt::render_text!(_ctx, ");
+        self.source.push_str("__sf_rt::render_text!(_ctx, ");
 
         // write text token with Debug::fmt
         write!(self.source, "{:?}", token.as_str()).unwrap();
@@ -121,7 +121,7 @@ impl SourceBuilder {
             "render"
         };
 
-        self.source.push_str("sfrt::");
+        self.source.push_str("__sf_rt::");
         self.source.push_str(method);
         self.source.push_str("!(_ctx, ");
         self.write_token(token);

@@ -270,13 +270,13 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             fn render_once_to_string(self, buf: &mut String) -> Result<(), sailfish::runtime::RenderError> {
                 #include_bytes_seq;
 
-                use sailfish::runtime as sfrt;
-                use sfrt::RenderInternal as _;
+                use sailfish::runtime as __sf_rt;
+                use __sf_rt::RenderInternal as _;
 
-                static SIZE_HINT: sfrt::SizeHint = sfrt::SizeHint::new();
+                static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
 
-                let mut _ctx = sfrt::Context {
-                    buf: sfrt::Buffer::from(std::mem::take(buf))
+                let mut _ctx = __sf_rt::Context {
+                    buf: __sf_rt::Buffer::from(std::mem::take(buf))
                 };
 
                 let _size_hint = SIZE_HINT.get();
