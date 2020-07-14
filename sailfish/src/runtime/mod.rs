@@ -98,3 +98,19 @@ impl Context {
 //     buffer.push_str("</table>");
 //     buffer.into_string()
 // }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::error::Error;
+
+    #[test]
+    fn render_error() {
+        let err = RenderError::new("custom error");
+        assert!(err.source().is_none());
+        assert_eq!(format!("{}", err), "custom error");
+
+        let err = RenderError::from(std::fmt::Error::default());
+        assert!(err.source().is_some());
+    }
+}

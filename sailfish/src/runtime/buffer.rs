@@ -312,11 +312,34 @@ mod tests {
         assert_eq!(buf.as_str(), "");
 
         // into empty string
-        let buf = Buffer::new();
+        let buf = Buffer::default();
         let mut s = buf.into_string();
         assert_eq!(s, "");
 
         s.push_str("apple");
         assert_eq!(s, "apple");
+    }
+
+    #[test]
+    fn clone() {
+        use std::fmt::Write;
+
+        let mut s1 = Buffer::with_capacity(0);
+        let mut s2 = s1.clone();
+
+        s1.push('a');
+        s2.push_str("b");
+
+        assert_eq!(s1.as_str(), "a");
+        assert_eq!(s2.as_str(), "b");
+
+        let mut s1 = Buffer::from("foo");
+        let mut s2 = s1.clone();
+
+        s1 = s1 + "bar";
+        write!(s2, "baz").unwrap();
+
+        assert_eq!(s1.as_str(), "foobar");
+        assert_eq!(s2.as_str(), "foobaz");
     }
 }

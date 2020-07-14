@@ -269,12 +269,11 @@ mod tests {
         assert_eq!(b.as_str(), "1111");
         b.clear();
 
-        let v = 2.0;
-        (&v)._sf_r_internal(&mut b).unwrap();
-        (&&v)._sf_r_internal(&mut b).unwrap();
-        (&&&v)._sf_r_internal(&mut b).unwrap();
-        (&&&&v)._sf_r_internal(&mut b).unwrap();
-        assert_eq!(b.as_str(), "2.02.02.02.0");
+        (&true)._sf_r_internal(&mut b).unwrap();
+        (&&false)._sf_r_internal(&mut b).unwrap();
+        (&&&true)._sf_r_internal(&mut b).unwrap();
+        (&&&&false)._sf_r_internal(&mut b).unwrap();
+        assert_eq!(b.as_str(), "truefalsetruefalse");
         b.clear();
 
         let s = "apple";
@@ -306,5 +305,23 @@ mod tests {
         (&Rc::new(2.3f32))._sf_re_internal(&mut b).unwrap();
 
         assert_eq!(b.as_str(), "ab42.3");
+    }
+
+    #[test]
+    fn float() {
+        let mut b = Buffer::new();
+
+        (&0.0f64)._sf_re_internal(&mut b).unwrap();
+        (&std::f64::INFINITY)._sf_re_internal(&mut b).unwrap();
+        (&std::f64::NEG_INFINITY)._sf_re_internal(&mut b).unwrap();
+        (&std::f64::NAN)._sf_re_internal(&mut b).unwrap();
+        assert_eq!(b.as_str(), "0.0inf-infNaN");
+        b.clear();
+
+        (&0.0f32)._sf_re_internal(&mut b).unwrap();
+        (&std::f32::INFINITY)._sf_re_internal(&mut b).unwrap();
+        (&std::f32::NEG_INFINITY)._sf_re_internal(&mut b).unwrap();
+        (&std::f32::NAN)._sf_re_internal(&mut b).unwrap();
+        assert_eq!(b.as_str(), "0.0inf-infNaN");
     }
 }
