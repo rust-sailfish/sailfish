@@ -271,7 +271,6 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-                use __sf_rt::RenderInternal as _;
 
                 static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
 
