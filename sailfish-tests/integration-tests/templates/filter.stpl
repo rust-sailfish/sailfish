@@ -1,0 +1,4 @@
+disp: <%- message | disp %>
+dbg: <%- message | dbg %>
+disp escaped: <%= message | disp %>
+dbg escaped: <%= message | dbg %>

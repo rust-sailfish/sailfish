@@ -85,3 +85,23 @@ impl<'a, T: Render> Render for Lower<'a, T> {
 pub fn lower<T: Render>(expr: &T) -> Lower<T> {
     Lower(expr)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn case() {
+        let mut buf = Buffer::new();
+        upper(&"hElLO, WOrLd!").render(&mut buf).unwrap();
+        assert_eq!(buf.as_str(), "HELLO, WORLD!");
+
+        buf.clear();
+        lower(&"hElLO, WOrLd!").render(&mut buf).unwrap();
+        assert_eq!(buf.as_str(), "hello, world!");
+
+        buf.clear();
+        lower(&"<h1>TITLE</h1>").render_escaped(&mut buf).unwrap();
+        assert_eq!(buf.as_str(), "&lt;h1&gt;title&lt;/h1&gt;");
+    }
+}
