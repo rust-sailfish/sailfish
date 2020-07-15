@@ -68,15 +68,21 @@ impl Buffer {
         self.capacity
     }
 
-    /// Force the length of buffer to `new_len`
+    #[inline]
+    #[doc(hidden)]
+    pub unsafe fn _set_len(&mut self, new_len: usize) {
+        self.len = new_len;
+    }
+
+    /// Increase the length of buffer by `additional` bytes
     ///
     /// # Safety
     ///
-    /// - `new_len` must be less than or equal to `capacity()`
-    /// - The elements at `old_len..new_len` must be initialized
+    /// - `additional` must be less than or equal to `capacity() - len()`
+    /// - The elements at `old_len..old_len + additional` must be initialized
     #[inline]
-    pub unsafe fn set_len(&mut self, new_len: usize) {
-        self.len = new_len;
+    pub unsafe fn advance(&mut self, additional: usize) {
+        self.len += additional;
     }
 
     #[inline]

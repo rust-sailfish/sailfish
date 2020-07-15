@@ -44,7 +44,7 @@ impl<'a, T: Render> Render for Upper<'a, T> {
         self.0.render(b)?;
 
         let s = b.as_str()[old_len..].to_uppercase();
-        unsafe { b.set_len(old_len) };
+        unsafe { b._set_len(old_len) };
         b.push_str(&*s);
         Ok(())
     }
@@ -64,7 +64,7 @@ impl<'a, T: Render> Render for Lower<'a, T> {
         self.0.render(b)?;
 
         let s = b.as_str()[old_len..].to_lowercase();
-        unsafe { b.set_len(old_len) };
+        unsafe { b._set_len(old_len) };
         b.push_str(&*s);
         Ok(())
     }
@@ -74,7 +74,7 @@ impl<'a, T: Render> Render for Lower<'a, T> {
         self.0.render_escaped(b)?;
 
         let s = b.as_str()[old_len..].to_lowercase();
-        unsafe { b.set_len(old_len) };
+        unsafe { b._set_len(old_len) };
         b.push_str(&*s);
         Ok(())
     }

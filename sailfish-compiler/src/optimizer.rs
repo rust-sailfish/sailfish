@@ -81,7 +81,7 @@ impl VisitMut for OptmizerImpl {
         let new_expr = syn::parse2(quote! {{
             __sf_rt::render_text!(__sf_buf, #sf);
             #fl;
-            unsafe { __sf_buf.set_len(__sf_buf.len() - #sf_len); }
+            unsafe { __sf_buf._set_len(__sf_buf.len() - #sf_len); }
         }})
         .unwrap();
 

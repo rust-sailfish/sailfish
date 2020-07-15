@@ -57,7 +57,7 @@ pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
         if feed.len() < 16 {
             buf.reserve(feed.len() * 6);
             let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
-            buf.set_len(buf.len() + l);
+            buf.advance(l);
         } else {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             {

@@ -80,7 +80,7 @@ pub type RenderResult = Result<String, RenderError>;
 //             let _ = (&r2).render(&mut buffer);
 //             buffer.push_str("</td><td>");
 //         }
-//         unsafe { buffer.set_len(buffer.len() - 4) }
+//         unsafe { buffer._set_len(buffer.len() - 4) }
 //         buffer.push_str("</tr>");
 //     }
 //     buffer.push_str("</table>");
