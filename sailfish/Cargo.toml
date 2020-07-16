@@ -1,6 +1,6 @@
 [package]
 name = "sailfish"
-version = "0.1.3"
+version = "0.2.0"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Really fast, intuitive template engine for Rust"
 homepage = "https://github.com/Kogia-sima/sailfish"
