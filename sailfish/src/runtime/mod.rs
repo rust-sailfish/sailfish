@@ -5,6 +5,7 @@ mod utils;
 
 mod buffer;
 pub mod escape;
+pub mod filter;
 mod macros;
 mod render;
 mod size_hint;
@@ -69,19 +70,6 @@ impl From<fmt::Error> for RenderError {
 
 pub type RenderResult = Result<String, RenderError>;
 
-#[doc(hidden)]
-pub struct Context {
-    #[doc(hidden)]
-    pub buf: Buffer,
-}
-
-impl Context {
-    #[inline]
-    pub fn into_result(self) -> RenderResult {
-        Ok(self.buf.into_string())
-    }
-}
-
 // #[inline(never)]
 // pub fn _instantiate(table: Vec<Vec<usize>>) -> String {
 //     let mut buffer = Buffer::with_capacity(130000);
@@ -92,9 +80,25 @@ impl Context {
 //             let _ = (&r2).render(&mut buffer);
 //             buffer.push_str("</td><td>");
 //         }
-//         unsafe { buffer.set_len(buffer.len() - 4) }
+//         unsafe { buffer._set_len(buffer.len() - 4) }
 //         buffer.push_str("</tr>");
 //     }
 //     buffer.push_str("</table>");
 //     buffer.into_string()
 // }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::error::Error;
+
+    #[test]
+    fn render_error() {
+        let err = RenderError::new("custom error");
+        assert!(err.source().is_none());
+        assert_eq!(format!("{}", err), "custom error");
+
+        let err = RenderError::from(std::fmt::Error::default());
+        assert!(err.source().is_some());
+    }
+}

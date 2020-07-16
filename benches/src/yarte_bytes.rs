@@ -1,3 +1,4 @@
+use bytes::BytesMut;
 use yarte::TemplateBytes;
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
@@ -10,7 +11,7 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
         table.push(inner);
     }
     let t = BigTable { table };
-    b.iter(|| t.call(109915));
+    b.iter(|| t.call::<BytesMut>(109915));
 }
 
 #[derive(TemplateBytes)]
@@ -42,7 +43,7 @@ pub fn teams(b: &mut criterion::Bencher<'_>) {
             },
         ],
     };
-    b.iter(|| t.call(239));
+    b.iter(|| t.call::<BytesMut>(239));
 }
 
 #[derive(TemplateBytes)]

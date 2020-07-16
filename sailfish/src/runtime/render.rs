@@ -1,4 +1,12 @@
-use std::path::Path;
+use std::borrow::Cow;
+use std::cell::{Ref, RefMut};
+use std::num::{
+    NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize,
+    NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize, Wrapping,
+};
+use std::path::{Path, PathBuf};
+use std::rc::Rc;
+use std::sync::{Arc, MutexGuard, RwLockReadGuard, RwLockWriteGuard};
 
 use super::buffer::Buffer;
 use super::{escape, RenderError};
@@ -59,16 +67,30 @@ pub trait Render {
 //     }
 // }
 
-impl Render for str {
+impl Render for String {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        b.push_str(self);
+        b.push_str(&**self);
         Ok(())
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        escape::escape_to_buf(self, b);
+        escape::escape_to_buf(&**self, b);
+        Ok(())
+    }
+}
+
+impl Render for &str {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        b.push_str(*self);
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        escape::escape_to_buf(*self, b);
         Ok(())
     }
 }
@@ -90,6 +112,21 @@ impl Render for char {
             '\'' => b.push_str("&#039;"),
             _ => b.push(*self),
         }
+        Ok(())
+    }
+}
+
+impl Render for PathBuf {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        // TODO: speed up on Windows using OsStrExt
+        b.push_str(&*self.to_string_lossy());
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        escape::escape_to_buf(&*self.to_string_lossy(), b);
         Ok(())
     }
 }
@@ -160,7 +197,7 @@ macro_rules! render_int {
                     unsafe {
                         let ptr = b.as_mut_ptr().add(b.len());
                         let l = itoap::write_to_ptr(ptr, *self);
-                        b.set_len(b.len() + l);
+                        b.advance(l);
                     }
                     debug_assert!(b.len() <= b.capacity());
                     Ok(())
@@ -186,7 +223,7 @@ impl Render for f32 {
                 b.reserve(16);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format32(*self, ptr);
-                b.set_len(b.len() + l);
+                b.advance(l);
                 debug_assert!(b.len() <= b.capacity());
             }
         } else if self.is_nan() {
@@ -215,7 +252,7 @@ impl Render for f64 {
                 b.reserve(24);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format64(*self, ptr);
-                b.set_len(b.len() + l);
+                b.advance(l);
                 debug_assert!(b.len() <= b.capacity());
             }
         } else if self.is_nan() {
@@ -236,22 +273,80 @@ impl Render for f64 {
     }
 }
 
-// private trait for avoiding method name collision in render* macros
-#[doc(hidden)]
-pub trait RenderInternal {
-    fn _sf_r_internal(&self, b: &mut Buffer) -> Result<(), RenderError>;
-    fn _sf_re_internal(&self, b: &mut Buffer) -> Result<(), RenderError>;
+macro_rules! render_deref {
+    (
+        $(#[doc = $doc:tt])*
+        [$($bounds:tt)+] $($desc:tt)+
+    ) => {
+        $(#[doc = $doc])*
+        impl <$($bounds)+> Render for $($desc)+ {
+            #[inline]
+            fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+                (**self).render(b)
+            }
+
+            #[inline]
+            fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+                (**self).render_escaped(b)
+            }
+        }
+    };
 }
 
-impl<T: Render + ?Sized> RenderInternal for T {
+render_deref!(['a, T: Render + ?Sized] &'a T);
+render_deref!(['a, T: Render + ?Sized] &'a mut T);
+render_deref!([T: Render + ?Sized] Box<T>);
+render_deref!([T: Render + ?Sized] Rc<T>);
+render_deref!([T: Render + ?Sized] Arc<T>);
+render_deref!(['a, T: Render + ToOwned + ?Sized] Cow<'a, T>);
+render_deref!(['a, T: Render + ?Sized] Ref<'a, T>);
+render_deref!(['a, T: Render + ?Sized] RefMut<'a, T>);
+render_deref!(['a, T: Render + ?Sized] MutexGuard<'a, T>);
+render_deref!(['a, T: Render + ?Sized] RwLockReadGuard<'a, T>);
+render_deref!(['a, T: Render + ?Sized] RwLockWriteGuard<'a, T>);
+
+macro_rules! render_nonzero {
+    ($($type:ty,)*) => {
+        $(
+            impl Render for $type {
+                #[inline]
+                fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+                    self.get().render(b)
+                }
+
+                #[inline]
+                fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+                    self.get().render_escaped(b)
+                }
+            }
+        )*
+    }
+}
+
+render_nonzero!(
+    NonZeroI8,
+    NonZeroI16,
+    NonZeroI32,
+    NonZeroI64,
+    NonZeroI128,
+    NonZeroIsize,
+    NonZeroU8,
+    NonZeroU16,
+    NonZeroU32,
+    NonZeroU64,
+    NonZeroU128,
+    NonZeroUsize,
+);
+
+impl<T: Render> Render for Wrapping<T> {
     #[inline]
-    fn _sf_r_internal(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        self.render(b)
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        self.0.render(b)
     }
 
     #[inline]
-    fn _sf_re_internal(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        self.render_escaped(b)
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        self.0.render_escaped(b)
     }
 }
 
@@ -262,34 +357,33 @@ mod tests {
     #[test]
     fn receiver_coercion() {
         let mut b = Buffer::new();
-        (&1)._sf_r_internal(&mut b).unwrap();
-        (&&1)._sf_r_internal(&mut b).unwrap();
-        (&&&1)._sf_r_internal(&mut b).unwrap();
-        (&&&&1)._sf_r_internal(&mut b).unwrap();
+        Render::render(&1, &mut b).unwrap();
+        Render::render(&&1, &mut b).unwrap();
+        Render::render(&&&1, &mut b).unwrap();
+        Render::render(&&&&1, &mut b).unwrap();
         assert_eq!(b.as_str(), "1111");
         b.clear();
 
-        let v = 2.0;
-        (&v)._sf_r_internal(&mut b).unwrap();
-        (&&v)._sf_r_internal(&mut b).unwrap();
-        (&&&v)._sf_r_internal(&mut b).unwrap();
-        (&&&&v)._sf_r_internal(&mut b).unwrap();
-        assert_eq!(b.as_str(), "2.02.02.02.0");
+        Render::render(&true, &mut b).unwrap();
+        Render::render(&&false, &mut b).unwrap();
+        Render::render(&&&true, &mut b).unwrap();
+        Render::render(&&&&false, &mut b).unwrap();
+        assert_eq!(b.as_str(), "truefalsetruefalse");
         b.clear();
 
         let s = "apple";
-        (&*s)._sf_re_internal(&mut b).unwrap();
-        (&s)._sf_re_internal(&mut b).unwrap();
-        (&&s)._sf_re_internal(&mut b).unwrap();
-        (&&&s)._sf_re_internal(&mut b).unwrap();
-        (&&&&s)._sf_re_internal(&mut b).unwrap();
+        Render::render_escaped(&s, &mut b).unwrap();
+        Render::render_escaped(&s, &mut b).unwrap();
+        Render::render_escaped(&&s, &mut b).unwrap();
+        Render::render_escaped(&&&s, &mut b).unwrap();
+        Render::render_escaped(&&&&s, &mut b).unwrap();
         assert_eq!(b.as_str(), "appleappleappleappleapple");
         b.clear();
 
-        (&'c')._sf_re_internal(&mut b).unwrap();
-        (&&'<')._sf_re_internal(&mut b).unwrap();
-        (&&&'&')._sf_re_internal(&mut b).unwrap();
-        (&&&&' ')._sf_re_internal(&mut b).unwrap();
+        Render::render_escaped(&'c', &mut b).unwrap();
+        Render::render_escaped(&&'<', &mut b).unwrap();
+        Render::render_escaped(&&&'&', &mut b).unwrap();
+        Render::render_escaped(&&&&' ', &mut b).unwrap();
         assert_eq!(b.as_str(), "c&lt;&amp; ");
         b.clear();
     }
@@ -300,11 +394,29 @@ mod tests {
         use std::rc::Rc;
 
         let mut b = Buffer::new();
-        (&String::from("a"))._sf_r_internal(&mut b).unwrap();
-        (&&PathBuf::from("b"))._sf_r_internal(&mut b).unwrap();
-        (&Rc::new(4u32))._sf_re_internal(&mut b).unwrap();
-        (&Rc::new(2.3f32))._sf_re_internal(&mut b).unwrap();
+        Render::render(&String::from("a"), &mut b).unwrap();
+        Render::render(&&PathBuf::from("b"), &mut b).unwrap();
+        Render::render_escaped(&Rc::new(4u32), &mut b).unwrap();
+        Render::render_escaped(&Rc::new(2.3f32), &mut b).unwrap();
 
         assert_eq!(b.as_str(), "ab42.3");
+    }
+
+    #[test]
+    fn float() {
+        let mut b = Buffer::new();
+
+        Render::render_escaped(&0.0f64, &mut b).unwrap();
+        Render::render_escaped(&std::f64::INFINITY, &mut b).unwrap();
+        Render::render_escaped(&std::f64::NEG_INFINITY, &mut b).unwrap();
+        Render::render_escaped(&std::f64::NAN, &mut b).unwrap();
+        assert_eq!(b.as_str(), "0.0inf-infNaN");
+        b.clear();
+
+        Render::render_escaped(&0.0f32, &mut b).unwrap();
+        Render::render_escaped(&std::f32::INFINITY, &mut b).unwrap();
+        Render::render_escaped(&std::f32::NEG_INFINITY, &mut b).unwrap();
+        Render::render_escaped(&std::f32::NAN, &mut b).unwrap();
+        assert_eq!(b.as_str(), "0.0inf-infNaN");
     }
 }

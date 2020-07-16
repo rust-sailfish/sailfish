@@ -1,9 +1,88 @@
 use proc_macro2::Span;
+use quote::ToTokens;
+use syn::parse::{Parse, ParseStream as SynParseStream, Result as ParseResult};
+use syn::spanned::Spanned;
+use syn::{BinOp, Block, Expr};
 
 use crate::error::*;
 use crate::parser::{ParseStream, Token, TokenKind};
 
-use syn::Block;
+enum Filter {
+    Ident(syn::Ident),
+    Call(syn::ExprCall),
+}
+
+impl Spanned for Filter {
+    fn span(&self) -> Span {
+        match *self {
+            Filter::Ident(ref i) => i.span(),
+            Filter::Call(ref c) => c.span(),
+        }
+    }
+}
+
+struct CodeBlock {
+    #[allow(dead_code)]
+    expr: Box<Expr>,
+    filter: Option<Filter>,
+}
+
+impl Parse for CodeBlock {
+    fn parse(s: SynParseStream) -> ParseResult<Self> {
+        let main = s.parse::<Expr>()?;
+
+        let code_block = match main {
+            Expr::Binary(b) if matches!(b.op, BinOp::BitOr(_)) => {
+                match *b.right {
+                    Expr::Call(c) => {
+                        if let Expr::Path(ref p) = *c.func {
+                            if p.path.get_ident().is_some() {
+                                CodeBlock {
+                                    expr: b.left,
+                                    filter: Some(Filter::Call(c)),
+                                }
+                            } else {
+                                return Err(syn::Error::new_spanned(
+                                    p,
+                                    "Invalid filter name",
+                                ));
+                            }
+                        } else {
+                            // if function in right side is not a path, fallback to
+                            // normal evaluation block
+                            CodeBlock {
+                                expr: b.left,
+                                filter: None,
+                            }
+                        }
+                    }
+                    Expr::Path(p) => {
+                        if let Some(i) = p.path.get_ident() {
+                            CodeBlock {
+                                expr: b.left,
+                                filter: Some(Filter::Ident(i.clone())),
+                            }
+                        } else {
+                            return Err(syn::Error::new_spanned(
+                                p,
+                                "Invalid filter name",
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(syn::Error::new_spanned(b, "Expected filter"));
+                    }
+                }
+            }
+            _ => CodeBlock {
+                expr: Box::new(main),
+                filter: None,
+            },
+        };
+
+        Ok(code_block)
+    }
+}
 
 #[derive(Clone)]
 pub struct SourceMapEntry {
@@ -38,48 +117,6 @@ impl SourceMap {
     }
 }
 
-pub struct TranslatedSource {
-    pub ast: Block,
-    pub source_map: SourceMap,
-}
-
-// translate tokens into Rust code
-#[derive(Clone, Debug, Default)]
-pub struct Translator {
-    escape: bool,
-}
-
-impl Translator {
-    #[inline]
-    pub fn new() -> Self {
-        Self { escape: true }
-    }
-
-    #[inline]
-    pub fn escape(mut self, new: bool) -> Self {
-        self.escape = new;
-        self
-    }
-
-    pub fn translate<'a>(
-        &self,
-        token_iter: ParseStream<'a>,
-    ) -> Result<TranslatedSource, Error> {
-        let original_source = token_iter.original_source;
-
-        let mut source = String::with_capacity(original_source.len());
-        source.push_str("{\n");
-        let mut ps = SourceBuilder {
-            escape: self.escape,
-            source,
-            source_map: SourceMap::default(),
-        };
-        ps.feed_tokens(&*token_iter.into_vec()?);
-
-        Ok(ps.finalize()?)
-    }
-}
-
 struct SourceBuilder {
     escape: bool,
     source: String,
@@ -87,6 +124,18 @@ struct SourceBuilder {
 }
 
 impl SourceBuilder {
+    fn new(escape: bool) -> SourceBuilder {
+        SourceBuilder {
+            escape,
+            source: String::from("{\n"),
+            source_map: SourceMap::default(),
+        }
+    }
+
+    fn reserve(&mut self, additional: usize) {
+        self.source.reserve(additional);
+    }
+
     fn write_token<'a>(&mut self, token: &Token<'a>) {
         let entry = SourceMapEntry {
             original: token.offset(),
@@ -97,45 +146,96 @@ impl SourceBuilder {
         self.source.push_str(token.as_str());
     }
 
-    fn write_code<'a>(&mut self, token: &Token<'a>) {
+    fn write_code<'a>(&mut self, token: &Token<'a>) -> Result<(), Error> {
         // TODO: automatically add missing tokens (e.g. ';', '{')
         self.write_token(token);
         self.source.push_str("\n");
+        Ok(())
     }
 
-    fn write_text<'a>(&mut self, token: &Token<'a>) {
+    fn write_text<'a>(&mut self, token: &Token<'a>) -> Result<(), Error> {
         use std::fmt::Write;
 
-        self.source.push_str("sfrt::render_text!(_ctx, ");
-
+        self.source.push_str("__sf_rt::render_text!(__sf_buf, ");
         // write text token with Debug::fmt
         write!(self.source, "{:?}", token.as_str()).unwrap();
-
         self.source.push_str(");\n");
+        Ok(())
     }
 
-    fn write_buffered_code<'a>(&mut self, token: &Token<'a>, escape: bool) {
+    fn write_buffered_code<'a>(
+        &mut self,
+        token: &Token<'a>,
+        escape: bool,
+    ) -> Result<(), Error> {
+        // parse and split off filter
+        let code_block = syn::parse_str::<CodeBlock>(token.as_str()).map_err(|e| {
+            let span = e.span();
+            let mut err = make_error!(ErrorKind::RustSyntaxError(e));
+            err.offset = into_offset(token.as_str(), span).map(|p| token.offset() + p);
+            err
+        })?;
         let method = if self.escape && escape {
             "render_escaped"
         } else {
             "render"
         };
 
-        self.source.push_str("sfrt::");
+        self.source.push_str("__sf_rt::");
         self.source.push_str(method);
-        self.source.push_str("!(_ctx, ");
-        self.write_token(token);
+        self.source.push_str("!(__sf_buf, ");
+
+        if let Some(filter) = code_block.filter {
+            let expr_str = code_block.expr.into_token_stream().to_string();
+            let (name, extra_args) = match filter {
+                Filter::Ident(i) => (i.to_string(), None),
+                Filter::Call(c) => (
+                    c.func.into_token_stream().to_string(),
+                    Some(c.args.into_token_stream().to_string()),
+                ),
+            };
+
+            self.source.push_str("sailfish::runtime::filter::");
+            self.source.push_str(&*name);
+            self.source.push_str("(");
+
+            // arguments to filter function
+            {
+                self.source.push_str("&(");
+                let entry = SourceMapEntry {
+                    original: token.offset(),
+                    new: self.source.len(),
+                    length: expr_str.len(),
+                };
+                self.source_map.entries.push(entry);
+                self.source.push_str(&expr_str);
+                self.source.push_str(")");
+
+                if let Some(extra_args) = extra_args {
+                    self.source.push_str(", ");
+                    self.source.push_str(&*extra_args);
+                }
+            }
+
+            self.source.push_str(")");
+        } else {
+            self.write_token(token);
+        }
+
         self.source.push_str(");\n");
+
+        Ok(())
     }
 
-    pub fn feed_tokens(&mut self, token_iter: &[Token]) {
-        let mut it = token_iter.iter().peekable();
+    pub fn feed_tokens<'a>(&mut self, token_iter: ParseStream<'a>) -> Result<(), Error> {
+        let mut it = token_iter.peekable();
         while let Some(token) = it.next() {
+            let token = token?;
             match token.kind() {
-                TokenKind::Code => self.write_code(&token),
+                TokenKind::Code => self.write_code(&token)?,
                 TokenKind::Comment => {}
                 TokenKind::BufferedCode { escape } => {
-                    self.write_buffered_code(&token, escape)
+                    self.write_buffered_code(&token, escape)?
                 }
                 TokenKind::Text => {
                     // concatenate repeated text token
@@ -143,7 +243,7 @@ impl SourceBuilder {
                     let mut concatenated = String::new();
                     concatenated.push_str(token.as_str());
 
-                    while let Some(next_token) = it.peek() {
+                    while let Some(&Ok(ref next_token)) = it.peek() {
                         match next_token.kind() {
                             TokenKind::Text => {
                                 concatenated.push_str(next_token.as_str());
@@ -157,10 +257,12 @@ impl SourceBuilder {
                     }
 
                     let new_token = Token::new(&*concatenated, offset, TokenKind::Text);
-                    self.write_text(&new_token);
+                    self.write_text(&new_token)?;
                 }
             }
         }
+
+        Ok(())
     }
 
     pub fn finalize(mut self) -> Result<TranslatedSource, Error> {
@@ -202,6 +304,43 @@ fn into_offset(source: &str, span: Span) -> Option<usize> {
     }
 }
 
+pub struct TranslatedSource {
+    pub ast: Block,
+    pub source_map: SourceMap,
+}
+
+// translate tokens into Rust code
+#[derive(Clone, Debug, Default)]
+pub struct Translator {
+    escape: bool,
+}
+
+impl Translator {
+    #[inline]
+    pub fn new() -> Self {
+        Self { escape: true }
+    }
+
+    #[inline]
+    pub fn escape(mut self, new: bool) -> Self {
+        self.escape = new;
+        self
+    }
+
+    pub fn translate<'a>(
+        &self,
+        token_iter: ParseStream<'a>,
+    ) -> Result<TranslatedSource, Error> {
+        let original_source = token_iter.original_source;
+
+        let mut ps = SourceBuilder::new(self.escape);
+        ps.reserve(original_source.len());
+        ps.feed_tokens(token_iter)?;
+
+        Ok(ps.finalize()?)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -209,7 +348,7 @@ mod tests {
 
     #[test]
     fn translate() {
-        let src = "<% pub fn sample() { %> <%% <%=//%>\n%><% } %>";
+        let src = "<% pub fn sample() { %> <%% <%=//%>\n1%><% } %>";
         let lexer = Parser::new();
         let token_iter = lexer.parse(src);
         let mut ps = SourceBuilder {
@@ -217,8 +356,7 @@ mod tests {
             source: String::with_capacity(token_iter.original_source.len()),
             source_map: SourceMap::default(),
         };
-        ps.feed_tokens(&token_iter.clone().into_vec().unwrap());
-        eprintln!("{}", ps.source);
+        ps.feed_tokens(token_iter.clone()).unwrap();
         Translator::new().translate(token_iter).unwrap();
     }
 }

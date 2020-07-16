@@ -1,0 +1,5 @@
+for row in &table {
+    for col in row {
+        println!("{}", *col);
+    }
+}

@@ -191,6 +191,26 @@ fn test_rust_macro() {
     assert_render("rust_macro", RustMacro { value: Some(10) });
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "formatting.stpl", escape = false)]
+struct Formatting;
+
+#[test]
+fn test_formatting() {
+    assert_render("formatting", Formatting);
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "filter.stpl")]
+struct Filter<'a> {
+    message: &'a str,
+}
+
+#[test]
+fn test_filter() {
+    assert_render("filter", Filter { message: "hello" });
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;

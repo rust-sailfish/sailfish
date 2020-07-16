@@ -50,10 +50,6 @@ fn escape(feed: &str, buf: &mut Buffer) {
     unsafe { fun(feed, buf) };
 }
 
-/// Change the default escape function
-#[doc(hidden)]
-pub fn register_escape_fn(_fun: fn(&str, &mut Buffer)) {}
-
 /// write the escaped contents into `Buffer`
 #[cfg_attr(feature = "perf-inline", inline)]
 pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
@@ -61,7 +57,7 @@ pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
         if feed.len() < 16 {
             buf.reserve(feed.len() * 6);
             let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
-            buf.set_len(buf.len() + l);
+            buf.advance(l);
         } else {
             #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
             {
@@ -119,6 +115,7 @@ mod tests {
     #[test]
     fn noescape() {
         assert_eq!(escape(""), "");
+        assert_eq!(escape("1234567890"), "1234567890");
         assert_eq!(
             escape("abcdefghijklmnopqrstrvwxyz"),
             "abcdefghijklmnopqrstrvwxyz"
@@ -159,12 +156,12 @@ mod tests {
         const ASCII_CHARS: &'static [u8] = br##"abcdefghijklmnopqrstuvwxyz0123456789-^\@[;:],./\!"#$%&'()~=~|`{+*}<>?_"##;
         let mut state = 88172645463325252u64;
         let mut data = Vec::with_capacity(100);
-        let mut buf1 = Buffer::new();
-        let mut buf2 = Buffer::new();
-        let mut buf3 = Buffer::new();
 
-        for len in 0..100 {
-            for _ in 0..10 {
+        let mut buf_naive = Buffer::new();
+        let mut buf = Buffer::new();
+
+        for len in 16..100 {
+            for _ in 0..5 {
                 data.clear();
                 for _ in 0..len {
                     // xorshift
@@ -178,23 +175,33 @@ mod tests {
 
                 let s = unsafe { std::str::from_utf8_unchecked(&*data) };
 
-                buf1.clear();
-                buf2.clear();
-                buf3.clear();
-
                 unsafe {
-                    escape_to_buf(s, &mut buf1);
-                    fallback::escape(s, &mut buf2);
                     naive::escape(
-                        &mut buf3,
+                        &mut buf_naive,
                         s.as_ptr(),
                         s.as_ptr(),
                         s.as_ptr().add(s.len()),
                     );
+
+                    dbg!(s);
+                    fallback::escape(s, &mut buf);
+                    assert_eq!(buf.as_str(), buf_naive.as_str());
+                    buf.clear();
+
+                    if is_x86_feature_detected!("sse2") {
+                        sse2::escape(s, &mut buf);
+                        assert_eq!(buf.as_str(), buf_naive.as_str());
+                        buf.clear();
+                    }
+
+                    if is_x86_feature_detected!("avx2") {
+                        avx2::escape(s, &mut buf);
+                        assert_eq!(buf.as_str(), buf_naive.as_str());
+                        buf.clear();
+                    }
                 }
 
-                assert_eq!(buf1.as_str(), buf3.as_str());
-                assert_eq!(buf2.as_str(), buf3.as_str());
+                buf_naive.clear();
             }
         }
     }

@@ -68,15 +68,21 @@ impl Buffer {
         self.capacity
     }
 
-    /// Force the length of buffer to `new_len`
+    #[inline]
+    #[doc(hidden)]
+    pub unsafe fn _set_len(&mut self, new_len: usize) {
+        self.len = new_len;
+    }
+
+    /// Increase the length of buffer by `additional` bytes
     ///
     /// # Safety
     ///
-    /// - `new_len` must be less than or equal to `capacity()`
-    /// - The elements at `old_len..new_len` must be initialized
+    /// - `additional` must be less than or equal to `capacity() - len()`
+    /// - The elements at `old_len..old_len + additional` must be initialized
     #[inline]
-    pub unsafe fn set_len(&mut self, new_len: usize) {
-        self.len = new_len;
+    pub unsafe fn advance(&mut self, additional: usize) {
+        self.len += additional;
     }
 
     #[inline]
@@ -86,9 +92,10 @@ impl Buffer {
 
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if unlikely!(self.len + size > self.capacity) {
-            self.reserve_internal(size);
+        if size <= self.capacity.wrapping_sub(self.len) {
+            return;
         }
+        self.reserve_internal(size);
         debug_assert!(self.len + size <= self.capacity);
     }
 
@@ -110,7 +117,9 @@ impl Buffer {
     #[inline]
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
-        self.reserve(size);
+        if unlikely!(size > self.capacity.wrapping_sub(self.len)) {
+            self.reserve_internal(size);
+        }
         unsafe {
             let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
@@ -129,9 +138,9 @@ impl Buffer {
     #[cold]
     fn reserve_internal(&mut self, size: usize) {
         unsafe {
-            let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
+            let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
             debug_assert!(new_capacity > self.capacity);
-            self.data = safe_realloc(self.data, self.capacity, new_capacity);
+            self.data = safe_realloc(self.data, self.capacity, new_capacity, size);
             self.capacity = new_capacity;
         }
         debug_assert!(!self.data.is_null());
@@ -140,7 +149,13 @@ impl Buffer {
 }
 
 #[cold]
-unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+unsafe fn safe_realloc(
+    ptr: *mut u8,
+    capacity: usize,
+    new_capacity: usize,
+    size: usize,
+) -> *mut u8 {
+    assert!(size <= std::usize::MAX / 2, "capacity is too large");
     assert!(new_capacity <= std::usize::MAX / 2, "capacity is too large");
     let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
@@ -303,11 +318,34 @@ mod tests {
         assert_eq!(buf.as_str(), "");
 
         // into empty string
-        let buf = Buffer::new();
+        let buf = Buffer::default();
         let mut s = buf.into_string();
         assert_eq!(s, "");
 
         s.push_str("apple");
         assert_eq!(s, "apple");
+    }
+
+    #[test]
+    fn clone() {
+        use std::fmt::Write;
+
+        let mut s1 = Buffer::with_capacity(0);
+        let mut s2 = s1.clone();
+
+        s1.push('a');
+        s2.push_str("b");
+
+        assert_eq!(s1.as_str(), "a");
+        assert_eq!(s2.as_str(), "b");
+
+        let mut s1 = Buffer::from("foo");
+        let mut s2 = s1.clone();
+
+        s1 = s1 + "bar";
+        write!(s2, "baz").unwrap();
+
+        assert_eq!(s1.as_str(), "foobar");
+        assert_eq!(s2.as_str(), "foobaz");
     }
 }

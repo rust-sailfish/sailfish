@@ -1,0 +1,13 @@
+[package]
+name = "fuzzing-tests"
+version = "0.2.0"
+authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
+edition = "2018"
+publish = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+afl = "0.8.0"
+sailfish = { path = "../../sailfish" }
+sailfish-compiler = { path = "../../sailfish-compiler" }

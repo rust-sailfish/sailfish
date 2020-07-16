@@ -200,6 +200,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             .ancestors()
             .find(|p| p.join("LICENSE").exists())
             .unwrap()
+            .join("sailfish-tests")
             .join("integration-tests")
             .join("tests")
             .join("fails")
@@ -269,23 +270,18 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             fn render_once_to_string(self, buf: &mut String) -> Result<(), sailfish::runtime::RenderError> {
                 #include_bytes_seq;
 
-                use sailfish::runtime as sfrt;
-                use sfrt::RenderInternal as _;
+                use sailfish::runtime as __sf_rt;
 
-                static SIZE_HINT: sfrt::SizeHint = sfrt::SizeHint::new();
+                static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
 
-                let mut _ctx = sfrt::Context {
-                    buf: sfrt::Buffer::from(std::mem::take(buf))
-                };
-
-                let _size_hint = SIZE_HINT.get();
-                _ctx.buf.reserve(_size_hint);
+                let mut __sf_buf = __sf_rt::Buffer::from(std::mem::take(buf));
+                __sf_buf.reserve(SIZE_HINT.get());
 
                 let #name { #field_names } = self;
                 include!(#output_file_string);
 
-                SIZE_HINT.update(_ctx.buf.len());
-                *buf = _ctx.buf.into_string();
+                SIZE_HINT.update(__sf_buf.len());
+                *buf = __sf_buf.into_string();
                 Ok(())
             }
         }

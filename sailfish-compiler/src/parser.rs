@@ -289,7 +289,7 @@ fn find_block_end(haystack: &str, delimiter: &str) -> Option<usize> {
             b'/' => match remain.as_bytes().get(pos + 1).copied() {
                 Some(b'/') => unwrap_or_break!(find_comment_end(&remain[pos..])),
                 Some(b'*') => unwrap_or_break!(find_block_comment_end(&remain[pos..])),
-                _ => pos + 1,
+                _ => 1,
             },
             b'\"' => {
                 // check if the literal is a raw string
@@ -311,7 +311,7 @@ fn find_block_end(haystack: &str, delimiter: &str) -> Option<usize> {
                 if remain[pos..].starts_with(delimiter) {
                     return Some(haystack.len() - remain.len() + pos + delimiter.len());
                 } else {
-                    pos + 1
+                    1
                 }
             }
         };

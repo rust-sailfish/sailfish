@@ -40,14 +40,11 @@ fn contains_key(x: usize) -> bool {
 
 #[inline]
 pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+    debug_assert!(feed.len() >= 16);
+
     let len = feed.len();
     let mut start_ptr = feed.as_ptr();
     let end_ptr = start_ptr.add(len);
-
-    if feed.len() < USIZE_BYTES {
-        naive::escape(buffer, start_ptr, start_ptr, end_ptr);
-        return;
-    }
 
     let mut ptr = start_ptr;
     let aligned_ptr = ptr.add(USIZE_BYTES - (start_ptr as usize & USIZE_ALIGN));

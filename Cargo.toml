@@ -3,11 +3,12 @@ members = [
   "sailfish",
   "sailfish-compiler",
   "sailfish-macros",
-  "examples",
-  "integration-tests"
+  "sailfish-tests/integration-tests"
 ]
 exclude = [
-  "benches"
+  "sailfish-tests/fuzzing-tests",
+  "benches",
+  "examples"
 ]
 
 [profile.dev.package.syn]
