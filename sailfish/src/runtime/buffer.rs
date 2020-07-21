@@ -222,21 +222,25 @@ impl fmt::Write for Buffer {
 }
 
 impl From<String> for Buffer {
+    /// Always copy the inner data from `String` because it is dangerous to
+    /// handle the raw components of `String`.
+    ///
+    /// This operation is `O(n)`
     #[inline]
     fn from(other: String) -> Buffer {
-        let mut other = ManuallyDrop::new(other);
-        Buffer {
-            data: other.as_mut_ptr(),
-            len: other.len(),
-            capacity: other.capacity(),
-        }
+        Buffer::from(other.as_str())
     }
 }
 
 impl From<&str> for Buffer {
     #[inline]
     fn from(other: &str) -> Buffer {
-        Buffer::from(other.to_owned())
+        let mut buf = Buffer::with_capacity(other.len());
+        unsafe {
+            ptr::copy_nonoverlapping(other.as_ptr(), buf.as_mut_ptr(), other.len());
+            buf.advance(other.len());
+        }
+        buf
     }
 }
 
