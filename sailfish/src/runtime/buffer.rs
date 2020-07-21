@@ -30,14 +30,8 @@ impl Buffer {
             if unlikely!(n == 0) {
                 Self::new()
             } else {
-                let layout = Layout::from_size_align_unchecked(n, 1);
-                let data = alloc(layout);
-                if data.is_null() {
-                    handle_alloc_error(layout);
-                }
-
                 Self {
-                    data,
+                    data: safe_alloc(n),
                     len: 0,
                     capacity: n,
                 }
@@ -148,6 +142,17 @@ impl Buffer {
     }
 }
 
+unsafe fn safe_alloc(capacity: usize) -> *mut u8 {
+    assert!(capacity <= std::usize::MAX / 2, "capacity is too large");
+    let layout = Layout::from_size_align_unchecked(capacity, 1);
+    let data = alloc(layout);
+    if data.is_null() {
+        handle_alloc_error(layout);
+    }
+
+    data
+}
+
 #[cold]
 unsafe fn safe_realloc(
     ptr: *mut u8,
@@ -178,14 +183,8 @@ impl Clone for Buffer {
             if self.capacity == 0 {
                 Self::new()
             } else {
-                let layout = Layout::from_size_align_unchecked(self.len, 1);
-                let data = alloc(layout);
-                if data.is_null() {
-                    handle_alloc_error(layout);
-                }
-
                 let buf = Self {
-                    data,
+                    data: safe_alloc(self.len),
                     len: self.len,
                     capacity: self.len,
                 };
