@@ -135,6 +135,15 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     b.iter(|| t.call::<Bufff>(109915));
 }
 
+#[inline(never)]
+pub fn vo(n: usize) -> &'static str {
+    if n % 2 == 0 {
+        "10"
+    } else {
+        "0"
+    }
+}
+
 #[derive(TemplateBytes)]
 #[template(path = "big-table")]
 struct BigTable {
