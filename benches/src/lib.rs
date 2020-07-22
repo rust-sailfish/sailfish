@@ -1,4 +1,5 @@
 #![feature(proc_macro_hygiene)]
+#![feature(core_intrinsics)]
 
 pub mod askama_bench;
 pub mod fomat;

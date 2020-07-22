@@ -23,9 +23,9 @@ serde_derive = "1"
 serde_json = "1"
 serde_yaml = "0.8"
 tera = { git = "https://github.com/Keats/tera" }
-v_htmlescape = "0.9.1"
-yarte = { git = "https://github.com/botika/yarte", features = ["bytes-buf", "fixed"] }
-bytes = "0.5.5"
+v_htmlescape = "0.10.0"
+yarte = { git = "https://github.com/botika/yarte", features = ["bytes-buf", "fixed"], rev = "a39f49d" }
+bytes = "0.5.6"
 
 [build-dependencies]
 ructe = { git = "https://github.com/kaj/ructe" }

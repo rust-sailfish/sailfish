@@ -208,7 +208,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tera",
- "v_htmlescape 0.9.1",
+ "v_htmlescape",
  "yarte",
 ]
 
@@ -307,12 +307,9 @@ checksum = "08c48aae112d48ed9f069b33538ea9e3e90aa263cfa3d1c24309612b1f7472de"
 
 [[package]]
 name = "bytes"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "118cf036fbb97d0816e3c34b2d7a1e8cfc60f68fcf63d550ddbe9bd5f59c213b"
-dependencies = [
- "loom",
-]
+checksum = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
 
 [[package]]
 name = "cast"
@@ -731,19 +728,6 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 name = "fomat-macros"
 version = "0.3.1"
 source = "git+https://github.com/krdln/fomat-macros#7e790d5cf205f05ed8c5ce2c81f4eb39de68b457"
-
-[[package]]
-name = "generator"
-version = "0.6.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "add72f17bb81521258fcc8a7a3245b1e184e916bfbe34f0ea89558f440df5c68"
-dependencies = [
- "cc",
- "libc",
- "log",
- "rustc_version",
- "winapi",
-]
 
 [[package]]
 name = "generic-array"
@@ -1203,17 +1187,6 @@ dependencies = [
  "regex-syntax",
  "syn 1.0.33",
  "utf8-ranges",
-]
-
-[[package]]
-name = "loom"
-version = "0.3.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ecc775857611e1df29abba5c41355cdf540e7e9d4acfdf0f355eefee82330b7"
-dependencies = [
- "cfg-if",
- "generator",
- "scoped-tls",
 ]
 
 [[package]]
@@ -1846,12 +1819,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "scoped-tls"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "332ffa32bf586782a3efaeb58f127980944bbc8c4d6913a86107ac2a5ab24b28"
-
-[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2288,16 +2255,6 @@ checksum = "b4ae116fef2b7fea257ed6440d3cfcff7f190865f170cdad00bb6465bf18ecba"
 
 [[package]]
 name = "v_escape"
-version = "0.11.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32189098aacb5820b08c8cff163c982ff72e88ebd04b6b31944084f57463b774"
-dependencies = [
- "bytes",
- "v_escape_derive",
-]
-
-[[package]]
-name = "v_escape"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b66158ce426982197fd44266d68125fd4000f1d42f5ee33ef02b500b4b6b0024"
@@ -2330,22 +2287,12 @@ dependencies = [
 
 [[package]]
 name = "v_htmlescape"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37981da7d2bd82edc21de370f4d7b010360c8590f70c9f76f5df20e780dc49f2"
-dependencies = [
- "cfg-if",
- "v_escape 0.11.3",
-]
-
-[[package]]
-name = "v_htmlescape"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f5fd25529cb2f78527b5ee507bcfb357b26d057b5e480853c26d49a4ead5c629"
 dependencies = [
  "cfg-if",
- "v_escape 0.12.0",
+ "v_escape",
 ]
 
 [[package]]
@@ -2520,7 +2467,7 @@ dependencies = [
 [[package]]
 name = "yarte"
 version = "0.12.0"
-source = "git+https://github.com/botika/yarte#a39f49d5e2f7826b1be492bca56cd79342369fe3"
+source = "git+https://github.com/botika/yarte?rev=a39f49d#a39f49d5e2f7826b1be492bca56cd79342369fe3"
 dependencies = [
  "buf-min",
  "yarte_derive",
@@ -2530,7 +2477,7 @@ dependencies = [
 [[package]]
 name = "yarte_codegen"
 version = "0.12.0"
-source = "git+https://github.com/botika/yarte#a39f49d5e2f7826b1be492bca56cd79342369fe3"
+source = "git+https://github.com/botika/yarte?rev=a39f49d#a39f49d5e2f7826b1be492bca56cd79342369fe3"
 dependencies = [
  "proc-macro2 1.0.18",
  "quote 1.0.7",
@@ -2542,7 +2489,7 @@ dependencies = [
 [[package]]
 name = "yarte_derive"
 version = "0.12.0"
-source = "git+https://github.com/botika/yarte#a39f49d5e2f7826b1be492bca56cd79342369fe3"
+source = "git+https://github.com/botika/yarte?rev=a39f49d#a39f49d5e2f7826b1be492bca56cd79342369fe3"
 dependencies = [
  "bat",
  "proc-macro2 1.0.18",
@@ -2559,7 +2506,7 @@ dependencies = [
 [[package]]
 name = "yarte_helpers"
 version = "0.12.0"
-source = "git+https://github.com/botika/yarte#a39f49d5e2f7826b1be492bca56cd79342369fe3"
+source = "git+https://github.com/botika/yarte?rev=a39f49d#a39f49d5e2f7826b1be492bca56cd79342369fe3"
 dependencies = [
  "buf-min",
  "dtoa",
@@ -2567,20 +2514,20 @@ dependencies = [
  "ryu",
  "serde",
  "toml",
- "v_htmlescape 0.10.0",
+ "v_htmlescape",
 ]
 
 [[package]]
 name = "yarte_hir"
 version = "0.12.0"
-source = "git+https://github.com/botika/yarte#a39f49d5e2f7826b1be492bca56cd79342369fe3"
+source = "git+https://github.com/botika/yarte?rev=a39f49d#a39f49d5e2f7826b1be492bca56cd79342369fe3"
 dependencies = [
  "derive_more",
  "proc-macro2 1.0.18",
  "quote 1.0.7",
  "syn 1.0.33",
  "v_eval",
- "v_htmlescape 0.10.0",
+ "v_htmlescape",
  "yarte_helpers",
  "yarte_parser",
 ]
@@ -2588,7 +2535,7 @@ dependencies = [
 [[package]]
 name = "yarte_parser"
 version = "0.12.0"
-source = "git+https://github.com/botika/yarte#a39f49d5e2f7826b1be492bca56cd79342369fe3"
+source = "git+https://github.com/botika/yarte?rev=a39f49d#a39f49d5e2f7826b1be492bca56cd79342369fe3"
 dependencies = [
  "annotate-snippets",
  "derive_more",
