@@ -1,4 +1,5 @@
 use bytes::BytesMut;
+use std::mem::{ManuallyDrop, MaybeUninit};
 use yarte::{Buffer, TemplateBytes};
 
 // Declare CARGO_CFG_HTMLESCAPE_DISABLE_AUTO_SIMD=
@@ -61,6 +62,75 @@ impl Buffer for Buff {
         self.0.as_mut_ptr().add(self.len())
     }
 }
+const SIZE: usize = 109915;
+struct Bufff {
+    ptr: [MaybeUninit<u8>; SIZE],
+    len: usize,
+}
+
+impl Bufff {
+    #[inline]
+    fn len(&self) -> usize {
+        self.len
+    }
+
+    #[inline]
+    fn as_ptr(&mut self) -> *mut u8 {
+        self.ptr.as_mut_ptr() as *mut u8
+    }
+}
+
+impl Buffer for Bufff {
+    type Freeze = Vec<u8>;
+
+    #[inline]
+    fn with_capacity(capacity: usize) -> Self
+    where
+        Self: Sized,
+    {
+        if capacity > SIZE {
+            panic!("Max capacity is {}", SIZE);
+        }
+
+        Bufff {
+            ptr: [MaybeUninit::uninit(); SIZE],
+            len: 0,
+        }
+    }
+
+    #[inline]
+    fn extend_from_slice(&mut self, src: &[u8]) {
+        self.reserve(src.len());
+        unsafe {
+            debug_assert!(SIZE - self.len() >= src.len());
+            std::ptr::copy_nonoverlapping(src.as_ptr(), self.buf_ptr(), src.len());
+            self.advance(src.len())
+        }
+    }
+
+    #[inline]
+    fn reserve(&mut self, additional: usize) {
+        debug_assert!(self.len() <= SIZE);
+        if std::intrinsics::unlikely(SIZE.wrapping_sub(self.len()) < additional) {
+            panic!("Max capacity is {}", SIZE);
+        }
+    }
+
+    #[inline]
+    fn freeze(self) -> Self::Freeze {
+        unsafe { Vec::new() }
+    }
+
+    #[inline]
+    unsafe fn advance(&mut self, cnt: usize) {
+        self.len += cnt;
+    }
+
+    #[inline]
+    unsafe fn buf_ptr(&mut self) -> *mut u8 {
+        self.as_ptr().add(self.len())
+    }
+}
 
 pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
     let mut table = Vec::with_capacity(*size);
@@ -72,7 +142,7 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
         table.push(inner);
     }
     let t = BigTable { table };
-    b.iter(|| t.call::<BytesMut>(109915));
+    b.iter(|| t.call::<Bufff>(109915));
 }
 
 #[derive(TemplateBytes)]
