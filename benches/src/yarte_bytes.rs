@@ -110,10 +110,6 @@ impl Buffer for Bufff {
 
     #[inline]
     fn reserve(&mut self, additional: usize) {
-        debug_assert!(self.len() <= SIZE);
-        if std::intrinsics::unlikely(SIZE.wrapping_sub(self.len()) < additional) {
-            panic!("Max capacity is {}", SIZE);
-        }
     }
 
     #[inline]
