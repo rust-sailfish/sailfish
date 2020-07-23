@@ -2,7 +2,6 @@
 name = "benches"
 version = "0.2.0"
 authors = ["Dirkjan Ochtman <dirkjan@ochtman.nl>", "Ryohei Machida <orcinus4627@gmail.com>"]
-build = "src/build.rs"
 edition = "2018"
 publish = false
 
@@ -26,9 +25,6 @@ tera = { git = "https://github.com/Keats/tera" }
 v_htmlescape = "0.10.0"
 yarte = { git = "https://github.com/botika/yarte", features = ["bytes-buf", "fixed"], rev = "a39f49d" }
 bytes = "0.5.6"
-
-[build-dependencies]
-ructe = { git = "https://github.com/kaj/ructe" }
 
 [[bench]]
 name = "all"

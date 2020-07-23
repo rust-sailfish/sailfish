@@ -1,6 +1,6 @@
 use benches::{
     askama_bench, fomat, handlebars, horrorshow_bench, liquid, markup_bench, maud_bench,
-    ramhorns, ructe, sailfish, std_write, tera, yarte_bench, yarte_bytes, yarte_fixed,
+    ramhorns, sailfish, std_write, tera, yarte_bench, yarte_bytes, yarte_fixed,
 };
 use criterion::{criterion_group, criterion_main, Criterion};
 
@@ -14,7 +14,7 @@ fn big_table(c: &mut Criterion) {
     g.bench_function("Markup", |b| markup_bench::big_table(b, &100));
     g.bench_function("Maud", |b| maud_bench::big_table(b, &100));
     g.bench_function("Ramhorns", |b| ramhorns::big_table(b, &100));
-    g.bench_function("Ructe", |b| ructe::big_table(b, &100));
+    // g.bench_function("Ructe", |b| ructe::big_table(b, &100));
     g.bench_function("Sailfish", |b| sailfish::big_table(b, &100));
     g.bench_function("Tera", |b| tera::big_table(b, &100));
     g.bench_function("Yarte", |b| yarte_bench::big_table(b, &100));
@@ -34,7 +34,7 @@ fn teams(c: &mut Criterion) {
     g.bench_function("Markup", |b| markup_bench::teams(b, &0));
     g.bench_function("Maud", |b| maud_bench::teams(b, &0));
     g.bench_function("Ramhorns", |b| ramhorns::teams(b));
-    g.bench_function("Ructe", |b| ructe::teams(b, &0));
+    // g.bench_function("Ructe", |b| ructe::teams(b, &0));
     g.bench_function("Sailfish", |b| sailfish::teams(b));
     g.bench_function("Tera", |b| tera::teams(b, &0));
     g.bench_function("Yarte", |b| yarte_bench::teams(b));
