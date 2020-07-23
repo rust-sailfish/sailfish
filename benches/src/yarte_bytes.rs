@@ -148,15 +148,11 @@ pub fn big_table(b: &mut criterion::Bencher<'_>, size: &usize) {
 }
 
 #[inline(never)]
-pub fn vo(n: usize) -> &'static str {
+pub fn vo(n: usize) -> u8 {
     /*******************************************************************************
             DO NOTHING
      *******************************************************************************/
-    if n % 2 == 0 {
-        "10"
-    } else {
-        "0"
-    }
+    n as u8
 }
 
 #[derive(TemplateBytes)]
