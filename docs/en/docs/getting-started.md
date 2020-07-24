@@ -51,8 +51,8 @@ And render the data with `render_once()` method.
 ```rust
 fn main() {
     let ctx = HelloTemplate {
-        messages: vec![String::from("foo"), String::from("bar")];
-    }
+        messages: vec![String::from("foo"), String::from("bar")],
+    };
 
     // Now render templates with given data
     println!("{}", ctx.render_once().unwrap());
