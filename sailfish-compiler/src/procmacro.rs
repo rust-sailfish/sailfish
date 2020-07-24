@@ -284,20 +284,6 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 *buf = __sf_buf.into_string();
                 Ok(())
             }
-
-            fn render_once(self) -> Result<String, sailfish::runtime::RenderError> {
-                use sailfish::runtime as __sf_rt;
-
-                static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
-
-                let mut __sf_buf = __sf_rt::Buffer::with_capacity(SIZE_HINT.get());
-
-                let #name { #field_names } = self;
-                include!(#output_file_string);
-
-                SIZE_HINT.update(__sf_buf.len());
-                Ok(__sf_buf.into_string())
-            }
         }
     };
 
