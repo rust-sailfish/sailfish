@@ -277,10 +277,12 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 let mut __sf_buf = __sf_rt::Buffer::from(buf.as_str());
                 __sf_buf.reserve(SIZE_HINT.get());
 
+                let __sf_old_len = __sf_buf.len();
+
                 let #name { #field_names } = self;
                 include!(#output_file_string);
 
-                SIZE_HINT.update(__sf_buf.len());
+                SIZE_HINT.update(__sf_buf.len() - __sf_old_len);
                 *buf = __sf_buf.into_string();
                 Ok(())
             }
