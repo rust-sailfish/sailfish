@@ -47,6 +47,7 @@ pub trait TemplateOnce: Sized {
     /// This method never returns `Err`, unless you explicitly return RenderError
     /// inside templates
     #[inline]
+    #[allow(deprecated)]
     fn render_once(self) -> runtime::RenderResult {
         let mut buf = String::new();
         self.render_once_to_string(&mut buf)?;
@@ -57,6 +58,10 @@ pub trait TemplateOnce: Sized {
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
     /// inside templates
+    #[deprecated(
+        since = "0.2.1",
+        note = "This function may be removed in the future due to performance issue"
+    )]
     fn render_once_to_string(self, buf: &mut String) -> Result<(), RenderError>;
 }
 
