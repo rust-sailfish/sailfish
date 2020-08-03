@@ -222,13 +222,18 @@ impl fmt::Write for Buffer {
 }
 
 impl From<String> for Buffer {
-    /// Always copy the inner data from `String` because it is dangerous to
-    /// handle the raw components of `String`.
+    /// Shrink the data and pass raw pointer directory to buffer
     ///
-    /// This operation is `O(n)`
+    /// This operation is `O(1)`
     #[inline]
     fn from(other: String) -> Buffer {
-        Buffer::from(other.as_str())
+        let bs = other.into_boxed_str();
+        let data = unsafe { &mut *Box::into_raw(bs) };
+        Buffer {
+            data: data.as_mut_ptr(),
+            len: data.len(),
+            capacity: data.len(),
+        }
     }
 }
 
