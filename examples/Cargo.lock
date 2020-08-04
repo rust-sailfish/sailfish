@@ -652,6 +652,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "home"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2456aef2e6b6a9784192ae780c0f15bc57df0e918585282325e8c8ac27737654"
+dependencies = [
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "hostname"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1121,7 +1130,7 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "sailfish"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "itoap",
  "ryu",
@@ -1130,8 +1139,9 @@ dependencies = [
 
 [[package]]
 name = "sailfish-compiler"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
+ "home",
  "memchr",
  "proc-macro2",
  "quote",
@@ -1141,7 +1151,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-examples"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "actix-rt",
  "actix-web",
@@ -1151,7 +1161,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-macros"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "sailfish-compiler",
