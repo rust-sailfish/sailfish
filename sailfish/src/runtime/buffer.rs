@@ -30,14 +30,8 @@ impl Buffer {
             if unlikely!(n == 0) {
                 Self::new()
             } else {
-                let layout = Layout::from_size_align_unchecked(n, 1);
-                let data = alloc(layout);
-                if data.is_null() {
-                    handle_alloc_error(layout);
-                }
-
                 Self {
-                    data,
+                    data: safe_alloc(n),
                     len: 0,
                     capacity: n,
                 }
@@ -148,6 +142,17 @@ impl Buffer {
     }
 }
 
+unsafe fn safe_alloc(capacity: usize) -> *mut u8 {
+    assert!(capacity <= std::usize::MAX / 2, "capacity is too large");
+    let layout = Layout::from_size_align_unchecked(capacity, 1);
+    let data = alloc(layout);
+    if data.is_null() {
+        handle_alloc_error(layout);
+    }
+
+    data
+}
+
 #[cold]
 unsafe fn safe_realloc(
     ptr: *mut u8,
@@ -178,14 +183,8 @@ impl Clone for Buffer {
             if self.capacity == 0 {
                 Self::new()
             } else {
-                let layout = Layout::from_size_align_unchecked(self.len, 1);
-                let data = alloc(layout);
-                if data.is_null() {
-                    handle_alloc_error(layout);
-                }
-
                 let buf = Self {
-                    data,
+                    data: safe_alloc(self.len),
                     len: self.len,
                     capacity: self.len,
                 };
@@ -223,13 +222,17 @@ impl fmt::Write for Buffer {
 }
 
 impl From<String> for Buffer {
+    /// Shrink the data and pass raw pointer directory to buffer
+    ///
+    /// This operation is `O(1)`
     #[inline]
     fn from(other: String) -> Buffer {
-        let mut other = ManuallyDrop::new(other);
+        let bs = other.into_boxed_str();
+        let data = unsafe { &mut *Box::into_raw(bs) };
         Buffer {
-            data: other.as_mut_ptr(),
-            len: other.len(),
-            capacity: other.capacity(),
+            data: data.as_mut_ptr(),
+            len: data.len(),
+            capacity: data.len(),
         }
     }
 }
@@ -237,7 +240,12 @@ impl From<String> for Buffer {
 impl From<&str> for Buffer {
     #[inline]
     fn from(other: &str) -> Buffer {
-        Buffer::from(other.to_owned())
+        let mut buf = Buffer::with_capacity(other.len());
+        unsafe {
+            ptr::copy_nonoverlapping(other.as_ptr(), buf.as_mut_ptr(), other.len());
+            buf.advance(other.len());
+        }
+        buf
     }
 }
 

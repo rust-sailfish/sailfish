@@ -1,5 +1,6 @@
+use std::fs;
 use std::io::{self, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 pub fn read_to_string(path: &Path) -> io::Result<String> {
@@ -16,13 +17,38 @@ pub fn read_to_string(path: &Path) -> io::Result<String> {
     Ok(content)
 }
 
+fn find_rustfmt() -> io::Result<Option<PathBuf>> {
+    let mut toolchain_dir = home::rustup_home()?;
+    toolchain_dir.push("toolchains");
+    for e in fs::read_dir(toolchain_dir)? {
+        let mut path = e?.path();
+        path.push("bin");
+        path.push("rustfmt");
+        if path.exists() {
+            return Ok(Some(path));
+        }
+    }
+
+    Ok(None)
+}
+
 /// Format block expression using `rustfmt` command
 pub fn rustfmt_block(source: &str) -> io::Result<String> {
+    let rustfmt = match find_rustfmt()? {
+        Some(p) => p,
+        None => {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "rustfmt command not found",
+            ))
+        }
+    };
+
     let mut new_source = String::with_capacity(source.len() + 11);
     new_source.push_str("fn render()");
     new_source.push_str(source);
 
-    let mut child = Command::new("rustfmt")
+    let mut child = Command::new(rustfmt)
         .args(&["--emit", "stdout", "--color", "never", "--quiet"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

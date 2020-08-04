@@ -50,3 +50,4 @@ nav:
     - 'Overview': 'syntax/overview.md'
     - 'Tags': 'syntax/tags.md'
     - 'Includes': 'syntax/includes.md'
+    - 'Filters': 'syntax/filters.md'

@@ -32,6 +32,15 @@
 
 Unlike EJS, you cannot omit the file extension.
 
-## Helpers
+## Filters
 
-(Work in progress)
+```ejs
+<%= message | upper %>
+```
+
+```ejs
+{
+    "id": <%= id %>
+    "comment": <%- comment | dbg %>
+}
+```

@@ -10,24 +10,3 @@ exclude = [
   "benches",
   "examples"
 ]
-
-[profile.dev.package.syn]
-opt-level = 0
-debug = false
-debug-assertions = false
-overflow-checks = false
-incremental = true
-
-[profile.test.package.syn]
-opt-level = 0
-debug = false
-debug-assertions = false
-overflow-checks = false
-incremental = true
-
-[profile.release.package.syn]
-opt-level = 0
-debug = false
-debug-assertions = false
-overflow-checks = false
-incremental = true

@@ -104,7 +104,7 @@ fn test_include() {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "big-table.stpl")]
+#[template(path = "big-table.stpl", rm_whitespace = true)]
 struct BigTable {
     table: Vec<Vec<usize>>,
 }
@@ -116,7 +116,7 @@ fn test_big_table() {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "teams.stpl")]
+#[template(path = "teams.stpl", rm_whitespace = true)]
 struct Teams {
     year: u16,
     teams: Vec<Team>,
