@@ -70,23 +70,6 @@ impl From<fmt::Error> for RenderError {
 
 pub type RenderResult = Result<String, RenderError>;
 
-// #[inline(never)]
-// pub fn _instantiate(table: Vec<Vec<usize>>) -> String {
-//     let mut buffer = Buffer::with_capacity(130000);
-//     buffer.push_str("<table>");
-//     for r1 in table {
-//         buffer.push_str("<tr><td>");
-//         for r2 in r1 {
-//             let _ = (&r2).render(&mut buffer);
-//             buffer.push_str("</td><td>");
-//         }
-//         unsafe { buffer._set_len(buffer.len() - 4) }
-//         buffer.push_str("</tr>");
-//     }
-//     buffer.push_str("</table>");
-//     buffer.into_string()
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
