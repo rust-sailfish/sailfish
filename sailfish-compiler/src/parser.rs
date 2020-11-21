@@ -334,7 +334,7 @@ fn find_block_comment_end(haystack: &str) -> Option<usize> {
     let mut depth = 1;
 
     while let Some(p) = memchr2(b'*', b'/', remain.as_bytes()) {
-        let c = unsafe { *remain.as_bytes().get_unchecked(p) };
+        let c = remain.as_bytes()[p];
         let next = remain.as_bytes().get(p + 1);
 
         match (c, next) {
@@ -344,14 +344,14 @@ fn find_block_comment_end(haystack: &str) -> Option<usize> {
                     return Some(offset);
                 }
                 depth -= 1;
-                remain = unsafe { remain.get_unchecked(p + 2..) };
+                remain = &remain[p + 2..];
             }
             (b'/', Some(b'*')) => {
                 depth += 1;
-                remain = unsafe { remain.get_unchecked(p + 2..) };
+                remain = &remain[p + 2..];
             }
             _ => {
-                remain = unsafe { remain.get_unchecked(p + 1..) };
+                remain = &remain[p + 1..];
             }
         }
     }
@@ -364,16 +364,14 @@ fn find_string_end(haystack: &str) -> Option<usize> {
     let mut bytes = &haystack.as_bytes()[1..];
 
     while let Some(p) = memchr2(b'"', b'\\', bytes) {
-        unsafe {
-            if *bytes.get_unchecked(p) == b'\"' {
-                // string terminator found
-                return Some(haystack.len() - (bytes.len() - p) + 1);
-            } else if p + 2 < bytes.len() {
-                // skip escape
-                bytes = bytes.get_unchecked(p + 2..);
-            } else {
-                break;
-            }
+        if bytes[p] == b'\"' {
+            // string terminator found
+            return Some(haystack.len() - (bytes.len() - p) + 1);
+        } else if p + 2 < bytes.len() {
+            // skip escape
+            bytes = &bytes[p + 2..];
+        } else {
+            break;
         }
     }
 
