@@ -20,7 +20,8 @@
 
 #[test]
 fn compile_error() {
-    std::env::set_var("SAILFISH_INTEGRATION_TESTS", "1");
-    let t = trybuild::TestCases::new();
-    t.compile_fail("tests/fails/*.rs");
+    if std::env::var("SAILFISH_INTEGRATION_TESTS").map_or(false, |v| v == "1") {
+        let t = trybuild::TestCases::new();
+        t.compile_fail("tests/fails/*.rs");
+    }
 }
