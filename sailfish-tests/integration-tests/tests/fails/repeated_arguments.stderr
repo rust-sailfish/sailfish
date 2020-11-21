@@ -1,3 +1,13 @@
+warning: unused import: `std::mem`
+  --> $DIR/mod.rs:12:5
+   |
+12 | use std::mem;
+   |     ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: 1 warning emitted
+
 error: keyword argument repeated.
  --> $DIR/repeated_arguments.rs:6:21
   |
@@ -15,7 +25,7 @@ error[E0599]: no method named `render_once` found for struct `InvalidOptionValue
    |
    = help: items from traits can only be used if the trait is implemented and in scope
    = note: the following trait defines an item `render_once`, perhaps you need to implement it:
-           candidate #1: `sailfish::TemplateOnce`
+           candidate #1: `TemplateOnce`
 
 warning: unused import: `sailfish::TemplateOnce`
  --> $DIR/repeated_arguments.rs:1:5
