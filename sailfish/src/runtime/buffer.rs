@@ -99,6 +99,7 @@ impl Buffer {
     }
 
     #[inline]
+    #[doc(hidden)]
     pub fn clear(&mut self) {
         self.len = 0;
     }
