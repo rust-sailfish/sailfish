@@ -1,6 +1,6 @@
 [package]
 name = "sailfish"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Really fast, intuitive template engine for Rust"
 homepage = "https://github.com/Kogia-sima/sailfish"
@@ -23,7 +23,7 @@ ryu = "1.0.4"
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"
-version = "0.2.2"
+version = "0.2.3"
 optional = true
 
 [build-dependencies]
