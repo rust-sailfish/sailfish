@@ -1,3 +1,13 @@
+warning: unused import: `std::mem`
+  --> $DIR/mod.rs:12:5
+   |
+12 | use std::mem;
+   |     ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: 1 warning emitted
+
 error: `path` option must be specified.
  --> $DIR/no_path.rs:4:10
   |
@@ -17,7 +27,7 @@ error[E0599]: no method named `render_once` found for struct `NoTemplate` in the
    |
    = help: items from traits can only be used if the trait is implemented and in scope
    = note: the following trait defines an item `render_once`, perhaps you need to implement it:
-           candidate #1: `sailfish::TemplateOnce`
+           candidate #1: `TemplateOnce`
 
 warning: unused import: `sailfish::TemplateOnce`
  --> $DIR/no_path.rs:1:5

@@ -267,7 +267,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let tokens = quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once_to_string(self, buf: &mut String) -> Result<(), sailfish::runtime::RenderError> {
+            fn render_once_to_string(self, buf: &mut String) -> std::result::Result<(), sailfish::runtime::RenderError> {
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;

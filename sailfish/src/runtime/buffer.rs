@@ -68,6 +68,11 @@ impl Buffer {
         self.len = new_len;
     }
 
+    pub(crate) fn truncate(&mut self, new_len: usize) {
+        assert!(new_len <= self.len);
+        self.len = new_len;
+    }
+
     /// Increase the length of buffer by `additional` bytes
     ///
     /// # Safety
@@ -94,6 +99,7 @@ impl Buffer {
     }
 
     #[inline]
+    #[doc(hidden)]
     pub fn clear(&mut self) {
         self.len = 0;
     }
