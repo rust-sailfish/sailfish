@@ -91,10 +91,9 @@ impl Buffer {
 
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if size <= self.capacity.wrapping_sub(self.len) {
-            return;
+        if unlikely!(size > self.capacity.wrapping_sub(self.len)) {
+            self.reserve_internal(size);
         }
-        self.reserve_internal(size);
         debug_assert!(self.len + size <= self.capacity);
     }
 
@@ -117,9 +116,7 @@ impl Buffer {
     #[inline]
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
-        if unlikely!(size > self.capacity.wrapping_sub(self.len)) {
-            self.reserve_internal(size);
-        }
+        self.reserve(size);
         unsafe {
             let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
