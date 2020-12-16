@@ -54,8 +54,16 @@ impl<'h> ResolverImpl<'h> {
             } else {
                 self.path_stack.last().unwrap().parent().unwrap().join(arg)
             };
-            let absolute_path_str = absolute_path.to_string_lossy();
-            return Ok(syn::parse2(quote! { include!(#absolute_path_str) }).unwrap());
+
+            return if let Some(absolute_path_str) = absolute_path.to_str() {
+                Ok(syn::parse2(quote! { include!(#absolute_path_str) }).unwrap())
+            } else {
+                let msg = format!(
+                    "cannot include path with non UTF-8 character: {:?}",
+                    absolute_path
+                );
+                Err(make_error!(ErrorKind::AnalyzeError(msg)))
+            };
         }
 
         // resolve the template file path

@@ -225,13 +225,18 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     let report = compile(&*input_file, &*output_file, config)
         .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
-    let input_file_string = input_file.to_string_lossy();
-    let output_file_string = output_file.to_string_lossy();
+    let input_file_string = input_file
+        .to_str()
+        .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", input_file));
+    let output_file_string = output_file
+        .to_str()
+        .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", output_file));
 
     let mut include_bytes_seq = quote! { include_bytes!(#input_file_string); };
     for dep in report.deps {
-        let dep_string = dep.to_string_lossy();
-        include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
+        if let Some(dep_string) = dep.to_str() {
+            include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
+        }
     }
 
     // Generate tokens
