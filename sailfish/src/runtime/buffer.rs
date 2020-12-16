@@ -149,8 +149,13 @@ impl Buffer {
 
     #[inline]
     pub fn push(&mut self, data: char) {
-        let mut buf = [0u8; 4];
-        self.push_str(data.encode_utf8(&mut buf));
+        // Question: Is it safe to pass uninitialized memory to `encode_utf8` function?
+        unsafe {
+            self.reserve_small(4);
+            let bp = self.data.add(self.len) as *mut [u8; 4];
+            let result = data.encode_utf8(&mut *bp);
+            self.len += result.len();
+        }
     }
 
     #[cfg_attr(feature = "perf-inline", inline)]
@@ -399,5 +404,19 @@ mod tests {
 
         s2.clear();
         let _ = s2.clone();
+    }
+
+    #[test]
+    fn push() {
+        for initial_capacity in &[0, 4, 16] {
+            let mut s = Buffer::with_capacity(*initial_capacity);
+
+            s.push('a');
+            s.push('é');
+            s.push('Ａ');
+            s.push('🄫');
+
+            assert_eq!(s.as_str(), "aéＡ🄫");
+        }
     }
 }
