@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate sailfish_macros;
-
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};

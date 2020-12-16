@@ -11,9 +11,6 @@
 //! `runtime::Render` trait for that type.
 //!
 //! ```ignore
-//! #[macro_use]
-//! extern crate sailfish_macros;
-//!
 //! use sailfish::TemplateOnce;
 //!
 //! #[derive(TemplateOnce)]
@@ -39,6 +36,8 @@
 pub mod runtime;
 
 pub use runtime::{RenderError, RenderResult};
+#[cfg(feature = "derive")]
+pub use sailfish_macros::TemplateOnce;
 
 /// Template that can be rendered with consuming itself.
 pub trait TemplateOnce: Sized {

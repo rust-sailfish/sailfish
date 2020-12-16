@@ -29,9 +29,6 @@ templates/
 Import the sailfish crates:
 
 ```rust
-#[macro_use]
-extern crate sailfish_macros;  // enable derive macros
-
 use sailfish::TemplateOnce;  // import `TemplateOnce` trait
 ```
 
