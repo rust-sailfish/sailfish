@@ -1,10 +1,10 @@
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens};
+use quote::quote;
 use std::collections::hash_map::DefaultHasher;
 use std::env;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
-use syn::parse::{Parse, ParseStream, Result as ParseResult};
+use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
@@ -15,6 +15,7 @@ use crate::error::*;
 // options for `template` attributes
 #[derive(Default)]
 struct DeriveTemplateOptions {
+    found_keys: Vec<Ident>,
     path: Option<LitStr>,
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
@@ -22,81 +23,53 @@ struct DeriveTemplateOptions {
     type_: Option<LitStr>,
 }
 
-impl Parse for DeriveTemplateOptions {
-    fn parse(outer: ParseStream) -> ParseResult<Self> {
-        let s;
-        syn::parenthesized!(s in outer);
-
-        let mut options = Self::default();
-        let mut found_keys = Vec::new();
-
-        while !s.is_empty() {
-            let key = s.parse::<Ident>()?;
-            s.parse::<Token![=]>()?;
-
-            // check if argument is repeated
-            if found_keys.iter().any(|e| *e == key) {
-                return Err(syn::Error::new(
-                    key.span(),
-                    format!("Argument `{}` was repeated.", key),
-                ));
-            }
-
-            if key == "path" {
-                options.path = Some(s.parse::<LitStr>()?);
-            } else if key == "delimiter" {
-                options.delimiter = Some(s.parse::<LitChar>()?);
-            } else if key == "escape" {
-                options.escape = Some(s.parse::<LitBool>()?);
-            } else if key == "rm_whitespace" {
-                options.rm_whitespace = Some(s.parse::<LitBool>()?);
-            } else if key == "type" {
-                options.type_ = Some(s.parse::<LitStr>()?);
-            } else {
-                return Err(syn::Error::new(
-                    key.span(),
-                    format!("Unknown option: `{}`", key),
-                ));
-            }
-
-            found_keys.push(key);
-
-            // consume comma token
-            if s.is_empty() {
-                break;
-            } else {
-                s.parse::<Token![,]>()?;
-            }
-        }
-
-        Ok(options)
-    }
-}
-
 impl DeriveTemplateOptions {
-    fn merge(&mut self, other: DeriveTemplateOptions) -> Result<(), syn::Error> {
-        fn merge_single<T: ToTokens>(
-            lhs: &mut Option<T>,
-            rhs: Option<T>,
-        ) -> Result<(), syn::Error> {
-            if lhs.is_some() {
-                if let Some(rhs) = rhs {
-                    Err(syn::Error::new_spanned(rhs, "keyword argument repeated."))
-                } else {
-                    Ok(())
-                }
-            } else {
-                *lhs = rhs;
-                Ok(())
-            }
-        }
+    fn parser<'s>(&'s mut self) -> impl Parser + 's {
+        move |outer: ParseStream| -> ParseResult<()> {
+            let s;
+            syn::parenthesized!(s in outer);
 
-        merge_single(&mut self.path, other.path)?;
-        merge_single(&mut self.delimiter, other.delimiter)?;
-        merge_single(&mut self.escape, other.escape)?;
-        merge_single(&mut self.rm_whitespace, other.rm_whitespace)?;
-        merge_single(&mut self.type_, other.type_)?;
-        Ok(())
+            while !s.is_empty() {
+                let key = s.parse::<Ident>()?;
+                s.parse::<Token![=]>()?;
+
+                // check if argument is repeated
+                if self.found_keys.iter().any(|e| *e == key) {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("Argument `{}` was repeated.", key),
+                    ));
+                }
+
+                if key == "path" {
+                    self.path = Some(s.parse::<LitStr>()?);
+                } else if key == "delimiter" {
+                    self.delimiter = Some(s.parse::<LitChar>()?);
+                } else if key == "escape" {
+                    self.escape = Some(s.parse::<LitBool>()?);
+                } else if key == "rm_whitespace" {
+                    self.rm_whitespace = Some(s.parse::<LitBool>()?);
+                } else if key == "type" {
+                    self.type_ = Some(s.parse::<LitStr>()?);
+                } else {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("Unknown option: `{}`", key),
+                    ));
+                }
+
+                self.found_keys.push(key);
+
+                // consume comma token
+                if s.is_empty() {
+                    break;
+                } else {
+                    s.parse::<Token![,]>()?;
+                }
+            }
+
+            Ok(())
+        }
     }
 }
 
@@ -170,8 +143,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     let mut all_options = DeriveTemplateOptions::default();
     for attr in strct.attrs {
         if attr.path.is_ident("template") {
-            let opt = syn::parse2::<DeriveTemplateOptions>(attr.tokens)?;
-            all_options.merge(opt)?;
+            syn::parse::Parser::parse2(all_options.parser(), attr.tokens)?;
         }
     }
 
