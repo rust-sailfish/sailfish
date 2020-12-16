@@ -9,7 +9,7 @@ warning: unused import: `std::mem`
 warning: 1 warning emitted
 
 error: Failed to compile template.
-Caused by: Rust Syntax Error: LexError
+caused by: Rust Syntax Error (LexError)
 
 file: unbalanced_brace.stpl
 

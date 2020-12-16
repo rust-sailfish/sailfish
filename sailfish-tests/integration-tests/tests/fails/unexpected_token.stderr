@@ -9,7 +9,7 @@ warning: unused import: `std::mem`
 warning: 1 warning emitted
 
 error: Failed to compile template.
-Caused by: Rust Syntax Error: expected expression
+caused by: Rust Syntax Error (expected expression)
 
 file: unexpected_token.stpl
 position: line 3, column 17

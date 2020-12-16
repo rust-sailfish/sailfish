@@ -22,10 +22,10 @@ impl fmt::Display for ErrorKind {
         match *self {
             ErrorKind::FmtError(ref e) => e.fmt(f),
             ErrorKind::IoError(ref e) => e.fmt(f),
-            ErrorKind::RustSyntaxError(ref e) => write!(f, "Rust Syntax Error: {}", e),
-            ErrorKind::ConfigError(ref e) => write!(f, "Invalid configuration: {}", e),
-            ErrorKind::ParseError(ref msg) => write!(f, "Parse error: {}", msg),
-            ErrorKind::AnalyzeError(ref msg) => write!(f, "Analyzation error: {}", msg),
+            ErrorKind::RustSyntaxError(ref e) => write!(f, "Rust Syntax Error ({})", e),
+            ErrorKind::ConfigError(ref e) => write!(f, "Invalid configuration ({})", e),
+            ErrorKind::ParseError(ref msg) => write!(f, "Parse error ({})", msg),
+            ErrorKind::AnalyzeError(ref msg) => write!(f, "Analyzation error ({})", msg),
             ErrorKind::Unimplemented(ref msg) => f.write_str(&**msg),
             ErrorKind::Other(ref msg) => f.write_str(&**msg),
         }
@@ -97,7 +97,7 @@ impl fmt::Display for Error {
         writeln!(f, "{}", self.chains.last().unwrap())?;
 
         for e in self.chains.iter().rev().skip(1) {
-            writeln!(f, "Caused by: {}", e)?;
+            writeln!(f, "caused by: {}", e)?;
         }
 
         f.write_str("\n")?;
@@ -255,7 +255,7 @@ mod tests {
         assert_eq!(
             err.to_string(),
             r#"some error
-Caused by: Analyzation error: mismatched types
+caused by: Analyzation error (mismatched types)
 
 file: apple.rs
 position: line 2, column 5

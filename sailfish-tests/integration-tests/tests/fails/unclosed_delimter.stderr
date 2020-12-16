@@ -9,7 +9,7 @@ warning: unused import: `std::mem`
 warning: 1 warning emitted
 
 error: Failed to compile template.
-Caused by: Parse error: Unterminated code block
+caused by: Parse error (Unterminated code block)
 
 file: unclosed_delimiter.stpl
 position: line 3, column 5
