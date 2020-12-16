@@ -1,6 +1,8 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
+use std::collections::hash_map::DefaultHasher;
 use std::env;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::punctuated::Punctuated;
@@ -134,31 +136,23 @@ fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBu
 fn filename_hash(path: &Path) -> String {
     use std::fmt::Write;
 
-    const FNV_PRIME: u64 = 1_099_511_628_211;
-    const FNV_OFFSET_BASIS: u64 = 14_695_981_039_346_656_037;
-
-    let mut hash = String::with_capacity(16);
+    let mut path_with_hash = String::with_capacity(16);
 
     if let Some(n) = path.file_name() {
         let mut filename = &*n.to_string_lossy();
         if let Some(p) = filename.find('.') {
             filename = &filename[..p];
         }
-        hash.push_str(filename);
-        hash.push('-');
+        path_with_hash.push_str(filename);
+        path_with_hash.push('-');
     }
 
-    // calculate 64bit hash
-    let mut h = FNV_OFFSET_BASIS;
-    for b in (&*path.to_string_lossy()).bytes() {
-        h = h.wrapping_mul(FNV_PRIME);
-        h ^= b as u64;
-    }
+    let mut hasher = DefaultHasher::new();
+    path.hash(&mut hasher);
+    let hash = hasher.finish();
+    let _ = write!(path_with_hash, "{:016x}", hash);
 
-    // convert 64bit hash into ascii
-    let _ = write!(hash, "{:016x}", h);
-
-    hash
+    path_with_hash
 }
 
 fn compile(
