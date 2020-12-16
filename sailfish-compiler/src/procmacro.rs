@@ -265,25 +265,31 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
 
+    // render_once method always results in the same code.
+    // This method can be implemented in `sailfish` crate, but I found that performance
+    // drops when the implementation is written in `sailfish` crate.
     let tokens = quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once_to_string(self, buf: &mut String) -> std::result::Result<(), sailfish::runtime::RenderError> {
+            fn render_once(self) -> sailfish::RenderResult {
+                use sailfish::runtime::{Buffer, SizeHint};
+                static SIZE_HINT: SizeHint = SizeHint::new();
+
+                let mut buf = Buffer::new();
+                buf.reserve(SIZE_HINT.get());
+
+                self.render_once_to(&mut buf)?;
+                SIZE_HINT.update(buf.len());
+
+                Ok(buf.into_string())
+            }
+
+            fn render_once_to(self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-
-                static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
-
-                let mut __sf_buf = __sf_rt::Buffer::from(buf.as_str());
-                __sf_buf.reserve(SIZE_HINT.get());
-
-                let __sf_old_len = __sf_buf.len();
-
                 let #name { #field_names } = self;
                 include!(#output_file_string);
 
-                SIZE_HINT.update(__sf_buf.len() - __sf_old_len);
-                *buf = __sf_buf.into_string();
                 Ok(())
             }
         }

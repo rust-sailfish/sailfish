@@ -35,6 +35,7 @@
 
 pub mod runtime;
 
+use runtime::Buffer;
 pub use runtime::{RenderError, RenderResult};
 #[cfg(feature = "derive")]
 pub use sailfish_macros::TemplateOnce;
@@ -45,23 +46,45 @@ pub trait TemplateOnce: Sized {
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
     /// inside templates
-    #[inline]
-    #[allow(deprecated)]
-    fn render_once(self) -> runtime::RenderResult {
-        let mut buf = String::new();
-        self.render_once_to_string(&mut buf)?;
-        Ok(buf)
-    }
+    ///
+    /// When you use `render_once` method, total rendered size will be cached, and at
+    /// the next time, buffer will be pre-allocated based on the cached length.
+    ///
+    /// If you don't want this behaviour, you can use `render_once_to` method instead.
+    fn render_once(self) -> runtime::RenderResult;
 
     /// Render the template and append the result to `buf`.
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
     /// inside templates
-    #[deprecated(
-        since = "0.2.1",
-        note = "This function may be removed in the future due to performance issue"
-    )]
-    fn render_once_to_string(self, buf: &mut String) -> Result<(), RenderError>;
+    ///
+    /// ```
+    /// use sailfish::{RenderError, TemplateOnce};
+    /// use sailfish::runtime::Buffer;
+    ///
+    /// # pub struct HelloTemplate {
+    /// #   messages: Vec<String>,
+    /// # }
+    /// #
+    /// # impl TemplateOnce for HelloTemplate {
+    /// #     fn render_once(self) -> Result<String, RenderError> {
+    /// #         Ok(String::new())
+    /// #     }
+    /// #
+    /// #     fn render_once_to(self, buf: &mut Buffer) -> Result<(), RenderError> {
+    /// #         Ok(())
+    /// #     }
+    /// # }
+    /// #
+    /// let tpl = HelloTemplate {
+    ///     messages: vec!["foo".to_string()]
+    /// };
+    ///
+    /// // custom pre-allocation
+    /// let mut buffer = Buffer::with_capacity(100);
+    /// tpl.render_once_to(&mut buffer).unwrap();
+    /// ```
+    fn render_once_to(self, buf: &mut Buffer) -> Result<(), RenderError>;
 }
 
 /// Work in Progress
