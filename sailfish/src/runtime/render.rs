@@ -192,9 +192,8 @@ macro_rules! render_int {
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     use itoap::Integer;
 
-                    b.reserve(Self::MAX_LEN);
-
                     unsafe {
+                        b.reserve_small(Self::MAX_LEN);
                         let ptr = b.as_mut_ptr().add(b.len());
                         let l = itoap::write_to_ptr(ptr, *self);
                         b.advance(l);
@@ -220,7 +219,7 @@ impl Render for f32 {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         if likely!(self.is_finite()) {
             unsafe {
-                b.reserve(16);
+                b.reserve_small(16);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format32(*self, ptr);
                 b.advance(l);
@@ -249,7 +248,7 @@ impl Render for f64 {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         if likely!(self.is_finite()) {
             unsafe {
-                b.reserve(24);
+                b.reserve_small(24);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format64(*self, ptr);
                 b.advance(l);

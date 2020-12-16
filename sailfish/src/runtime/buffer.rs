@@ -91,10 +91,17 @@ impl Buffer {
 
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if unlikely!(size > self.capacity.wrapping_sub(self.len)) {
-            self.reserve_internal(size);
+        assert!(size <= isize::MAX as usize);
+        unsafe { self.reserve_small(size) };
+    }
+
+    #[inline]
+    pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
+        debug_assert!(size <= isize::MAX as usize);
+        if self.len + size <= self.capacity {
+            return;
         }
-        debug_assert!(self.len + size <= self.capacity);
+        self.reserve_internal(size);
     }
 
     #[inline]
@@ -116,8 +123,11 @@ impl Buffer {
     #[inline]
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
-        self.reserve(size);
         unsafe {
+            // SAFETY: slice length is in general limited to isize::MAX bytes.
+            // See https://github.com/rust-lang/rust/pull/79930#issuecomment-745155197
+            // for details.
+            self.reserve_small(size);
             let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
             self.len += size;
@@ -134,10 +144,11 @@ impl Buffer {
     #[cfg_attr(feature = "perf-inline", inline)]
     #[cold]
     fn reserve_internal(&mut self, size: usize) {
+        debug_assert!(size <= isize::MAX as usize);
         unsafe {
             let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
             debug_assert!(new_capacity > self.capacity);
-            self.data = safe_realloc(self.data, self.capacity, new_capacity, size);
+            self.data = safe_realloc(self.data, self.capacity, new_capacity);
             self.capacity = new_capacity;
         }
         debug_assert!(!self.data.is_null());
@@ -146,7 +157,7 @@ impl Buffer {
 }
 
 unsafe fn safe_alloc(capacity: usize) -> *mut u8 {
-    assert!(capacity <= std::usize::MAX / 2, "capacity is too large");
+    assert!(capacity <= isize::MAX as usize, "capacity is too large");
     let layout = Layout::from_size_align_unchecked(capacity, 1);
     let data = alloc(layout);
     if data.is_null() {
@@ -157,14 +168,8 @@ unsafe fn safe_alloc(capacity: usize) -> *mut u8 {
 }
 
 #[cold]
-unsafe fn safe_realloc(
-    ptr: *mut u8,
-    capacity: usize,
-    new_capacity: usize,
-    size: usize,
-) -> *mut u8 {
-    assert!(size <= std::usize::MAX / 2, "capacity is too large");
-    assert!(new_capacity <= std::usize::MAX / 2, "capacity is too large");
+unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+    assert!(new_capacity <= isize::MAX as usize, "capacity is too large");
     let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
         alloc(new_layout)
