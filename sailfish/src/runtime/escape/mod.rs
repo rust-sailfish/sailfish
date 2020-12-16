@@ -55,7 +55,7 @@ fn escape(feed: &str, buf: &mut Buffer) {
 pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
     unsafe {
         if feed.len() < 16 {
-            buf.reserve(feed.len() * 6);
+            buf.reserve_small(feed.len() * 6);
             let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
             buf.advance(l);
         } else {
