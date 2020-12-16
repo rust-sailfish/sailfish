@@ -2,6 +2,8 @@
 //!
 //! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
+#![cfg_attr(target_feature = "avx2", allow(dead_code))]
+
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod avx2;
 mod fallback;
@@ -9,7 +11,6 @@ mod naive;
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 mod sse2;
 
-use std::mem;
 use std::sync::atomic::{AtomicPtr, Ordering};
 
 use super::buffer::Buffer;
@@ -69,7 +70,7 @@ pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
                 #[cfg(not(target_feature = "avx2"))]
                 {
                     let fun = FN.load(Ordering::Relaxed);
-                    mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
+                    std::mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
                 }
             }
 

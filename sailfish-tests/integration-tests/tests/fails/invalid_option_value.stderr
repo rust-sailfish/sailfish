@@ -1,13 +1,3 @@
-warning: unused import: `std::mem`
-  --> $DIR/mod.rs:12:5
-   |
-12 | use std::mem;
-   |     ^^^^^^^^
-   |
-   = note: `#[warn(unused_imports)]` on by default
-
-warning: 1 warning emitted
-
 error: expected boolean literal
  --> $DIR/invalid_option_value.rs:5:38
   |
