@@ -106,6 +106,7 @@ pub fn escape_to_string(feed: &str, s: &mut String) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use nanorand::RNG;
 
     fn escape(feed: &str) -> String {
         let mut s = String::new();
@@ -155,7 +156,7 @@ mod tests {
     #[test]
     fn random() {
         const ASCII_CHARS: &'static [u8] = br##"abcdefghijklmnopqrstuvwxyz0123456789-^\@[;:],./\!"#$%&'()~=~|`{+*}<>?_"##;
-        let mut state = 88172645463325252u64;
+        let mut gen = nanorand::WyRand::new();
         let mut data = Vec::with_capacity(100);
 
         let mut buf_naive = Buffer::new();
@@ -165,12 +166,7 @@ mod tests {
             for _ in 0..5 {
                 data.clear();
                 for _ in 0..len {
-                    // xorshift
-                    state ^= state << 13;
-                    state ^= state >> 7;
-                    state ^= state << 17;
-
-                    let idx = state as usize % ASCII_CHARS.len();
+                    let idx = gen.generate_range(0, ASCII_CHARS.len());
                     data.push(ASCII_CHARS[idx]);
                 }
 
@@ -184,7 +180,6 @@ mod tests {
                         s.as_ptr().add(s.len()),
                     );
 
-                    dbg!(s);
                     fallback::escape(s, &mut buf);
                     assert_eq!(buf.as_str(), buf_naive.as_str());
                     buf.clear();
