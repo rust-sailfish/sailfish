@@ -15,6 +15,7 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    /// Create an empty buffer
     #[inline]
     pub const fn new() -> Buffer {
         Self {
@@ -24,17 +25,15 @@ impl Buffer {
         }
     }
 
-    #[cfg_attr(feature = "perf-inline", inline)]
+    #[inline]
     pub fn with_capacity(n: usize) -> Buffer {
-        unsafe {
-            if unlikely!(n == 0) {
-                Self::new()
-            } else {
-                Self {
-                    data: safe_alloc(n),
-                    len: 0,
-                    capacity: n,
-                }
+        if unlikely!(n == 0) {
+            Self::new()
+        } else {
+            Self {
+                data: safe_alloc(n),
+                len: 0,
+                capacity: n,
             }
         }
     }
@@ -68,6 +67,11 @@ impl Buffer {
         self.len = new_len;
     }
 
+    /// Same as String::truncate
+    ///
+    /// # Panics
+    ///
+    /// This method panics if `new_len > self.len()`.
     pub(crate) fn truncate(&mut self, new_len: usize) {
         assert!(new_len <= self.len);
         self.len = new_len;
@@ -89,12 +93,19 @@ impl Buffer {
         self.len == 0
     }
 
+    /// Same as String::reserve
+    ///
+    /// # Panics
+    ///
+    /// This method panics if `size` overflows `isize::MAX`.
     #[inline]
     pub fn reserve(&mut self, size: usize) {
         assert!(size <= isize::MAX as usize);
         unsafe { self.reserve_small(size) };
     }
 
+    /// Same as String::reserve except that undefined behaviour can result if `size`
+    /// overflows `isize::MAX`.
     #[inline]
     pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
         debug_assert!(size <= isize::MAX as usize);
@@ -110,13 +121,14 @@ impl Buffer {
         self.len = 0;
     }
 
-    /// Converts a `Buffer` into a `String`.
-    ///
-    /// This consumes the `Buffer`, so we do not need to copy its contents.
+    /// Converts a `Buffer` into a `String` without copy/realloc operation.
     #[inline]
     pub fn into_string(self) -> String {
         debug_assert!(self.len <= self.capacity);
         let buf = ManuallyDrop::new(self);
+
+        // SAFETY: This operations satisfy all requirements specified in
+        // https://doc.rust-lang.org/std/string/struct.String.html#safety
         unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
     }
 
@@ -145,31 +157,44 @@ impl Buffer {
     #[cold]
     fn reserve_internal(&mut self, size: usize) {
         debug_assert!(size <= isize::MAX as usize);
-        unsafe {
-            let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
-            debug_assert!(new_capacity > self.capacity);
-            self.data = safe_realloc(self.data, self.capacity, new_capacity);
-            self.capacity = new_capacity;
-        }
+
+        let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
+        debug_assert!(new_capacity > self.capacity);
+        self.data = unsafe { safe_realloc(self.data, self.capacity, new_capacity) };
+        self.capacity = new_capacity;
+
         debug_assert!(!self.data.is_null());
         debug_assert!(self.len <= self.capacity);
     }
 }
 
-unsafe fn safe_alloc(capacity: usize) -> *mut u8 {
+#[inline(never)]
+fn safe_alloc(capacity: usize) -> *mut u8 {
+    assert!(capacity > 0);
     assert!(capacity <= isize::MAX as usize, "capacity is too large");
-    let layout = Layout::from_size_align_unchecked(capacity, 1);
-    let data = alloc(layout);
-    if data.is_null() {
-        handle_alloc_error(layout);
-    }
 
-    data
+    // SAFETY: capacity is non-zero, and always multiple of alignment (1).
+    unsafe {
+        let layout = Layout::from_size_align_unchecked(capacity, 1);
+        let data = alloc(layout);
+        if data.is_null() {
+            handle_alloc_error(layout);
+        }
+
+        data
+    }
 }
 
+/// # Safety
+///
+/// - if `capacity > 0`, `capacity` is the same value that was used to allocate the block
+/// of memory pointed by `ptr`.
 #[cold]
+#[inline(never)]
 unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+    assert!(new_capacity > 0);
     assert!(new_capacity <= isize::MAX as usize, "capacity is too large");
+
     let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
         alloc(new_layout)
@@ -188,7 +213,7 @@ unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *m
 impl Clone for Buffer {
     fn clone(&self) -> Self {
         unsafe {
-            if self.capacity == 0 {
+            if self.is_empty() {
                 Self::new()
             } else {
                 let buf = Self {
@@ -213,6 +238,8 @@ impl fmt::Debug for Buffer {
 impl Drop for Buffer {
     fn drop(&mut self) {
         if self.capacity != 0 {
+            // SAFETY: when `self.capacity > 0`, `self.capacity` is the same value
+            // used for allocate the block of memory pointed by `self.data`.
             unsafe {
                 let layout = Layout::from_size_align_unchecked(self.capacity, 1);
                 dealloc(self.data, layout);
@@ -236,7 +263,7 @@ impl From<String> for Buffer {
     #[inline]
     fn from(other: String) -> Buffer {
         let bs = other.into_boxed_str();
-        let data = unsafe { &mut *Box::into_raw(bs) };
+        let data = Box::leak(bs);
         Buffer {
             data: data.as_mut_ptr(),
             len: data.len(),
@@ -249,10 +276,16 @@ impl From<&str> for Buffer {
     #[inline]
     fn from(other: &str) -> Buffer {
         let mut buf = Buffer::with_capacity(other.len());
-        unsafe {
-            ptr::copy_nonoverlapping(other.as_ptr(), buf.as_mut_ptr(), other.len());
-            buf.advance(other.len());
+
+        if !other.is_empty() {
+            // SAFETY: `Buffer.capacity()` should be same as `other.len()`, so if `other`
+            // is not empty, `buf.as_mut_ptr()` is supporsed to point to valid memory.
+            unsafe {
+                ptr::copy_nonoverlapping(other.as_ptr(), buf.as_mut_ptr(), other.len());
+                buf.advance(other.len());
+            }
         }
+
         buf
     }
 }
@@ -363,5 +396,8 @@ mod tests {
 
         assert_eq!(s1.as_str(), "foobar");
         assert_eq!(s2.as_str(), "foobaz");
+
+        s2.clear();
+        let _ = s2.clone();
     }
 }

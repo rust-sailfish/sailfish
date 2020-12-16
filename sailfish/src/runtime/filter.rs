@@ -131,13 +131,16 @@ fn trim_impl(b: &mut Buffer, old_len: usize) {
         }
 
         debug_assert!(b.capacity() >= old_len + trimmed_len);
+
+        // SAFETY: `new_contents.len() = b.len() - old_len` and
+        // `trimmed_len < new_contents.len()`, so `old_len + trimmed_len < b.len()`.
         unsafe {
             b._set_len(old_len + trimmed_len);
         }
     }
 }
 
-/// convert the rendered contents to lowercase
+/// Remove leading and trailing writespaces from rendered results
 #[inline]
 pub fn trim<T: Render>(expr: &T) -> Trim<T> {
     Trim(expr)

@@ -192,9 +192,14 @@ macro_rules! render_int {
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     use itoap::Integer;
 
+                    // SAFETY: `MAX_LEN < 40` and then does not overflows `isize::MAX`.
+                    // Also `b.len()` should be always less than or equal to `isize::MAX`.
                     unsafe {
                         b.reserve_small(Self::MAX_LEN);
                         let ptr = b.as_mut_ptr().add(b.len());
+
+                        // SAFETY: `MAX_LEN` is always greater than zero, so
+                        // `b.as_mut_ptr()` always point to valid block of memory
                         let l = itoap::write_to_ptr(ptr, *self);
                         b.advance(l);
                     }
