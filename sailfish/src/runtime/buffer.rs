@@ -67,16 +67,6 @@ impl Buffer {
         self.len = new_len;
     }
 
-    /// Same as String::truncate
-    ///
-    /// # Panics
-    ///
-    /// This method panics if `new_len > self.len()`.
-    pub(crate) fn truncate(&mut self, new_len: usize) {
-        assert!(new_len <= self.len);
-        self.len = new_len;
-    }
-
     /// Increase the length of buffer by `additional` bytes
     ///
     /// # Safety
