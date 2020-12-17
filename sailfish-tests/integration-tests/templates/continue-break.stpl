@@ -1,0 +1,9 @@
+<div>
+<% for i in 0..10 { %>
+  <div>head</div>
+  <% if i < 2 { continue; } %>
+  <div><%= i %></div>
+  <% if i > 5 { break; } %>
+  <div>tail</div>
+<% } %>
+</div>

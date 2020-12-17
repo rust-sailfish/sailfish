@@ -104,6 +104,15 @@ fn test_include() {
 }
 
 #[derive(TemplateOnce)]
+#[template(path = "continue-break.stpl", rm_whitespace = true)]
+struct ContinueBreak;
+
+#[test]
+fn continue_break() {
+    assert_render("continue-break", ContinueBreak);
+}
+
+#[derive(TemplateOnce)]
 #[template(path = "big-table.stpl", rm_whitespace = true)]
 struct BigTable {
     table: Vec<Vec<usize>>,
