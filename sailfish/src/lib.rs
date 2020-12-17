@@ -32,12 +32,14 @@
     html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/icon.png"
 )]
 #![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub mod runtime;
 
 use runtime::Buffer;
 pub use runtime::{RenderError, RenderResult};
 #[cfg(feature = "derive")]
+#[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
 pub use sailfish_macros::TemplateOnce;
 
 /// Template that can be rendered with consuming itself.
