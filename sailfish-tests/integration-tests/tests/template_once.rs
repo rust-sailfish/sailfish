@@ -290,6 +290,26 @@ fn test_filter() {
     assert_render("filter", Filter { message: "hello" });
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "json-filter.stpl")]
+struct JsonFilter {
+    data: serde_json::Value,
+}
+
+#[test]
+fn test_json_filter() {
+    let data = serde_json::json!({
+        "name": "John Doe",
+        "age": 43,
+        "phones": [
+            "+44 1234567",
+            "+44 2345678"
+        ]
+    });
+
+    assert_render("json-filter", JsonFilter { data });
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;

@@ -6,9 +6,10 @@ edition = "2018"
 publish = false
 
 [dependencies]
-sailfish = { path = "../../sailfish", default-features = false }
+sailfish = { path = "../../sailfish", default-features = false, features = ["json"] }
 sailfish-macros = { path = "../../sailfish-macros" }
 sailfish-compiler = { path = "../../sailfish-compiler" }
+serde_json = "1.0.60"
 
 [dev-dependencies]
 trybuild = "1.0.28"

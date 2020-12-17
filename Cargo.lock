@@ -48,6 +48,7 @@ dependencies = [
  "sailfish",
  "sailfish-compiler",
  "sailfish-macros",
+ "serde_json",
  "trybuild",
 ]
 

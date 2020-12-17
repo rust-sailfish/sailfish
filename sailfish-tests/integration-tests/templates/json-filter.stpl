@@ -1,0 +1,4 @@
+{
+    "name": "JSON test",
+    "data": <%- data | json %>
+}
