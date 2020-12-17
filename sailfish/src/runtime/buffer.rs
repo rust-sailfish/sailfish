@@ -100,7 +100,7 @@ impl Buffer {
     /// This method panics if `size` overflows `isize::MAX`.
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        assert!(size <= isize::MAX as usize);
+        assert!(size <= std::isize::MAX as usize);
         unsafe { self.reserve_small(size) };
     }
 
@@ -108,7 +108,7 @@ impl Buffer {
     /// overflows `isize::MAX`.
     #[inline]
     pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
-        debug_assert!(size <= isize::MAX as usize);
+        debug_assert!(size <= std::isize::MAX as usize);
         if self.len + size <= self.capacity {
             return;
         }
@@ -161,7 +161,7 @@ impl Buffer {
     #[cfg_attr(feature = "perf-inline", inline)]
     #[cold]
     fn reserve_internal(&mut self, size: usize) {
-        debug_assert!(size <= isize::MAX as usize);
+        debug_assert!(size <= std::isize::MAX as usize);
 
         let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
         debug_assert!(new_capacity > self.capacity);
@@ -176,7 +176,10 @@ impl Buffer {
 #[inline(never)]
 fn safe_alloc(capacity: usize) -> *mut u8 {
     assert!(capacity > 0);
-    assert!(capacity <= isize::MAX as usize, "capacity is too large");
+    assert!(
+        capacity <= std::isize::MAX as usize,
+        "capacity is too large"
+    );
 
     // SAFETY: capacity is non-zero, and always multiple of alignment (1).
     unsafe {
@@ -198,7 +201,10 @@ fn safe_alloc(capacity: usize) -> *mut u8 {
 #[inline(never)]
 unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
     assert!(new_capacity > 0);
-    assert!(new_capacity <= isize::MAX as usize, "capacity is too large");
+    assert!(
+        new_capacity <= std::isize::MAX as usize,
+        "capacity is too large"
+    );
 
     let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
