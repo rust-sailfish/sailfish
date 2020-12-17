@@ -207,6 +207,7 @@ cfg_json! {
         }
     }
 
+    /// Serialize the given data structure as JSON into the buffer
     #[inline]
     pub fn json<T: serde::Serialize>(expr: &T) -> Json<T> {
         Json(expr)
