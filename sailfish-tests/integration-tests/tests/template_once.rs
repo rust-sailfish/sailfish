@@ -290,6 +290,15 @@ fn test_filter() {
     assert_render("filter", Filter { message: "hello" });
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "filter2.stpl")]
+struct Filter2;
+
+#[test]
+fn test_filter2() {
+    assert_render("filter2", Filter2);
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;
