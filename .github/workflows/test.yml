@@ -1,0 +1,84 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: stable
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            toolchain: stable
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+            toolchain: stable
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            toolchain: beta
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: 1.42.0 # MSRV
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            toolchain: nightly
+          - os: ubuntu-latest
+            deps: sudo apt install gcc-multilib
+            target: i686-unknown-linux-gnu
+            toolchain: nightly
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: ${{ matrix.target }}
+          toolchain: ${{ matrix.toolchain }}
+          override: true
+      - run: ${{ matrix.deps }}
+      - name: Test sailfish
+        run: |
+          cargo test --target ${{ matrix.target }} --manifest-path sailfish/Cargo.toml --no-default-features
+          cargo test --target ${{ matrix.target }} --manifest-path sailfish/Cargo.toml --all-features
+      - name: Test sailfish-compiler
+        run: |
+          cargo test --target ${{ matrix.target }} --manifest-path sailfish-compiler/Cargo.toml
+      - name: Integration tests
+        # Currently integration tests have some issue related to line feeds
+        if: ${{ matrix.os != 'windows-latest' }}
+        run: |
+          cargo test --target ${{ matrix.target }} --manifest-path sailfish-tests/integration-tests/Cargo.toml
+
+  test-miri:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        run: |
+          MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
+          rustup default "$MIRI_NIGHTLY"
+          rustup component add miri
+      - name: Test sailfish
+        run: |
+          cargo miri test --manifest-path sailfish/Cargo.toml --no-default-features
+          cargo miri test --manifest-path sailfish/Cargo.toml --all-features
+
+  test-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: nightly
+            target: aarch64-apple-ios
+            override: true
+      - name: Build only
+        run: cargo build --target=aarch64-apple-ios --workspace
