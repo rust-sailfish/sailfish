@@ -324,7 +324,7 @@ mod tests {
     use super::Buffer;
 
     #[test]
-    fn test1() {
+    fn push_str() {
         let mut buffer = Buffer::new();
         assert_eq!(buffer.len(), 0);
         assert_eq!(buffer.capacity(), 0);
@@ -339,14 +339,11 @@ mod tests {
     }
 
     #[test]
-    fn test2() {
-        let mut buffer = Buffer::with_capacity(1);
+    fn with_capacity() {
+        let buffer = Buffer::with_capacity(1);
         assert!(buffer.is_empty());
         assert_eq!(buffer.len(), 0);
         assert!(buffer.capacity() >= 1);
-
-        buffer += "pie";
-        assert!(!buffer.is_empty());
     }
 
     #[test]
