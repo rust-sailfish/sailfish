@@ -15,11 +15,14 @@ edition = "2018"
 [features]
 default = ["derive", "perf-inline"]
 derive = ["sailfish-macros"]
+json = ["serde", "serde_json"]
 perf-inline = []
 
 [dependencies]
 itoap = "0.1.0"
 ryu = "1.0.4"
+serde = { version = "1.0.118", optional = true }
+serde_json = { version = "1.0.60", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"

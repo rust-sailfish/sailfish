@@ -146,6 +146,73 @@ pub fn trim<T: Render>(expr: &T) -> Trim<T> {
     Trim(expr)
 }
 
+cfg_json! {
+    pub struct Json<'a, T>(&'a T);
+
+    impl<'a, T: serde::Serialize> Render for Json<'a, T> {
+        #[inline]
+        fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+            struct Writer<'a>(&'a mut Buffer);
+
+            impl<'a> std::io::Write for Writer<'a> {
+                #[inline]
+                fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                    let buf = unsafe { std::str::from_utf8_unchecked(buf) };
+                    self.0.push_str(buf);
+                    Ok(buf.len())
+                }
+
+                #[inline]
+                fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()> {
+                    self.write(buf).map(|_| {})
+                }
+
+                #[inline]
+                fn flush(&mut self) -> std::io::Result<()> {
+                    Ok(())
+                }
+            }
+
+            serde_json::to_writer(Writer(b), self.0)
+                .map_err(|e| RenderError::new(&e.to_string()))
+        }
+
+        #[inline]
+        fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+            use super::escape::escape_to_buf;
+
+            struct Writer<'a>(&'a mut Buffer);
+
+            impl<'a> std::io::Write for Writer<'a> {
+                #[inline]
+                fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+                    let buf = unsafe { std::str::from_utf8_unchecked(buf) };
+                    escape_to_buf(buf, self.0);
+                    Ok(buf.len())
+                }
+
+                #[inline]
+                fn write_all(&mut self, buf: &[u8]) -> std::io::Result<()> {
+                    self.write(buf).map(|_| {})
+                }
+
+                #[inline]
+                fn flush(&mut self) -> std::io::Result<()> {
+                    Ok(())
+                }
+            }
+
+            serde_json::to_writer(Writer(b), self.0)
+                .map_err(|e| RenderError::new(&e.to_string()))
+        }
+    }
+
+    #[inline]
+    pub fn json<T: serde::Serialize>(expr: &T) -> Json<T> {
+        Json(expr)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
