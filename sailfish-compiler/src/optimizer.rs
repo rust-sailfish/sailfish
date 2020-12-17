@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::visit_mut::VisitMut;
-use syn::{Block, Expr, ExprMacro, Ident, LitStr, Stmt, Token};
+use syn::{Block, Expr, ExprBreak, ExprContinue, ExprMacro, Ident, LitStr, Stmt, Token};
 
 struct RenderTextMacroArgument {
     #[allow(dead_code)]
@@ -35,6 +35,27 @@ fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
     None
 }
 
+#[derive(Default)]
+struct ContinueBreakFinder {
+    found: bool,
+}
+
+impl VisitMut for ContinueBreakFinder {
+    fn visit_expr_continue_mut(&mut self, _: &mut ExprContinue) {
+        self.found = true;
+    }
+
+    fn visit_expr_break_mut(&mut self, _: &mut ExprBreak) {
+        self.found = true;
+    }
+}
+
+fn block_has_continue_or_break(i: &mut Block) -> bool {
+    let mut finder = ContinueBreakFinder::default();
+    finder.visit_block_mut(i);
+    finder.found
+}
+
 struct OptmizerImpl {
     rm_whitespace: bool,
 }
@@ -48,25 +69,24 @@ impl VisitMut for OptmizerImpl {
             return;
         };
 
+        // process inner block in advance
         syn::visit_mut::visit_block_mut(self, &mut fl.body);
+
+        if block_has_continue_or_break(&mut fl.body) {
+            return;
+        }
 
         let (mf, ml) = match (fl.body.stmts.first(), fl.body.stmts.last()) {
             (
                 Some(Stmt::Semi(Expr::Macro(ref mf), ..)),
                 Some(Stmt::Semi(Expr::Macro(ref ml), ..)),
             ) => (mf, ml),
-            _ => {
-                syn::visit_mut::visit_expr_mut(self, i);
-                return;
-            }
+            _ => return,
         };
 
         let (sf, sl) = match (get_rendertext_value(mf), get_rendertext_value(ml)) {
             (Some(sf), Some(sl)) => (sf, sl),
-            _ => {
-                syn::visit_mut::visit_expr_mut(self, i);
-                return;
-            }
+            _ => return,
         };
 
         let sf_len = sf.len();
