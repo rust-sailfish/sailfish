@@ -4,8 +4,7 @@
 
 Simple, small, and extremely fast template engine for Rust
 
-[![Build Status](https://travis-ci.org/Kogia-sima/sailfish.svg?branch=master)](https://travis-ci.org/Kogia-sima/sailfish)
-[![Build status](https://ci.appveyor.com/api/projects/status/fa3et4rft4dyvdn9/branch/master?svg=true)](https://ci.appveyor.com/project/Kogiasima/sailfish/branch/master)
+[![Tests](https://github.com/Kogia-sima/sailfish/workflows/Tests/badge.svg)](https://github.com/Kogia-sima/sailfish/actions?query=workflow%3ATests)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
 
