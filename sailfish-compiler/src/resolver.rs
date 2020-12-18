@@ -73,12 +73,7 @@ impl<'h> ResolverImpl<'h> {
             PathBuf::from(&arg[1..])
         } else {
             // relative include
-            self.path_stack
-                .last()
-                .unwrap()
-                .parent()
-                .unwrap()
-                .join(arg.clone())
+            self.path_stack.last().unwrap().parent().unwrap().join(arg)
         };
 
         // parse and translate the child template

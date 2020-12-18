@@ -33,6 +33,7 @@
 )]
 #![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![allow(clippy::redundant_closure)]
 
 pub mod runtime;
 

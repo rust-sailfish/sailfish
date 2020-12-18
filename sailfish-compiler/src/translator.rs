@@ -149,7 +149,7 @@ impl SourceBuilder {
     fn write_code<'a>(&mut self, token: &Token<'a>) -> Result<(), Error> {
         // TODO: automatically add missing tokens (e.g. ';', '{')
         self.write_token(token);
-        self.source.push_str("\n");
+        self.source.push('\n');
         Ok(())
     }
 
@@ -197,7 +197,7 @@ impl SourceBuilder {
 
             self.source.push_str("sailfish::runtime::filter::");
             self.source.push_str(&*name);
-            self.source.push_str("(");
+            self.source.push('(');
 
             // arguments to filter function
             {
@@ -209,7 +209,7 @@ impl SourceBuilder {
                 };
                 self.source_map.entries.push(entry);
                 self.source.push_str(&expr_str);
-                self.source.push_str(")");
+                self.source.push(')');
 
                 if let Some(extra_args) = extra_args {
                     self.source.push_str(", ");
@@ -217,7 +217,7 @@ impl SourceBuilder {
                 }
             }
 
-            self.source.push_str(")");
+            self.source.push(')');
         } else {
             self.write_token(token);
         }
