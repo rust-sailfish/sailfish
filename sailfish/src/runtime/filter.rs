@@ -146,6 +146,56 @@ pub fn trim<T: Render>(expr: &T) -> Trim<T> {
     Trim(expr)
 }
 
+pub struct Truncate<'a, T>(&'a T, usize);
+
+impl<'a, T: Render> Render for Truncate<'a, T> {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        let old_len = b.len();
+        self.0.render(b)?;
+        truncate_impl(b, old_len, self.1)
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        let old_len = b.len();
+        self.0.render_escaped(b)?;
+        truncate_impl(b, old_len, self.1)
+    }
+}
+
+fn truncate_impl(
+    b: &mut Buffer,
+    old_len: usize,
+    limit: usize,
+) -> Result<(), RenderError> {
+    let mut pos = old_len + limit;
+    if b.len() > pos {
+        let tmp = b.as_str();
+        while !tmp.is_char_boundary(pos) {
+            pos += 1;
+        }
+
+        unsafe { b._set_len(pos) };
+        b.push_str("...");
+
+        Ok(())
+    } else if b.len() >= old_len {
+        Ok(())
+    } else {
+        Err(RenderError::new("buffer size shrinked while rendering"))
+    }
+}
+
+/// Limit length of rendered contents, appends '...' if truncated
+#[inline]
+pub fn truncate<T: Render>(expr: &T, mut limit: usize) -> Truncate<T> {
+    // SAFETY: since `buf.len() <= isize::MAX`, length of rendered contents never
+    // overflows isize::MAX. If limit > isize::MAX, then truncation never happens
+    limit &= std::usize::MAX >> 1;
+    Truncate(expr, limit)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -299,6 +299,15 @@ fn test_filter2() {
     assert_render("filter2", Filter2);
 }
 
+#[derive(TemplateOnce)]
+#[template(path = "truncate-filter.stpl")]
+struct TruncateFilter;
+
+#[test]
+fn test_truncate_filter() {
+    assert_render("truncate-filter", TruncateFilter);
+}
+
 #[cfg(unix)]
 mod unix {
     use super::*;
