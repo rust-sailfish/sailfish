@@ -7,81 +7,46 @@ use syn::{BinOp, Block, Expr};
 use crate::error::*;
 use crate::parser::{ParseStream, Token, TokenKind};
 
-enum Filter {
-    Ident(syn::Ident),
-    Call(syn::ExprCall),
+// translate tokens into Rust code
+#[derive(Clone, Debug, Default)]
+pub struct Translator {
+    escape: bool,
 }
 
-impl Spanned for Filter {
-    fn span(&self) -> Span {
-        match *self {
-            Filter::Ident(ref i) => i.span(),
-            Filter::Call(ref c) => c.span(),
-        }
+impl Translator {
+    #[inline]
+    pub fn new() -> Self {
+        Self { escape: true }
+    }
+
+    #[inline]
+    pub fn escape(mut self, new: bool) -> Self {
+        self.escape = new;
+        self
+    }
+
+    pub fn translate<'a>(
+        &self,
+        token_iter: ParseStream<'a>,
+    ) -> Result<TranslatedSource, Error> {
+        let original_source = token_iter.original_source;
+
+        let mut ps = SourceBuilder::new(self.escape);
+        ps.reserve(original_source.len());
+        ps.feed_tokens(token_iter)?;
+
+        Ok(ps.finalize()?)
     }
 }
 
-struct CodeBlock {
-    #[allow(dead_code)]
-    expr: Box<Expr>,
-    filter: Option<Filter>,
+pub struct TranslatedSource {
+    pub ast: Block,
+    pub source_map: SourceMap,
 }
 
-impl Parse for CodeBlock {
-    fn parse(s: SynParseStream) -> ParseResult<Self> {
-        let main = s.parse::<Expr>()?;
-
-        let code_block = match main {
-            Expr::Binary(b) if matches!(b.op, BinOp::BitOr(_)) => {
-                match *b.right {
-                    Expr::Call(c) => {
-                        if let Expr::Path(ref p) = *c.func {
-                            if p.path.get_ident().is_some() {
-                                CodeBlock {
-                                    expr: b.left,
-                                    filter: Some(Filter::Call(c)),
-                                }
-                            } else {
-                                return Err(syn::Error::new_spanned(
-                                    p,
-                                    "Invalid filter name",
-                                ));
-                            }
-                        } else {
-                            // if function in right side is not a path, fallback to
-                            // normal evaluation block
-                            CodeBlock {
-                                expr: b.left,
-                                filter: None,
-                            }
-                        }
-                    }
-                    Expr::Path(p) => {
-                        if let Some(i) = p.path.get_ident() {
-                            CodeBlock {
-                                expr: b.left,
-                                filter: Some(Filter::Ident(i.clone())),
-                            }
-                        } else {
-                            return Err(syn::Error::new_spanned(
-                                p,
-                                "Invalid filter name",
-                            ));
-                        }
-                    }
-                    _ => {
-                        return Err(syn::Error::new_spanned(b, "Expected filter"));
-                    }
-                }
-            }
-            _ => CodeBlock {
-                expr: Box::new(main),
-                filter: None,
-            },
-        };
-
-        Ok(code_block)
-    }
+#[derive(Default)]
+pub struct SourceMap {
+    entries: Vec<SourceMapEntry>,
 }
 
 #[derive(Clone)]
@@ -89,11 +54,6 @@ pub struct SourceMapEntry {
     pub original: usize,
     pub new: usize,
     pub length: usize,
-}
-
-#[derive(Default)]
-pub struct SourceMap {
-    entries: Vec<SourceMapEntry>,
 }
 
 impl SourceMap {
@@ -289,6 +249,83 @@ impl SourceBuilder {
     }
 }
 
+enum Filter {
+    Ident(syn::Ident),
+    Call(syn::ExprCall),
+}
+
+impl Spanned for Filter {
+    fn span(&self) -> Span {
+        match *self {
+            Filter::Ident(ref i) => i.span(),
+            Filter::Call(ref c) => c.span(),
+        }
+    }
+}
+
+struct CodeBlock {
+    #[allow(dead_code)]
+    expr: Box<Expr>,
+    filter: Option<Filter>,
+}
+
+impl Parse for CodeBlock {
+    fn parse(s: SynParseStream) -> ParseResult<Self> {
+        let main = s.parse::<Expr>()?;
+
+        let code_block = match main {
+            Expr::Binary(b) if matches!(b.op, BinOp::BitOr(_)) => {
+                match *b.right {
+                    Expr::Call(c) => {
+                        if let Expr::Path(ref p) = *c.func {
+                            if p.path.get_ident().is_some() {
+                                CodeBlock {
+                                    expr: b.left,
+                                    filter: Some(Filter::Call(c)),
+                                }
+                            } else {
+                                return Err(syn::Error::new_spanned(
+                                    p,
+                                    "Invalid filter name",
+                                ));
+                            }
+                        } else {
+                            // if function in right side is not a path, fallback to
+                            // normal evaluation block
+                            CodeBlock {
+                                expr: b.left,
+                                filter: None,
+                            }
+                        }
+                    }
+                    Expr::Path(p) => {
+                        if let Some(i) = p.path.get_ident() {
+                            CodeBlock {
+                                expr: b.left,
+                                filter: Some(Filter::Ident(i.clone())),
+                            }
+                        } else {
+                            return Err(syn::Error::new_spanned(
+                                p,
+                                "Invalid filter name",
+                            ));
+                        }
+                    }
+                    _ => {
+                        return Err(syn::Error::new_spanned(b, "Expected filter"));
+                    }
+                }
+            }
+            _ => CodeBlock {
+                expr: Box::new(main),
+                filter: None,
+            },
+        };
+
+        Ok(code_block)
+    }
+}
+
 fn into_offset(source: &str, span: Span) -> Option<usize> {
     let lc = span.start();
     if lc.line > 0 {
@@ -301,43 +338,6 @@ fn into_offset(source: &str, span: Span) -> Option<usize> {
         )
     } else {
         None
-    }
-}
-
-pub struct TranslatedSource {
-    pub ast: Block,
-    pub source_map: SourceMap,
-}
-
-// translate tokens into Rust code
-#[derive(Clone, Debug, Default)]
-pub struct Translator {
-    escape: bool,
-}
-
-impl Translator {
-    #[inline]
-    pub fn new() -> Self {
-        Self { escape: true }
-    }
-
-    #[inline]
-    pub fn escape(mut self, new: bool) -> Self {
-        self.escape = new;
-        self
-    }
-
-    pub fn translate<'a>(
-        &self,
-        token_iter: ParseStream<'a>,
-    ) -> Result<TranslatedSource, Error> {
-        let original_source = token_iter.original_source;
-
-        let mut ps = SourceBuilder::new(self.escape);
-        ps.reserve(original_source.len());
-        ps.feed_tokens(token_iter)?;
-
-        Ok(ps.finalize()?)
     }
 }
 

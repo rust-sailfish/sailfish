@@ -23,6 +23,53 @@ macro_rules! return_if_some {
     };
 }
 
+#[derive(Clone)]
+pub struct Resolver<'h> {
+    include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
+}
+
+impl<'h> Resolver<'h> {
+    pub fn new() -> Self {
+        Self {
+            include_handler: Arc::new(|_| {
+                Err(make_error!(ErrorKind::AnalyzeError(
+                    "You cannot use `include` macro inside templates".to_owned()
+                )))
+            }),
+        }
+    }
+
+    #[inline]
+    pub fn include_handler(
+        mut self,
+        new: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
+    ) -> Resolver<'h> {
+        self.include_handler = new;
+        self
+    }
+
+    #[inline]
+    pub fn resolve(
+        &self,
+        input_file: &Path,
+        ast: &mut Block,
+    ) -> Result<ResolveReport, Error> {
+        let mut child = ResolverImpl {
+            path_stack: vec![input_file.to_owned()],
+            deps: Vec::new(),
+            error: None,
+            include_handler: Arc::clone(&self.include_handler),
+        };
+        child.visit_block_mut(ast);
+
+        if let Some(e) = child.error {
+            Err(e)
+        } else {
+            Ok(ResolveReport { deps: child.deps })
+        }
+    }
+}
+
 pub struct ResolveReport {
     pub deps: Vec<PathBuf>,
 }
@@ -114,53 +161,6 @@ impl<'h> VisitMut for ResolverImpl<'h> {
                     return;
                 }
             }
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct Resolver<'h> {
-    include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
-}
-
-impl<'h> Resolver<'h> {
-    pub fn new() -> Self {
-        Self {
-            include_handler: Arc::new(|_| {
-                Err(make_error!(ErrorKind::AnalyzeError(
-                    "You cannot use `include` macro inside templates".to_owned()
-                )))
-            }),
-        }
-    }
-
-    #[inline]
-    pub fn include_handler(
-        mut self,
-        new: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
-    ) -> Resolver<'h> {
-        self.include_handler = new;
-        self
-    }
-
-    #[inline]
-    pub fn resolve(
-        &self,
-        input_file: &Path,
-        ast: &mut Block,
-    ) -> Result<ResolveReport, Error> {
-        let mut child = ResolverImpl {
-            path_stack: vec![input_file.to_owned()],
-            deps: Vec::new(),
-            error: None,
-            include_handler: Arc::clone(&self.include_handler),
-        };
-        child.visit_block_mut(ast);
-
-        if let Some(e) = child.error {
-            Err(e)
-        } else {
-            Ok(ResolveReport { deps: child.deps })
         }
     }
 }

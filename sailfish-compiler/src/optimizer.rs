@@ -3,57 +3,31 @@ use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::visit_mut::VisitMut;
 use syn::{Block, Expr, ExprBreak, ExprContinue, ExprMacro, Ident, LitStr, Stmt, Token};
 
-struct RenderTextMacroArgument {
-    #[allow(dead_code)]
-    context: Ident,
-    arg: LitStr,
+pub struct Optimizer {
+    rm_whitespace: bool,
 }
 
-impl Parse for RenderTextMacroArgument {
-    fn parse(s: ParseStream) -> ParseResult<Self> {
-        let context = s.parse()?;
-        s.parse::<Token![,]>()?;
-        let arg = s.parse()?;
-
-        Ok(Self { context, arg })
-    }
-}
-
-fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
-    let mut it = i.mac.path.segments.iter();
-
-    if it.next().map_or(false, |s| s.ident == "__sf_rt")
-        && it.next().map_or(false, |s| s.ident == "render_text")
-        && it.next().is_none()
-    {
-        let tokens = i.mac.tokens.clone();
-        if let Ok(macro_arg) = syn::parse2::<RenderTextMacroArgument>(tokens) {
-            return Some(macro_arg.arg.value());
+impl Optimizer {
+    #[inline]
+    pub fn new() -> Self {
+        Self {
+            rm_whitespace: false,
         }
     }
 
-    None
-}
-
-#[derive(Default)]
-struct ContinueBreakFinder {
-    found: bool,
-}
-
-impl VisitMut for ContinueBreakFinder {
-    fn visit_expr_continue_mut(&mut self, _: &mut ExprContinue) {
-        self.found = true;
+    #[inline]
+    pub fn rm_whitespace(mut self, new: bool) -> Self {
+        self.rm_whitespace = new;
+        self
     }
 
-    fn visit_expr_break_mut(&mut self, _: &mut ExprBreak) {
-        self.found = true;
+    #[inline]
+    pub fn optimize(&self, i: &mut Block) {
+        OptmizerImpl {
+            rm_whitespace: self.rm_whitespace,
+        }
+        .visit_block_mut(i);
     }
-}
-
-fn block_has_continue_or_break(i: &mut Block) -> bool {
-    let mut finder = ContinueBreakFinder::default();
-    finder.visit_block_mut(i);
-    finder.found
 }
 
 struct OptmizerImpl {
@@ -145,29 +119,55 @@ impl VisitMut for OptmizerImpl {
     }
 }
 
-pub struct Optimizer {
-    rm_whitespace: bool,
+fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
+    struct RenderTextMacroArgument {
+        #[allow(dead_code)]
+        context: Ident,
+        arg: LitStr,
+    }
+
+    impl Parse for RenderTextMacroArgument {
+        fn parse(s: ParseStream) -> ParseResult<Self> {
+            let context = s.parse()?;
+            s.parse::<Token![,]>()?;
+            let arg = s.parse()?;
+
+            Ok(Self { context, arg })
+        }
+    }
+
+    let mut it = i.mac.path.segments.iter();
+
+    if it.next().map_or(false, |s| s.ident == "__sf_rt")
+        && it.next().map_or(false, |s| s.ident == "render_text")
+        && it.next().is_none()
+    {
+        let tokens = i.mac.tokens.clone();
+        if let Ok(macro_arg) = syn::parse2::<RenderTextMacroArgument>(tokens) {
+            return Some(macro_arg.arg.value());
+        }
+    }
+
+    None
 }
 
-impl Optimizer {
-    #[inline]
-    pub fn new() -> Self {
-        Self {
-            rm_whitespace: false,
+fn block_has_continue_or_break(i: &mut Block) -> bool {
+    #[derive(Default)]
+    struct ContinueBreakFinder {
+        found: bool,
+    }
+
+    impl VisitMut for ContinueBreakFinder {
+        fn visit_expr_continue_mut(&mut self, _: &mut ExprContinue) {
+            self.found = true;
+        }
+
+        fn visit_expr_break_mut(&mut self, _: &mut ExprBreak) {
+            self.found = true;
         }
     }
 
-    #[inline]
-    pub fn rm_whitespace(mut self, new: bool) -> Self {
-        self.rm_whitespace = new;
-        self
-    }
-
-    #[inline]
-    pub fn optimize(&self, i: &mut Block) {
-        OptmizerImpl {
-            rm_whitespace: self.rm_whitespace,
-        }
-        .visit_block_mut(i);
-    }
+    let mut finder = ContinueBreakFinder::default();
+    finder.visit_block_mut(i);
+    finder.found
 }
