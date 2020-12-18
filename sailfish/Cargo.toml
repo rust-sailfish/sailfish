@@ -14,8 +14,11 @@ edition = "2018"
 
 [features]
 default = ["derive", "perf-inline"]
+# automatically import derive macro
 derive = ["sailfish-macros"]
+# enable json filter
 json = ["serde", "serde_json"]
+# add more #[inline] attribute
 perf-inline = []
 
 [dependencies]
