@@ -1,5 +1,15 @@
 use std::ptr;
 
+macro_rules! cfg_json {
+    ($($item:item)*) => {
+        $(
+            #[cfg(feature = "json")]
+            #[cfg_attr(docsrs, doc(cfg(feature = "json")))]
+            $item
+        )*
+    }
+}
+
 #[cfg(sailfish_nightly)]
 macro_rules! likely {
     ($val:expr) => {
