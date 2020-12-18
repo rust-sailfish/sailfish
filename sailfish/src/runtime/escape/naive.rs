@@ -30,7 +30,9 @@ pub(super) unsafe fn proceed(
         debug_assert!(start_ptr <= ptr);
         let idx = ESCAPE_LUT[*ptr as usize] as usize;
         debug_assert!(idx <= 9);
-        if unlikely!(idx < ESCAPED_LEN) {
+        if likely!(idx >= ESCAPED_LEN) {
+            ptr = ptr.add(1);
+        } else {
             if ptr > start_ptr {
                 let slc =
                     slice::from_raw_parts(start_ptr, ptr as usize - start_ptr as usize);
@@ -38,8 +40,8 @@ pub(super) unsafe fn proceed(
             }
             buffer.push_str(*ESCAPED.get_unchecked(idx));
             start_ptr = ptr.add(1);
+            ptr = ptr.add(1);
         }
-        ptr = ptr.add(1);
     }
 
     debug_assert_eq!(ptr, end_ptr);
@@ -57,7 +59,9 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize {
         debug_assert!(start_ptr <= ptr);
         let idx = *ESCAPE_LUT.get_unchecked(*ptr as usize) as usize;
         debug_assert!(idx <= 9);
-        if unlikely!(idx < ESCAPED_LEN) {
+        if likely!(idx >= ESCAPED_LEN) {
+            ptr = ptr.add(1);
+        } else {
             let escaped = ESCAPED.get_unchecked(idx);
             if ptr > start_ptr {
                 let len = ptr as usize - start_ptr as usize;
@@ -68,8 +72,8 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize {
             memcpy_16(escaped.as_ptr(), buf, escaped.len());
             buf = buf.add(escaped.len());
             start_ptr = ptr.add(1);
+            ptr = ptr.add(1);
         }
-        ptr = ptr.add(1);
     }
 
     debug_assert_eq!(ptr, end_ptr);
