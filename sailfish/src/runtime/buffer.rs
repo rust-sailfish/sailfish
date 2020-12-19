@@ -90,7 +90,7 @@ impl Buffer {
     /// This method panics if `size` overflows `isize::MAX`.
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if size <= self.capacity - self.len {
+        if likely!(size <= self.capacity - self.len) {
             return;
         }
         self.reserve_internal(size);
@@ -101,7 +101,7 @@ impl Buffer {
     #[inline]
     pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
         debug_assert!(size <= std::isize::MAX as usize);
-        if self.len + size <= self.capacity {
+        if likely!(self.len + size <= self.capacity) {
             return;
         }
         self.reserve_internal(size);
