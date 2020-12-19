@@ -46,7 +46,11 @@ impl<'a, T: Render> Render for Upper<'a, T> {
         let old_len = b.len();
         self.0.render(b)?;
 
-        let s = b.as_str()[old_len..].to_uppercase();
+        let content = b
+            .as_str()
+            .get(old_len..)
+            .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+        let s = content.to_uppercase();
         unsafe { b._set_len(old_len) };
         b.push_str(&*s);
         Ok(())
@@ -66,7 +70,11 @@ impl<'a, T: Render> Render for Lower<'a, T> {
         let old_len = b.len();
         self.0.render(b)?;
 
-        let s = b.as_str()[old_len..].to_lowercase();
+        let content = b
+            .as_str()
+            .get(old_len..)
+            .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+        let s = content.to_lowercase();
         unsafe { b._set_len(old_len) };
         b.push_str(&*s);
         Ok(())
@@ -96,22 +104,23 @@ impl<'a, T: Render> Render for Trim<'a, T> {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let old_len = b.len();
         self.0.render(b)?;
-        trim_impl(b, old_len);
-        Ok(())
+        trim_impl(b, old_len)
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let old_len = b.len();
         self.0.render_escaped(b)?;
-        trim_impl(b, old_len);
-        Ok(())
+        trim_impl(b, old_len)
     }
 }
 
-fn trim_impl(b: &mut Buffer, old_len: usize) {
-    debug_assert!(b.len() >= old_len);
-    let new_contents = &b.as_str()[old_len..];
+fn trim_impl(b: &mut Buffer, old_len: usize) -> Result<(), RenderError> {
+    let new_contents = b
+        .as_str()
+        .get(old_len..)
+        .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+
     let trimmed = new_contents.trim();
     let trimmed_len = trimmed.len();
 
@@ -138,6 +147,8 @@ fn trim_impl(b: &mut Buffer, old_len: usize) {
             b._set_len(old_len + trimmed_len);
         }
     }
+
+    Ok(())
 }
 
 /// Remove leading and trailing writespaces from rendered results
