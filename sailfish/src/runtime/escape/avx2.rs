@@ -10,20 +10,19 @@ use super::super::Buffer;
 use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 
 const VECTOR_BYTES: usize = std::mem::size_of::<__m256i>();
-const VECTOR_ALIGN: usize = VECTOR_BYTES - 1;
 
 #[target_feature(enable = "avx2")]
 pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
     debug_assert!(feed.len() >= 16);
 
     let len = feed.len();
-
     if len < VECTOR_BYTES {
         escape_small(feed, buffer);
         return;
     }
 
     let mut start_ptr = feed.as_ptr();
+    let mut ptr = start_ptr;
     let end_ptr = start_ptr.add(len);
 
     let v_independent1 = _mm256_set1_epi8(5);
@@ -38,39 +37,8 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         )) as u32
     };
 
-    let mut ptr = start_ptr;
-    let aligned_ptr = ptr.add(VECTOR_BYTES - (start_ptr as usize & VECTOR_ALIGN));
-
-    {
+    while ptr <= end_ptr.sub(VECTOR_BYTES) {
         let mut mask = maskgen(_mm256_loadu_si256(ptr as *const __m256i));
-        loop {
-            let trailing_zeros = mask.trailing_zeros() as usize;
-            let ptr2 = ptr.add(trailing_zeros);
-            if ptr2 >= aligned_ptr {
-                break;
-            }
-
-            let c = ESCAPE_LUT[*ptr2 as usize] as usize;
-            if c < ESCAPED_LEN {
-                if start_ptr < ptr2 {
-                    let slc = slice::from_raw_parts(
-                        start_ptr,
-                        ptr2 as usize - start_ptr as usize,
-                    );
-                    buffer.push_str(std::str::from_utf8_unchecked(slc));
-                }
-                buffer.push_str(*ESCAPED.get_unchecked(c));
-                start_ptr = ptr2.add(1);
-            }
-            mask ^= 1 << trailing_zeros;
-        }
-    }
-
-    ptr = aligned_ptr;
-    let mut next_ptr = ptr.add(VECTOR_BYTES);
-
-    while next_ptr <= end_ptr {
-        let mut mask = maskgen(_mm256_load_si256(ptr as *const __m256i));
         while mask != 0 {
             let trailing_zeros = mask.trailing_zeros() as usize;
             let ptr2 = ptr.add(trailing_zeros);
@@ -89,11 +57,10 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
             mask ^= 1 << trailing_zeros;
         }
 
-        ptr = next_ptr;
-        next_ptr = next_ptr.add(VECTOR_BYTES);
+        ptr = ptr.add(VECTOR_BYTES);
     }
 
-    debug_assert!(next_ptr > end_ptr);
+    debug_assert!(ptr.add(VECTOR_BYTES) > end_ptr);
 
     if ptr < end_ptr {
         debug_assert!((end_ptr as usize - ptr as usize) < VECTOR_BYTES);
