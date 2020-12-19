@@ -35,51 +35,76 @@ struct OptmizerImpl {
 }
 
 impl VisitMut for OptmizerImpl {
-    fn visit_expr_mut(&mut self, i: &mut Expr) {
-        let fl = if let Expr::ForLoop(ref mut fl) = *i {
-            fl
-        } else {
-            syn::visit_mut::visit_expr_mut(self, i);
-            return;
-        };
+    fn visit_block_mut(&mut self, i: &mut Block) {
+        let mut results = Vec::with_capacity(i.stmts.len());
 
-        // process inner block in advance
-        syn::visit_mut::visit_block_mut(self, &mut fl.body);
+        for mut stmt in i.stmts.drain(..) {
+            // process whole statement in advance
+            syn::visit_mut::visit_stmt_mut(self, &mut stmt);
 
-        if block_has_continue_or_break(&mut fl.body) {
-            return;
+            // check if statement is for loop
+            let fl = match stmt {
+                Stmt::Expr(Expr::ForLoop(ref mut fl))
+                | Stmt::Semi(Expr::ForLoop(ref mut fl), _) => fl,
+                _ => {
+                    results.push(stmt);
+                    continue;
+                }
+            };
+
+            // check if for loop contains 2 or more statements
+            if fl.body.stmts.len() <= 1 {
+                results.push(stmt);
+                continue;
+            }
+
+            // check if for loop contains continue or break statement
+            if block_has_continue_or_break(&mut fl.body) {
+                results.push(stmt);
+                continue;
+            }
+
+            // check if first and last statement inside for loop is render_text! macro
+            let (sf, sl) = match (
+                fl.body
+                    .stmts
+                    .first()
+                    .and_then(get_rendertext_value_from_stmt),
+                fl.body
+                    .stmts
+                    .last()
+                    .and_then(get_rendertext_value_from_stmt),
+            ) {
+                (Some(sf), Some(sl)) => (sf, sl),
+                _ => {
+                    results.push(stmt);
+                    continue;
+                }
+            };
+
+            let sf_len = sf.len();
+
+            // optimize for loop contents
+            let mut concat = sl;
+            concat += sf.as_str();
+
+            fl.body.stmts.remove(0);
+            *fl.body.stmts.last_mut().unwrap() = syn::parse2(quote! {
+                __sf_rt::render_text!(__sf_buf, #concat);
+            })
+            .unwrap();
+
+            let mut new_stmts = syn::parse2::<Block>(quote! {{
+                __sf_rt::render_text!(__sf_buf, #sf);
+                #stmt
+                unsafe { __sf_buf._set_len(__sf_buf.len() - #sf_len); }
+            }})
+            .unwrap();
+
+            results.append(&mut new_stmts.stmts)
         }
 
-        let (mf, ml) = match (fl.body.stmts.first(), fl.body.stmts.last()) {
-            (
-                Some(Stmt::Semi(Expr::Macro(ref mf), ..)),
-                Some(Stmt::Semi(Expr::Macro(ref ml), ..)),
-            ) => (mf, ml),
-            _ => return,
-        };
-
-        let (sf, sl) = match (get_rendertext_value(mf), get_rendertext_value(ml)) {
-            (Some(sf), Some(sl)) => (sf, sl),
-            _ => return,
-        };
-
-        let sf_len = sf.len();
-        let concat = sl + &*sf;
-
-        fl.body.stmts.remove(0);
-        *fl.body.stmts.last_mut().unwrap() = syn::parse2(quote! {
-            __sf_rt::render_text!(__sf_buf, #concat);
-        })
-        .unwrap();
-
-        let new_expr = syn::parse2(quote! {{
-            __sf_rt::render_text!(__sf_buf, #sf);
-            #fl;
-            unsafe { __sf_buf._set_len(__sf_buf.len() - #sf_len); }
-        }})
-        .unwrap();
-
-        *i = new_expr;
+        i.stmts = results;
     }
 
     fn visit_expr_macro_mut(&mut self, i: &mut ExprMacro) {
@@ -149,6 +174,15 @@ fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
     }
 
     None
+}
+
+fn get_rendertext_value_from_stmt(stmt: &Stmt) -> Option<String> {
+    let mac = match stmt {
+        Stmt::Semi(Expr::Macro(ref mac), ..) => mac,
+        _ => return None,
+    };
+
+    get_rendertext_value(mac)
 }
 
 fn block_has_continue_or_break(i: &mut Block) -> bool {
