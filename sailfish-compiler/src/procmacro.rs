@@ -264,6 +264,8 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 Ok(())
             }
         }
+
+        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
     };
 
     Ok(tokens)

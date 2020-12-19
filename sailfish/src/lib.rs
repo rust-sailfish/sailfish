@@ -44,7 +44,7 @@ pub use runtime::{RenderError, RenderResult};
 pub use sailfish_macros::TemplateOnce;
 
 /// Template that can be rendered with consuming itself.
-pub trait TemplateOnce: Sized {
+pub trait TemplateOnce: Sized + private::Sealed {
     /// Render the template and return the rendering result as `RenderResult`
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
@@ -62,7 +62,7 @@ pub trait TemplateOnce: Sized {
     /// inside templates
     ///
     /// ```
-    /// use sailfish::{RenderError, TemplateOnce};
+    /// use sailfish::TemplateOnce;
     /// use sailfish::runtime::Buffer;
     ///
     /// # pub struct HelloTemplate {
@@ -70,14 +70,17 @@ pub trait TemplateOnce: Sized {
     /// # }
     /// #
     /// # impl TemplateOnce for HelloTemplate {
-    /// #     fn render_once(self) -> Result<String, RenderError> {
+    /// #     fn render_once(self) -> Result<String, sailfish::RenderError> {
     /// #         Ok(String::new())
     /// #     }
     /// #
-    /// #     fn render_once_to(self, buf: &mut Buffer) -> Result<(), RenderError> {
+    /// #     fn render_once_to(self, buf: &mut Buffer)
+    /// #             -> Result<(), sailfish::RenderError> {
     /// #         Ok(())
     /// #     }
     /// # }
+    /// #
+    /// # impl sailfish::private::Sealed for HelloTemplate {}
     /// #
     /// let tpl = HelloTemplate {
     ///     messages: vec!["foo".to_string()]
@@ -91,6 +94,11 @@ pub trait TemplateOnce: Sized {
 }
 
 /// Work in Progress
-pub trait Template {
+pub trait Template: private::Sealed {
     fn render(&self) -> runtime::RenderResult;
+}
+
+#[doc(hidden)]
+pub mod private {
+    pub trait Sealed {}
 }
