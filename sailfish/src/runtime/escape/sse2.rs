@@ -31,7 +31,6 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
     };
 
     while ptr <= end_ptr.sub(VECTOR_BYTES) {
-        debug_assert_eq!((ptr as usize) % VECTOR_BYTES, 0);
         let mut mask = maskgen(_mm_loadu_si128(ptr as *const __m128i));
         while mask != 0 {
             let trailing_zeros = mask.trailing_zeros() as usize;
