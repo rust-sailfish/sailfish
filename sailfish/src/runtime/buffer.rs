@@ -319,6 +319,9 @@ impl Default for Buffer {
     }
 }
 
+unsafe impl Send for Buffer {}
+unsafe impl Sync for Buffer {}
+
 #[cfg(test)]
 mod tests {
     use super::Buffer;
