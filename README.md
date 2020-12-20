@@ -15,10 +15,10 @@ Simple, small, and extremely fast template engine for Rust
 ## ✨ Features
 
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
+- Builtin filters
 - Relatively small number of dependencies (<15 crates in total)
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
-- Template rendering NEVER fails unless you explicitly return error.
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
 - Automatically re-compile sources when template file is updated.
 - Works on Rust 1.42 or later
@@ -73,9 +73,6 @@ You can find more examples in [examples](./examples) directory.
 
 - `Template` trait ([RFC](https://github.com/Kogia-sima/sailfish/issues/3))
 - Template inheritance (block, partials, etc.)
-- Whitespace suppressing
-- Dynamic template compilation ([RFC](https://github.com/Kogia-sima/sailfish/issues/1))
-- `format_templates!(fmt, args..)` macro
 
 ## 👤 Author
 
