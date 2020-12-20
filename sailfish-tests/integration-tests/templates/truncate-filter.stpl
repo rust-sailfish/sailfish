@@ -1,0 +1,4 @@
+no-truncate: <%- "abc" | truncate(10) %>
+boundary: <%- "apple" | truncate(5) %>
+truncate: <%- "banana" | truncate(5) %>
+overflow: <%- "cherry" | truncate(std::usize::MAX) %>

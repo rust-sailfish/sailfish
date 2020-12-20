@@ -15,6 +15,7 @@ pub struct Buffer {
 }
 
 impl Buffer {
+    /// Create an empty buffer
     #[inline]
     pub const fn new() -> Buffer {
         Self {
@@ -24,21 +25,21 @@ impl Buffer {
         }
     }
 
-    #[cfg_attr(feature = "perf-inline", inline)]
+    /// Create a empty buffer with a particular capacity
+    #[inline]
     pub fn with_capacity(n: usize) -> Buffer {
-        unsafe {
-            if unlikely!(n == 0) {
-                Self::new()
-            } else {
-                Self {
-                    data: safe_alloc(n),
-                    len: 0,
-                    capacity: n,
-                }
+        if unlikely!(n == 0) {
+            Self::new()
+        } else {
+            Self {
+                data: safe_alloc(n),
+                len: 0,
+                capacity: n,
             }
         }
     }
 
+    /// Extracts a string slice containing the entire buffer
     #[inline]
     pub fn as_str(&self) -> &str {
         unsafe {
@@ -47,16 +48,19 @@ impl Buffer {
         }
     }
 
+    /// Returns an unsafe mutable pointer to the inner data
     #[inline]
     pub fn as_mut_ptr(&self) -> *mut u8 {
         self.data
     }
 
+    /// Returns the length of this buffer in bytes
     #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Returns this buffer's capacity in bytes
     #[inline]
     pub fn capacity(&self) -> usize {
         self.capacity
@@ -65,11 +69,6 @@ impl Buffer {
     #[inline]
     #[doc(hidden)]
     pub unsafe fn _set_len(&mut self, new_len: usize) {
-        self.len = new_len;
-    }
-
-    pub(crate) fn truncate(&mut self, new_len: usize) {
-        assert!(new_len <= self.len);
         self.len = new_len;
     }
 
@@ -84,18 +83,34 @@ impl Buffer {
         self.len += additional;
     }
 
+    /// Returns `true` if this buffer has a length of zero, and `false` otherwise
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
+    /// Same as String::reserve
+    ///
+    /// # Panics
+    ///
+    /// This method panics if `size` overflows `isize::MAX`.
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if size <= self.capacity.wrapping_sub(self.len) {
+        if likely!(size <= self.capacity - self.len) {
             return;
         }
         self.reserve_internal(size);
-        debug_assert!(self.len + size <= self.capacity);
+    }
+
+    /// Same as String::reserve except that undefined behaviour can result if `size`
+    /// overflows `isize::MAX`.
+    #[inline]
+    pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
+        debug_assert!(size <= std::isize::MAX as usize);
+        if likely!(self.len + size <= self.capacity) {
+            return;
+        }
+        self.reserve_internal(size);
     }
 
     #[inline]
@@ -104,22 +119,27 @@ impl Buffer {
         self.len = 0;
     }
 
-    /// Converts a `Buffer` into a `String`.
-    ///
-    /// This consumes the `Buffer`, so we do not need to copy its contents.
+    /// Converts a `Buffer` into a `String` without copy/realloc operation.
     #[inline]
     pub fn into_string(self) -> String {
         debug_assert!(self.len <= self.capacity);
         let buf = ManuallyDrop::new(self);
+
+        // SAFETY: This operations satisfy all requirements specified in
+        // https://doc.rust-lang.org/std/string/struct.String.html#safety
         unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
     }
 
+    /// Appends a given string slice onto the end of this buffer
     #[inline]
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
-        if unlikely!(size > self.capacity.wrapping_sub(self.len)) {
-            self.reserve_internal(size);
-        }
+
+        // NOTE: Since there's no guarantee that the maximum slice size won't overflow
+        // isize::MAX, we must call `reserve()` instead of `reserve_small()`. See
+        // https://github.com/rust-lang/rust/pull/79930#issuecomment-747135498 for more
+        // details.
+        self.reserve(size);
         unsafe {
             let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
@@ -128,46 +148,66 @@ impl Buffer {
         debug_assert!(self.len <= self.capacity);
     }
 
+    /// Appends the given `char` to the end of this buffer
     #[inline]
     pub fn push(&mut self, data: char) {
-        let mut buf = [0u8; 4];
-        self.push_str(data.encode_utf8(&mut buf));
+        // Question: Is it safe to pass uninitialized memory to `encode_utf8` function?
+        unsafe {
+            self.reserve_small(4);
+            let bp = self.data.add(self.len) as *mut [u8; 4];
+            let result = data.encode_utf8(&mut *bp);
+            self.len += result.len();
+        }
     }
 
     #[cfg_attr(feature = "perf-inline", inline)]
     #[cold]
     fn reserve_internal(&mut self, size: usize) {
-        unsafe {
-            let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
-            debug_assert!(new_capacity > self.capacity);
-            self.data = safe_realloc(self.data, self.capacity, new_capacity, size);
-            self.capacity = new_capacity;
-        }
+        debug_assert!(size <= std::isize::MAX as usize);
+
+        let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
+        debug_assert!(new_capacity > self.capacity);
+        self.data = unsafe { safe_realloc(self.data, self.capacity, new_capacity) };
+        self.capacity = new_capacity;
+
         debug_assert!(!self.data.is_null());
         debug_assert!(self.len <= self.capacity);
     }
 }
 
-unsafe fn safe_alloc(capacity: usize) -> *mut u8 {
-    assert!(capacity <= std::usize::MAX / 2, "capacity is too large");
-    let layout = Layout::from_size_align_unchecked(capacity, 1);
-    let data = alloc(layout);
-    if data.is_null() {
-        handle_alloc_error(layout);
-    }
+#[inline(never)]
+fn safe_alloc(capacity: usize) -> *mut u8 {
+    assert!(capacity > 0);
+    assert!(
+        capacity <= std::isize::MAX as usize,
+        "capacity is too large"
+    );
 
-    data
+    // SAFETY: capacity is non-zero, and always multiple of alignment (1).
+    unsafe {
+        let layout = Layout::from_size_align_unchecked(capacity, 1);
+        let data = alloc(layout);
+        if data.is_null() {
+            handle_alloc_error(layout);
+        }
+
+        data
+    }
 }
 
+/// # Safety
+///
+/// - if `capacity > 0`, `capacity` is the same value that was used to allocate the block
+/// of memory pointed by `ptr`.
 #[cold]
-unsafe fn safe_realloc(
-    ptr: *mut u8,
-    capacity: usize,
-    new_capacity: usize,
-    size: usize,
-) -> *mut u8 {
-    assert!(size <= std::usize::MAX / 2, "capacity is too large");
-    assert!(new_capacity <= std::usize::MAX / 2, "capacity is too large");
+#[inline(never)]
+unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+    assert!(new_capacity > 0);
+    assert!(
+        new_capacity <= std::isize::MAX as usize,
+        "capacity is too large"
+    );
+
     let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
         alloc(new_layout)
@@ -186,7 +226,7 @@ unsafe fn safe_realloc(
 impl Clone for Buffer {
     fn clone(&self) -> Self {
         unsafe {
-            if self.capacity == 0 {
+            if self.is_empty() {
                 Self::new()
             } else {
                 let buf = Self {
@@ -211,6 +251,8 @@ impl fmt::Debug for Buffer {
 impl Drop for Buffer {
     fn drop(&mut self) {
         if self.capacity != 0 {
+            // SAFETY: when `self.capacity > 0`, `self.capacity` is the same value
+            // used for allocate the block of memory pointed by `self.data`.
             unsafe {
                 let layout = Layout::from_size_align_unchecked(self.capacity, 1);
                 dealloc(self.data, layout);
@@ -234,7 +276,7 @@ impl From<String> for Buffer {
     #[inline]
     fn from(other: String) -> Buffer {
         let bs = other.into_boxed_str();
-        let data = unsafe { &mut *Box::into_raw(bs) };
+        let data = Box::leak(bs);
         Buffer {
             data: data.as_mut_ptr(),
             len: data.len(),
@@ -247,10 +289,16 @@ impl From<&str> for Buffer {
     #[inline]
     fn from(other: &str) -> Buffer {
         let mut buf = Buffer::with_capacity(other.len());
-        unsafe {
-            ptr::copy_nonoverlapping(other.as_ptr(), buf.as_mut_ptr(), other.len());
-            buf.advance(other.len());
+
+        if !other.is_empty() {
+            // SAFETY: `Buffer.capacity()` should be same as `other.len()`, so if `other`
+            // is not empty, `buf.as_mut_ptr()` is supporsed to point to valid memory.
+            unsafe {
+                ptr::copy_nonoverlapping(other.as_ptr(), buf.as_mut_ptr(), other.len());
+                buf.advance(other.len());
+            }
         }
+
         buf
     }
 }
@@ -279,12 +327,15 @@ impl Default for Buffer {
     }
 }
 
+unsafe impl Send for Buffer {}
+unsafe impl Sync for Buffer {}
+
 #[cfg(test)]
 mod tests {
     use super::Buffer;
 
     #[test]
-    fn test1() {
+    fn push_str() {
         let mut buffer = Buffer::new();
         assert_eq!(buffer.len(), 0);
         assert_eq!(buffer.capacity(), 0);
@@ -299,14 +350,11 @@ mod tests {
     }
 
     #[test]
-    fn test2() {
-        let mut buffer = Buffer::with_capacity(1);
+    fn with_capacity() {
+        let buffer = Buffer::with_capacity(1);
         assert!(buffer.is_empty());
         assert_eq!(buffer.len(), 0);
         assert!(buffer.capacity() >= 1);
-
-        buffer += "pie";
-        assert!(!buffer.is_empty());
     }
 
     #[test]
@@ -361,5 +409,22 @@ mod tests {
 
         assert_eq!(s1.as_str(), "foobar");
         assert_eq!(s2.as_str(), "foobaz");
+
+        s2.clear();
+        let _ = s2.clone();
+    }
+
+    #[test]
+    fn push() {
+        for initial_capacity in &[0, 4, 16] {
+            let mut s = Buffer::with_capacity(*initial_capacity);
+
+            s.push('a');
+            s.push('é');
+            s.push('Ａ');
+            s.push('🄫');
+
+            assert_eq!(s.as_str(), "aéＡ🄫");
+        }
     }
 }

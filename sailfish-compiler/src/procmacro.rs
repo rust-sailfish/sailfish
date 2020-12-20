@@ -1,8 +1,10 @@
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens};
+use quote::quote;
+use std::collections::hash_map::DefaultHasher;
 use std::env;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
-use syn::parse::{Parse, ParseStream, Result as ParseResult};
+use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
@@ -13,6 +15,7 @@ use crate::error::*;
 // options for `template` attributes
 #[derive(Default)]
 struct DeriveTemplateOptions {
+    found_keys: Vec<Ident>,
     path: Option<LitStr>,
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
@@ -20,81 +23,53 @@ struct DeriveTemplateOptions {
     type_: Option<LitStr>,
 }
 
-impl Parse for DeriveTemplateOptions {
-    fn parse(outer: ParseStream) -> ParseResult<Self> {
-        let s;
-        syn::parenthesized!(s in outer);
-
-        let mut options = Self::default();
-        let mut found_keys = Vec::new();
-
-        while !s.is_empty() {
-            let key = s.parse::<Ident>()?;
-            s.parse::<Token![=]>()?;
-
-            // check if argument is repeated
-            if found_keys.iter().any(|e| *e == key) {
-                return Err(syn::Error::new(
-                    key.span(),
-                    format!("Argument `{}` was repeated.", key),
-                ));
-            }
-
-            if key == "path" {
-                options.path = Some(s.parse::<LitStr>()?);
-            } else if key == "delimiter" {
-                options.delimiter = Some(s.parse::<LitChar>()?);
-            } else if key == "escape" {
-                options.escape = Some(s.parse::<LitBool>()?);
-            } else if key == "rm_whitespace" {
-                options.rm_whitespace = Some(s.parse::<LitBool>()?);
-            } else if key == "type" {
-                options.type_ = Some(s.parse::<LitStr>()?);
-            } else {
-                return Err(syn::Error::new(
-                    key.span(),
-                    format!("Unknown option: `{}`", key),
-                ));
-            }
-
-            found_keys.push(key);
-
-            // consume comma token
-            if s.is_empty() {
-                break;
-            } else {
-                s.parse::<Token![,]>()?;
-            }
-        }
-
-        Ok(options)
-    }
-}
-
 impl DeriveTemplateOptions {
-    fn merge(&mut self, other: DeriveTemplateOptions) -> Result<(), syn::Error> {
-        fn merge_single<T: ToTokens>(
-            lhs: &mut Option<T>,
-            rhs: Option<T>,
-        ) -> Result<(), syn::Error> {
-            if lhs.is_some() {
-                if let Some(rhs) = rhs {
-                    Err(syn::Error::new_spanned(rhs, "keyword argument repeated."))
-                } else {
-                    Ok(())
-                }
-            } else {
-                *lhs = rhs;
-                Ok(())
-            }
-        }
+    fn parser<'s>(&'s mut self) -> impl Parser + 's {
+        move |outer: ParseStream| -> ParseResult<()> {
+            let s;
+            syn::parenthesized!(s in outer);
 
-        merge_single(&mut self.path, other.path)?;
-        merge_single(&mut self.delimiter, other.delimiter)?;
-        merge_single(&mut self.escape, other.escape)?;
-        merge_single(&mut self.rm_whitespace, other.rm_whitespace)?;
-        merge_single(&mut self.type_, other.type_)?;
-        Ok(())
+            while !s.is_empty() {
+                let key = s.parse::<Ident>()?;
+                s.parse::<Token![=]>()?;
+
+                // check if argument is repeated
+                if self.found_keys.iter().any(|e| *e == key) {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("Argument `{}` was repeated.", key),
+                    ));
+                }
+
+                if key == "path" {
+                    self.path = Some(s.parse::<LitStr>()?);
+                } else if key == "delimiter" {
+                    self.delimiter = Some(s.parse::<LitChar>()?);
+                } else if key == "escape" {
+                    self.escape = Some(s.parse::<LitBool>()?);
+                } else if key == "rm_whitespace" {
+                    self.rm_whitespace = Some(s.parse::<LitBool>()?);
+                } else if key == "type" {
+                    self.type_ = Some(s.parse::<LitStr>()?);
+                } else {
+                    return Err(syn::Error::new(
+                        key.span(),
+                        format!("Unknown option: `{}`", key),
+                    ));
+                }
+
+                self.found_keys.push(key);
+
+                // consume comma token
+                if s.is_empty() {
+                    break;
+                } else {
+                    s.parse::<Token![,]>()?;
+                }
+            }
+
+            Ok(())
+        }
     }
 }
 
@@ -134,31 +109,23 @@ fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBu
 fn filename_hash(path: &Path) -> String {
     use std::fmt::Write;
 
-    const FNV_PRIME: u64 = 1_099_511_628_211;
-    const FNV_OFFSET_BASIS: u64 = 14_695_981_039_346_656_037;
-
-    let mut hash = String::with_capacity(16);
+    let mut path_with_hash = String::with_capacity(16);
 
     if let Some(n) = path.file_name() {
         let mut filename = &*n.to_string_lossy();
         if let Some(p) = filename.find('.') {
             filename = &filename[..p];
         }
-        hash.push_str(filename);
-        hash.push('-');
+        path_with_hash.push_str(filename);
+        path_with_hash.push('-');
     }
 
-    // calculate 64bit hash
-    let mut h = FNV_OFFSET_BASIS;
-    for b in (&*path.to_string_lossy()).bytes() {
-        h = h.wrapping_mul(FNV_PRIME);
-        h ^= b as u64;
-    }
+    let mut hasher = DefaultHasher::new();
+    path.hash(&mut hasher);
+    let hash = hasher.finish();
+    let _ = write!(path_with_hash, "{:016x}", hash);
 
-    // convert 64bit hash into ascii
-    let _ = write!(hash, "{:016x}", h);
-
-    hash
+    path_with_hash
 }
 
 fn compile(
@@ -176,8 +143,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     let mut all_options = DeriveTemplateOptions::default();
     for attr in strct.attrs {
         if attr.path.is_ident("template") {
-            let opt = syn::parse2::<DeriveTemplateOptions>(attr.tokens)?;
-            all_options.merge(opt)?;
+            syn::parse::Parser::parse2(all_options.parser(), attr.tokens)?;
         }
     }
 
@@ -231,13 +197,18 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     let report = compile(&*input_file, &*output_file, config)
         .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
-    let input_file_string = input_file.to_string_lossy();
-    let output_file_string = output_file.to_string_lossy();
+    let input_file_string = input_file
+        .to_str()
+        .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", input_file));
+    let output_file_string = output_file
+        .to_str()
+        .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", output_file));
 
     let mut include_bytes_seq = quote! { include_bytes!(#input_file_string); };
     for dep in report.deps {
-        let dep_string = dep.to_string_lossy();
-        include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
+        if let Some(dep_string) = dep.to_str() {
+            include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
+        }
     }
 
     // Generate tokens
@@ -265,28 +236,36 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
 
+    // render_once method always results in the same code.
+    // This method can be implemented in `sailfish` crate, but I found that performance
+    // drops when the implementation is written in `sailfish` crate.
     let tokens = quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once_to_string(self, buf: &mut String) -> std::result::Result<(), sailfish::runtime::RenderError> {
+            fn render_once(self) -> sailfish::RenderResult {
+                use sailfish::runtime::{Buffer, SizeHint};
+                static SIZE_HINT: SizeHint = SizeHint::new();
+
+                let mut buf = Buffer::new();
+                buf.reserve(SIZE_HINT.get());
+
+                self.render_once_to(&mut buf)?;
+                SIZE_HINT.update(buf.len());
+
+                Ok(buf.into_string())
+            }
+
+            fn render_once_to(self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-
-                static SIZE_HINT: __sf_rt::SizeHint = __sf_rt::SizeHint::new();
-
-                let mut __sf_buf = __sf_rt::Buffer::from(buf.as_str());
-                __sf_buf.reserve(SIZE_HINT.get());
-
-                let __sf_old_len = __sf_buf.len();
-
                 let #name { #field_names } = self;
                 include!(#output_file_string);
 
-                SIZE_HINT.update(__sf_buf.len() - __sf_old_len);
-                *buf = __sf_buf.into_string();
                 Ok(())
             }
         }
+
+        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
     };
 
     Ok(tokens)

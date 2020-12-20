@@ -7,6 +7,5 @@ members = [
 ]
 exclude = [
   "sailfish-tests/fuzzing-tests",
-  "benches",
   "examples"
 ]

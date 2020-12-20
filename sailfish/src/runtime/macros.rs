@@ -2,7 +2,7 @@
 #[doc(hidden)]
 macro_rules! render {
     ($buf:ident, $value:expr) => {
-        $crate::runtime::Render::render(&($value), &mut $buf)?
+        $crate::runtime::Render::render(&($value), $buf)?
     };
 }
 
@@ -10,7 +10,7 @@ macro_rules! render {
 #[doc(hidden)]
 macro_rules! render_escaped {
     ($buf:ident, $value:expr) => {
-        $crate::runtime::Render::render_escaped(&($value), &mut $buf)?
+        $crate::runtime::Render::render_escaped(&($value), $buf)?
     };
 }
 

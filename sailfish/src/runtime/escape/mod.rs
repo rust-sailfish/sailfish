@@ -2,19 +2,8 @@
 //!
 //! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-mod avx2;
 mod fallback;
 mod naive;
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-mod sse2;
-
-use std::mem;
-use std::sync::atomic::{AtomicPtr, Ordering};
-
-use super::buffer::Buffer;
-
-type FnRaw = *mut ();
 
 static ESCAPE_LUT: [u8; 256] = [
     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
@@ -32,54 +21,77 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 5;
 
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-static FN: AtomicPtr<()> = AtomicPtr::new(escape as FnRaw);
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri)))]
+macro_rules! generate_impl {
+    () => {
+        mod avx2;
+        mod sse2;
 
-#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-fn escape(feed: &str, buf: &mut Buffer) {
-    debug_assert!(feed.len() >= 16);
-    let fun = if is_x86_feature_detected!("avx2") {
-        avx2::escape
-    } else if is_x86_feature_detected!("sse2") {
-        sse2::escape
-    } else {
-        fallback::escape
-    };
+        use super::buffer::Buffer;
+        use std::sync::atomic::{AtomicPtr, Ordering};
 
-    FN.store(fun as FnRaw, Ordering::Relaxed);
-    unsafe { fun(feed, buf) };
-}
+        type FnRaw = *mut ();
 
-/// write the escaped contents into `Buffer`
-#[cfg_attr(feature = "perf-inline", inline)]
-pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
-    unsafe {
-        if feed.len() < 16 {
-            buf.reserve(feed.len() * 6);
-            let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
-            buf.advance(l);
-        } else {
-            #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-            {
-                #[cfg(target_feature = "avx2")]
-                {
+        static FN: AtomicPtr<()> = AtomicPtr::new(escape as FnRaw);
+
+        fn escape(feed: &str, buf: &mut Buffer) {
+            debug_assert!(feed.len() >= 16);
+            let fun = if is_x86_feature_detected!("avx2") {
+                avx2::escape
+            } else if is_x86_feature_detected!("sse2") {
+                sse2::escape
+            } else {
+                fallback::escape
+            };
+
+            FN.store(fun as FnRaw, Ordering::Relaxed);
+            unsafe { fun(feed, buf) };
+        }
+
+        /// write the escaped contents into `Buffer`
+        #[cfg_attr(feature = "perf-inline", inline)]
+        pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+            unsafe {
+                if feed.len() < 16 {
+                    buf.reserve_small(feed.len() * 6);
+                    let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
+                    buf.advance(l);
+                } else if cfg!(target_feature = "avx2") {
                     avx2::escape(feed, buf);
-                }
-
-                #[cfg(not(target_feature = "avx2"))]
-                {
+                } else {
                     let fun = FN.load(Ordering::Relaxed);
-                    mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
+                    std::mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
                 }
-            }
-
-            #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-            {
-                fallback::escape(feed, buf);
             }
         }
-    }
+    };
 }
+
+#[cfg(not(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri))))]
+macro_rules! generate_impl {
+    () => {
+        use super::buffer::Buffer;
+
+        /// write the escaped contents into `Buffer`
+        #[cfg_attr(feature = "perf-inline", inline)]
+        pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+            unsafe {
+                if cfg!(miri) {
+                    let bp = feed.as_ptr();
+                    naive::escape(buf, bp, bp, bp.add(feed.len()))
+                } else if feed.len() < 16 {
+                    buf.reserve_small(feed.len() * 6);
+                    let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
+                    buf.advance(l);
+                } else {
+                    fallback::escape(feed, buf)
+                }
+            }
+        }
+    };
+}
+
+generate_impl!();
 
 /// write the escaped contents into `String`
 ///
@@ -152,6 +164,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(miri))]
     fn random() {
         const ASCII_CHARS: &'static [u8] = br##"abcdefghijklmnopqrstuvwxyz0123456789-^\@[;:],./\!"#$%&'()~=~|`{+*}<>?_"##;
         let mut state = 88172645463325252u64;
@@ -183,21 +196,23 @@ mod tests {
                         s.as_ptr().add(s.len()),
                     );
 
-                    dbg!(s);
                     fallback::escape(s, &mut buf);
                     assert_eq!(buf.as_str(), buf_naive.as_str());
                     buf.clear();
 
-                    if is_x86_feature_detected!("sse2") {
-                        sse2::escape(s, &mut buf);
-                        assert_eq!(buf.as_str(), buf_naive.as_str());
-                        buf.clear();
-                    }
+                    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+                    {
+                        if is_x86_feature_detected!("sse2") {
+                            sse2::escape(s, &mut buf);
+                            assert_eq!(buf.as_str(), buf_naive.as_str());
+                            buf.clear();
+                        }
 
-                    if is_x86_feature_detected!("avx2") {
-                        avx2::escape(s, &mut buf);
-                        assert_eq!(buf.as_str(), buf_naive.as_str());
-                        buf.clear();
+                        if is_x86_feature_detected!("avx2") {
+                            avx2::escape(s, &mut buf);
+                            assert_eq!(buf.as_str(), buf_naive.as_str());
+                            buf.clear();
+                        }
                     }
                 }
 

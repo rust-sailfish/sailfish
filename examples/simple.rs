@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate sailfish_macros;
-
 use sailfish::TemplateOnce;
 
 #[derive(TemplateOnce)]

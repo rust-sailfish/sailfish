@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::cell::{Ref, RefMut};
+use std::fmt;
 use std::num::{
     NonZeroI128, NonZeroI16, NonZeroI32, NonZeroI64, NonZeroI8, NonZeroIsize,
     NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize, Wrapping,
@@ -9,12 +10,19 @@ use std::rc::Rc;
 use std::sync::{Arc, MutexGuard, RwLockReadGuard, RwLockWriteGuard};
 
 use super::buffer::Buffer;
-use super::{escape, RenderError};
+use super::escape;
 
 /// types which can be rendered inside buffer block (`<%= %>`)
 ///
 /// If you want to render the custom data, you must implement this trait and specify
 /// the behaviour.
+///
+/// # Safety
+///
+/// This trait allows modifying the previously-rendered contents or even decreasing the
+/// buffer size. However, such an operation easily cause unexpected rendering results.
+/// In order to avoid this, implementors should ensure that the contents which is already
+/// rendered won't be changed during `render` or `render_escaped` method is called.
 ///
 /// # Examples
 ///
@@ -192,10 +200,14 @@ macro_rules! render_int {
                 fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
                     use itoap::Integer;
 
-                    b.reserve(Self::MAX_LEN);
-
+                    // SAFETY: `MAX_LEN < 40` and then does not overflows `isize::MAX`.
+                    // Also `b.len()` should be always less than or equal to `isize::MAX`.
                     unsafe {
+                        b.reserve_small(Self::MAX_LEN);
                         let ptr = b.as_mut_ptr().add(b.len());
+
+                        // SAFETY: `MAX_LEN` is always greater than zero, so
+                        // `b.as_mut_ptr()` always point to valid block of memory
                         let l = itoap::write_to_ptr(ptr, *self);
                         b.advance(l);
                     }
@@ -220,7 +232,7 @@ impl Render for f32 {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         if likely!(self.is_finite()) {
             unsafe {
-                b.reserve(16);
+                b.reserve_small(16);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format32(*self, ptr);
                 b.advance(l);
@@ -249,7 +261,7 @@ impl Render for f64 {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         if likely!(self.is_finite()) {
             unsafe {
-                b.reserve(24);
+                b.reserve_small(24);
                 let ptr = b.as_mut_ptr().add(b.len());
                 let l = ryu::raw::format64(*self, ptr);
                 b.advance(l);
@@ -350,9 +362,62 @@ impl<T: Render> Render for Wrapping<T> {
     }
 }
 
+/// The error type which is returned from template function
+#[derive(Clone, Debug)]
+pub enum RenderError {
+    /// Custom error message
+    Msg(String),
+    /// fmt::Error was raised during rendering
+    Fmt(fmt::Error),
+    /// Buffer size shrinked during rendering
+    ///
+    /// This method won't be raised unless you implement `Render` trait for custom type.
+    ///
+    /// Also there is no guarentee that this error will be returned whenever the buffer
+    /// size shrinked.
+    BufSize,
+}
+
+impl RenderError {
+    /// Construct a new error with custom message
+    pub fn new(msg: &str) -> Self {
+        RenderError::Msg(msg.to_owned())
+    }
+}
+
+impl fmt::Display for RenderError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            RenderError::Msg(ref s) => f.pad(&**s),
+            RenderError::Fmt(ref e) => fmt::Display::fmt(e, f),
+            RenderError::BufSize => f.pad("buffer size shrinked while rendering"),
+        }
+    }
+}
+
+impl std::error::Error for RenderError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            RenderError::Msg(_) | RenderError::BufSize => None,
+            RenderError::Fmt(ref e) => Some(e),
+        }
+    }
+}
+
+impl From<fmt::Error> for RenderError {
+    #[inline]
+    fn from(other: fmt::Error) -> Self {
+        RenderError::Fmt(other)
+    }
+}
+
+/// Result type returned from `TemplateOnce::render_once` method
+pub type RenderResult = Result<String, RenderError>;
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
 
     #[test]
     fn receiver_coercion() {
@@ -418,5 +483,15 @@ mod tests {
         Render::render_escaped(&std::f32::NEG_INFINITY, &mut b).unwrap();
         Render::render_escaped(&std::f32::NAN, &mut b).unwrap();
         assert_eq!(b.as_str(), "0.0inf-infNaN");
+    }
+
+    #[test]
+    fn render_error() {
+        let err = RenderError::new("custom error");
+        assert!(err.source().is_none());
+        assert_eq!(format!("{}", err), "custom error");
+
+        let err = RenderError::from(std::fmt::Error::default());
+        assert!(err.source().is_some());
     }
 }

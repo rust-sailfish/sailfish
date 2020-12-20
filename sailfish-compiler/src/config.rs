@@ -26,7 +26,7 @@ impl Default for Config {
 }
 
 #[cfg(feature = "config")]
-mod config {
+mod imp {
     use std::fs;
     use yaml_rust::yaml::{Yaml, YamlLoader};
 

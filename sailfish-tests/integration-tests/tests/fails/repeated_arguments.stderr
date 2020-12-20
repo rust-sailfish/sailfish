@@ -1,18 +1,8 @@
-warning: unused import: `std::mem`
-  --> $DIR/mod.rs:12:5
-   |
-12 | use std::mem;
-   |     ^^^^^^^^
-   |
-   = note: `#[warn(unused_imports)]` on by default
-
-warning: 1 warning emitted
-
-error: keyword argument repeated.
- --> $DIR/repeated_arguments.rs:6:21
+error: Argument `escape` was repeated.
+ --> $DIR/repeated_arguments.rs:6:12
   |
 6 | #[template(escape = false)]
-  |                     ^^^^^
+  |            ^^^^^^
 
 error[E0599]: no method named `render_once` found for struct `InvalidOptionValue` in the current scope
   --> $DIR/repeated_arguments.rs:12:69

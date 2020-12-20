@@ -104,6 +104,15 @@ fn test_include() {
 }
 
 #[derive(TemplateOnce)]
+#[template(path = "continue-break.stpl", rm_whitespace = true)]
+struct ContinueBreak;
+
+#[test]
+fn continue_break() {
+    assert_render("continue-break", ContinueBreak);
+}
+
+#[derive(TemplateOnce)]
 #[template(path = "big-table.stpl", rm_whitespace = true)]
 struct BigTable {
     table: Vec<Vec<usize>>,
@@ -152,6 +161,76 @@ fn test_teams() {
         ],
     };
     assert_render("teams", teams);
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "techempower.stpl", rm_whitespace = true)]
+struct Techempower {
+    items: Vec<Fortune>,
+}
+
+struct Fortune {
+    id: i32,
+    message: &'static str,
+}
+
+#[test]
+fn test_techempower() {
+    let items = vec![
+        Fortune {
+            id: 0,
+            message: "Additional fortune added at request time.",
+        },
+        Fortune {
+            id: 1,
+            message: "fortune: No such file or directory",
+        },
+        Fortune {
+            id: 2,
+            message: "A computer scientist is someone who fixes things that aren't broken.",
+        },
+        Fortune {
+            id: 3,
+            message: "After enough decimal places, nobody gives a damn.",
+        },
+        Fortune {
+            id: 4,
+            message: "A bad random number generator: 1, 1, 1, 1, 1, 4.33e+67, 1, 1, 1",
+        },
+        Fortune {
+            id: 5,
+            message: "A computer program does what you tell it to do, not what you want it to do.",
+        },
+        Fortune {
+            id: 6,
+            message: "Emacs is a nice operating system, but I prefer UNIX. — Tom Christaensen",
+        },
+        Fortune {
+            id: 7,
+            message: "Any program that runs right is obsolete.",
+        },
+        Fortune {
+            id: 8,
+            message: "A list is only as strong as its weakest link. — Donald Knuth",
+        },
+        Fortune {
+            id: 9,
+            message: "Feature: A bug with seniority.",
+        },
+        Fortune {
+            id: 10,
+            message: "Computers make very fast, very accurate mistakes.",
+        },
+        Fortune {
+            id: 11,
+            message: "<script>alert(\"This should not be displayed in a browser alert box.\");</script>",
+        },
+        Fortune {
+            id: 12,
+            message: "フレームワークのベンチマーク",
+        },
+    ];
+    assert_render("techempower", Techempower { items });
 }
 
 #[derive(TemplateOnce)]
@@ -209,6 +288,43 @@ struct Filter<'a> {
 #[test]
 fn test_filter() {
     assert_render("filter", Filter { message: "hello" });
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "filter2.stpl")]
+struct Filter2;
+
+#[test]
+fn test_filter2() {
+    assert_render("filter2", Filter2);
+}
+
+#[derive(TemplateOnce)]
+#[template(path = "truncate-filter.stpl")]
+struct TruncateFilter;
+
+#[test]
+fn test_truncate_filter() {
+    assert_render("truncate-filter", TruncateFilter);
+}
+#[derive(TemplateOnce)]
+#[template(path = "json-filter.stpl")]
+struct JsonFilter {
+    data: serde_json::Value,
+}
+
+#[test]
+fn test_json_filter() {
+    let data = serde_json::json!({
+        "name": "John Doe",
+        "age": 43,
+        "phones": [
+            "+44 1234567",
+            "+44 2345678"
+        ]
+    });
+
+    assert_render("json-filter", JsonFilter { data });
 }
 
 #[cfg(unix)]

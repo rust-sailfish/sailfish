@@ -44,7 +44,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
 
     let len = feed.len();
     let mut start_ptr = feed.as_ptr();
-    let end_ptr = start_ptr.add(len);
+    let end_ptr = feed[len..].as_ptr();
 
     let mut ptr = start_ptr;
     let aligned_ptr = ptr.add(USIZE_BYTES - (start_ptr as usize & USIZE_ALIGN));
@@ -58,7 +58,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
 
     ptr = aligned_ptr;
 
-    while ptr.add(USIZE_BYTES) <= end_ptr {
+    while ptr <= end_ptr.sub(USIZE_BYTES) {
         debug_assert_eq!((ptr as usize) % USIZE_BYTES, 0);
 
         let chunk = *(ptr as *const usize);

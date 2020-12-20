@@ -4,8 +4,7 @@
 
 Simple, small, and extremely fast template engine for Rust
 
-[![Build Status](https://travis-ci.org/Kogia-sima/sailfish.svg?branch=master)](https://travis-ci.org/Kogia-sima/sailfish)
-[![Build status](https://ci.appveyor.com/api/projects/status/fa3et4rft4dyvdn9/branch/master?svg=true)](https://ci.appveyor.com/project/Kogiasima/sailfish/branch/master)
+[![Tests](https://github.com/Kogia-sima/sailfish/workflows/Tests/badge.svg)](https://github.com/Kogia-sima/sailfish/actions?query=workflow%3ATests)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
 
@@ -16,10 +15,10 @@ Simple, small, and extremely fast template engine for Rust
 ## ✨ Features
 
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
+- Builtin filters
 - Relatively small number of dependencies (<15 crates in total)
-- Extremely fast (See [benchmarks](./benches/README.md))
+- Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
-- Template rendering NEVER fails unless you explicitly return error.
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
 - Automatically re-compile sources when template file is updated.
 - Works on Rust 1.42 or later
@@ -30,8 +29,8 @@ Dependencies:
 
 ```toml
 [dependencies]
-sailfish = "0.2.3"
-sailfish-macros = "0.2.3"
+sailfish = "0.3.0"
+sailfish-macros = "0.3.0"
 ```
 
 Template file (templates/hello.stpl):
@@ -74,9 +73,6 @@ You can find more examples in [examples](./examples) directory.
 
 - `Template` trait ([RFC](https://github.com/Kogia-sima/sailfish/issues/3))
 - Template inheritance (block, partials, etc.)
-- Whitespace suppressing
-- Dynamic template compilation ([RFC](https://github.com/Kogia-sima/sailfish/issues/1))
-- `format_templates!(fmt, args..)` macro
 
 ## 👤 Author
 

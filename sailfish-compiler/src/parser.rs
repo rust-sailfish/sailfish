@@ -392,7 +392,6 @@ fn find_raw_string_end(haystack: &str) -> Option<usize> {
         }
     }
 
-    dbg!(&terminator);
     haystack[terminator.len() + 1..]
         .find(&terminator)
         .map(|p| p + terminator.len() * 2 + 1)

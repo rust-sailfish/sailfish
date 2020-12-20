@@ -1,0 +1,4 @@
+no-truncate: abc
+boundary: apple
+truncate: banan...
+overflow: cherry

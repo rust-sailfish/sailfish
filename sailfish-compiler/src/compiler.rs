@@ -13,13 +13,13 @@ use crate::resolver::Resolver;
 use crate::translator::{TranslatedSource, Translator};
 use crate::util::{read_to_string, rustfmt_block};
 
-pub struct CompilationReport {
-    pub deps: Vec<PathBuf>,
-}
-
 #[derive(Default)]
 pub struct Compiler {
     config: Config,
+}
+
+pub struct CompilationReport {
+    pub deps: Vec<PathBuf>,
 }
 
 impl Compiler {
