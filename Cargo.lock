@@ -42,7 +42,7 @@ dependencies = [
 
 [[package]]
 name = "integration-tests"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "pretty_assertions",
  "sailfish",
@@ -129,7 +129,7 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "sailfish"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "itoap",
  "ryu",
@@ -141,7 +141,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-compiler"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "home",
  "memchr",
@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-macros"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "proc-macro2",
  "sailfish-compiler",
