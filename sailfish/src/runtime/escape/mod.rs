@@ -72,6 +72,7 @@ macro_rules! generate_impl {
     () => {
         use super::buffer::Buffer;
 
+        /// write the escaped contents into `Buffer`
         #[cfg_attr(feature = "perf-inline", inline)]
         pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
             unsafe {
