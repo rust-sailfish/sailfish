@@ -8,6 +8,7 @@ use std::slice;
 
 use super::super::Buffer;
 use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
+use super::naive::push_escaped_str;
 
 const VECTOR_BYTES: usize = std::mem::size_of::<__m128i>();
 
@@ -34,6 +35,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         let mut mask = maskgen(_mm_loadu_si128(ptr as *const __m128i));
         while mask != 0 {
             let trailing_zeros = mask.trailing_zeros() as usize;
+            mask ^= 1 << trailing_zeros;
             let ptr2 = ptr.add(trailing_zeros);
             let c = ESCAPE_LUT[*ptr2 as usize] as usize;
             if c < ESCAPED_LEN {
@@ -44,10 +46,9 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                buffer.push_str(*ESCAPED.get_unchecked(c));
+                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
-            mask ^= 1 << trailing_zeros;
         }
 
         ptr = ptr.add(VECTOR_BYTES);
@@ -63,6 +64,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         let mut mask = maskgen(_mm_loadu_si128(read_ptr as *const __m128i)) >> backs;
         while mask != 0 {
             let trailing_zeros = mask.trailing_zeros() as usize;
+            mask ^= 1 << trailing_zeros;
             let ptr2 = ptr.add(trailing_zeros);
             let c = ESCAPE_LUT[*ptr2 as usize] as usize;
             if c < ESCAPED_LEN {
@@ -73,10 +75,9 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                buffer.push_str(*ESCAPED.get_unchecked(c));
+                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
-            mask ^= 1 << trailing_zeros;
         }
     }
 
