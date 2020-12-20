@@ -18,6 +18,12 @@ impl<'a, T: fmt::Display> Render for Display<'a, T> {
 }
 
 /// render using `std::fmt::Display` trait
+///
+/// # Examples
+///
+/// ```text
+/// filename: <%= filename.display() | disp %>
+/// ```
 #[inline]
 pub fn disp<T: fmt::Display>(expr: &T) -> Display<T> {
     Display(expr)
@@ -34,6 +40,18 @@ impl<'a, T: fmt::Debug> Render for Debug<'a, T> {
 }
 
 /// render using `std::fmt::Debug` trait
+///
+/// # Examples
+///
+/// The following examples produce exactly same results, but former is a bit faster
+///
+/// ```text
+/// table content: <%= table | dbg %>
+/// ```
+///
+/// ```text
+/// table content: <%= format!("{:?}", table); %>
+/// ```
 #[inline]
 pub fn dbg<T: fmt::Debug>(expr: &T) -> Debug<T> {
     Debug(expr)
@@ -58,6 +76,18 @@ impl<'a, T: Render> Render for Upper<'a, T> {
 }
 
 /// convert the rendered contents to uppercase
+///
+/// # Examples
+///
+/// ```text
+/// <%= "tschüß" | upper %>
+/// ```
+///
+/// result:
+///
+/// ```text
+/// TSCHÜSS
+/// ```
 #[inline]
 pub fn upper<T: Render>(expr: &T) -> Upper<T> {
     Upper(expr)
@@ -92,6 +122,18 @@ impl<'a, T: Render> Render for Lower<'a, T> {
 }
 
 /// convert the rendered contents to lowercase
+///
+/// # Examples
+///
+/// ```text
+/// <%= "ὈΔΥΣΣΕΎΣ" | lower %>
+/// ```
+///
+/// result:
+///
+/// ```text
+/// ὀδυσσεύς
+/// ```
 #[inline]
 pub fn lower<T: Render>(expr: &T) -> Lower<T> {
     Lower(expr)
@@ -152,6 +194,18 @@ fn trim_impl(b: &mut Buffer, old_len: usize) -> Result<(), RenderError> {
 }
 
 /// Remove leading and trailing writespaces from rendered results
+///
+/// # Examples
+///
+/// ```text
+/// <%= " Hello world\n" | trim %>
+/// ```
+///
+/// result:
+///
+/// ```text
+/// Hello world
+/// ```
 #[inline]
 pub fn trim<T: Render>(expr: &T) -> Trim<T> {
     Trim(expr)
@@ -194,6 +248,14 @@ fn truncate_impl(
 }
 
 /// Limit length of rendered contents, appends '...' if truncated
+///
+/// # Examples
+///
+/// The following example renders the first 20 characters of `message`
+///
+/// ```test
+/// <%= message | truncate(20) %>
+/// ```
 #[inline]
 pub fn truncate<T: Render>(expr: &T, limit: usize) -> Truncate<T> {
     Truncate(expr, limit)
@@ -261,6 +323,15 @@ cfg_json! {
     }
 
     /// Serialize the given data structure as JSON into the buffer
+    ///
+    /// # Examples
+    ///
+    /// ```text
+    /// {
+    ///     "name": "JSON example",
+    ///     "data": <%- data | json %>
+    /// }
+    /// ```
     #[inline]
     pub fn json<T: serde::Serialize>(expr: &T) -> Json<T> {
         Json(expr)
