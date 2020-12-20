@@ -16,7 +16,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
     let len = feed.len();
     let mut start_ptr = feed.as_ptr();
     let mut ptr = start_ptr;
-    let end_ptr = start_ptr.add(len);
+    let end_ptr = feed[len..].as_ptr();
 
     let v_independent1 = _mm_set1_epi8(5);
     let v_independent2 = _mm_set1_epi8(2);

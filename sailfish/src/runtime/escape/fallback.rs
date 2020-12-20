@@ -44,7 +44,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
 
     let len = feed.len();
     let mut start_ptr = feed.as_ptr();
-    let end_ptr = start_ptr.add(len);
+    let end_ptr = feed[len..].as_ptr();
 
     let mut ptr = start_ptr;
     let aligned_ptr = ptr.add(USIZE_BYTES - (start_ptr as usize & USIZE_ALIGN));
