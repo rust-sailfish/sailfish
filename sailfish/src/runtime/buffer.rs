@@ -25,6 +25,7 @@ impl Buffer {
         }
     }
 
+    /// Create a empty buffer with a particular capacity
     #[inline]
     pub fn with_capacity(n: usize) -> Buffer {
         if unlikely!(n == 0) {
@@ -38,6 +39,7 @@ impl Buffer {
         }
     }
 
+    /// Extracts a string slice containing the entire buffer
     #[inline]
     pub fn as_str(&self) -> &str {
         unsafe {
@@ -46,16 +48,19 @@ impl Buffer {
         }
     }
 
+    /// Returns an unsafe mutable pointer to the inner data
     #[inline]
     pub fn as_mut_ptr(&self) -> *mut u8 {
         self.data
     }
 
+    /// Returns the length of this buffer in bytes
     #[inline]
     pub fn len(&self) -> usize {
         self.len
     }
 
+    /// Returns this buffer's capacity in bytes
     #[inline]
     pub fn capacity(&self) -> usize {
         self.capacity
@@ -78,6 +83,7 @@ impl Buffer {
         self.len += additional;
     }
 
+    /// Returns `true` if this buffer has a length of zero, and `false` otherwise
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len == 0
@@ -124,6 +130,7 @@ impl Buffer {
         unsafe { String::from_raw_parts(buf.data, buf.len, buf.capacity) }
     }
 
+    /// Appends a given string slice onto the end of this buffer
     #[inline]
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
@@ -141,6 +148,7 @@ impl Buffer {
         debug_assert!(self.len <= self.capacity);
     }
 
+    /// Appends the given `char` to the end of this buffer
     #[inline]
     pub fn push(&mut self, data: char) {
         // Question: Is it safe to pass uninitialized memory to `encode_utf8` function?
