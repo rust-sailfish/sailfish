@@ -16,7 +16,8 @@ impl SizeHint {
     /// Get the current value
     #[inline]
     pub fn get(&self) -> usize {
-        self.value.load(Ordering::Acquire)
+        let value = self.value.load(Ordering::Acquire);
+        value + value / 8 + 75
     }
 
     /// Update size hint based on given value.
@@ -24,10 +25,24 @@ impl SizeHint {
     /// There is no guarantee that the value of get() after calling update() is same
     /// as the value passed on update()
     #[inline]
-    pub fn update(&self, mut value: usize) {
-        value = value + value / 8 + 75;
-        if unlikely!(self.get() < value) {
-            self.value.store(value, Ordering::Release);
+    pub fn update(&self, value: usize) {
+        let mut old = self.value.load(Ordering::Acquire);
+        if old == 0 {
+            old = value;
         }
+        self.value
+            .store(old - old / 4 + value / 4, Ordering::Release);
+    }
+}
+
+#[test]
+fn test_update() {
+    let hint = SizeHint::new();
+
+    for size in 1..=100 {
+        let cap = hint.get();
+        assert!(size <= cap);
+        assert!(cap <= size + size / 8 + 75);
+        hint.update(size);
     }
 }
