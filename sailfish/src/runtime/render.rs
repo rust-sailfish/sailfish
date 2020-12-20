@@ -16,6 +16,13 @@ use super::{escape, RenderError};
 /// If you want to render the custom data, you must implement this trait and specify
 /// the behaviour.
 ///
+/// # Safety
+///
+/// This trait allows modifying the previously-rendered contents or even decreasing the
+/// buffer size. However, such an operation easily cause unexpected rendering results.
+/// In order to avoid this, implementors should ensure that the contents which is already
+/// rendered won't be changed during `render` or `render_escaped` method is called.
+///
 /// # Examples
 ///
 /// ```
