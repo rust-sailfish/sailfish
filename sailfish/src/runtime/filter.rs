@@ -70,7 +70,7 @@ impl<'a, T: Render> Render for Upper<'a, T> {
         let content = b
             .as_str()
             .get(old_len..)
-            .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+            .ok_or_else(|| RenderError::BufSize)?;
         let s = content.to_uppercase();
         unsafe { b._set_len(old_len) };
         b.push_str(&*s);
@@ -107,7 +107,7 @@ impl<'a, T: Render> Render for Lower<'a, T> {
         let content = b
             .as_str()
             .get(old_len..)
-            .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+            .ok_or_else(|| RenderError::BufSize)?;
         let s = content.to_lowercase();
         unsafe { b._set_len(old_len) };
         b.push_str(&*s);
@@ -166,7 +166,7 @@ fn trim_impl(b: &mut Buffer, old_len: usize) -> Result<(), RenderError> {
     let new_contents = b
         .as_str()
         .get(old_len..)
-        .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+        .ok_or_else(|| RenderError::BufSize)?;
 
     let trimmed = new_contents.trim();
     let trimmed_len = trimmed.len();
@@ -243,7 +243,7 @@ fn truncate_impl(
     let new_contents = b
         .as_str()
         .get(old_len..)
-        .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
+        .ok_or_else(|| RenderError::BufSize)?;
 
     if let Some(idx) = new_contents.char_indices().nth(limit).map(|(i, _)| i) {
         unsafe { b._set_len(old_len.wrapping_add(idx)) };
