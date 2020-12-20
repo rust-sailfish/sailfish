@@ -7,6 +7,7 @@ use std::ptr;
 
 use super::{Buffer, Render, RenderError};
 
+/// Helper struct for 'display' filter
 pub struct Display<'a, T>(&'a T);
 
 impl<'a, T: fmt::Display> Render for Display<'a, T> {
@@ -29,6 +30,7 @@ pub fn disp<T: fmt::Display>(expr: &T) -> Display<T> {
     Display(expr)
 }
 
+/// Helper struct for 'dbg' filter
 pub struct Debug<'a, T>(&'a T);
 
 impl<'a, T: fmt::Debug> Render for Debug<'a, T> {
@@ -57,6 +59,7 @@ pub fn dbg<T: fmt::Debug>(expr: &T) -> Debug<T> {
     Debug(expr)
 }
 
+/// Helper struct for 'upper' filter
 pub struct Upper<'a, T>(&'a T);
 
 impl<'a, T: Render> Render for Upper<'a, T> {
@@ -93,6 +96,7 @@ pub fn upper<T: Render>(expr: &T) -> Upper<T> {
     Upper(expr)
 }
 
+/// Helper struct for 'lower' filter
 pub struct Lower<'a, T>(&'a T);
 
 impl<'a, T: Render> Render for Lower<'a, T> {
@@ -139,6 +143,7 @@ pub fn lower<T: Render>(expr: &T) -> Lower<T> {
     Lower(expr)
 }
 
+/// Helper struct for 'trim' filter
 pub struct Trim<'a, T>(&'a T);
 
 impl<'a, T: Render> Render for Trim<'a, T> {
@@ -211,6 +216,7 @@ pub fn trim<T: Render>(expr: &T) -> Trim<T> {
     Trim(expr)
 }
 
+/// Helper struct for 'truncate' filter
 pub struct Truncate<'a, T>(&'a T, usize);
 
 impl<'a, T: Render> Render for Truncate<'a, T> {
@@ -262,6 +268,7 @@ pub fn truncate<T: Render>(expr: &T, limit: usize) -> Truncate<T> {
 }
 
 cfg_json! {
+    /// Helper struct for 'json' filter
     pub struct Json<'a, T>(&'a T);
 
     impl<'a, T: serde::Serialize> Render for Json<'a, T> {

@@ -7,6 +7,7 @@ pub struct SizeHint {
 }
 
 impl SizeHint {
+    /// Initialize size hint
     pub const fn new() -> SizeHint {
         SizeHint {
             value: AtomicUsize::new(0),

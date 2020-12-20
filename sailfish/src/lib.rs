@@ -34,6 +34,7 @@
 #![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(clippy::redundant_closure)]
+#![deny(missing_docs)]
 
 pub mod runtime;
 
@@ -95,6 +96,7 @@ pub trait TemplateOnce: Sized + private::Sealed {
 
 /// Work in Progress
 pub trait Template: private::Sealed {
+    /// Work in progress
     fn render(&self) -> runtime::RenderResult;
 }
 

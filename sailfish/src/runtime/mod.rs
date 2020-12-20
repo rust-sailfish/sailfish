@@ -68,6 +68,7 @@ impl From<fmt::Error> for RenderError {
     }
 }
 
+/// Result type returned from `TemplateOnce::render_once` method
 pub type RenderResult = Result<String, RenderError>;
 
 #[cfg(test)]
