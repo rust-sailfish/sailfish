@@ -30,7 +30,6 @@ Dependencies:
 ```toml
 [dependencies]
 sailfish = "0.3.0"
-sailfish-macros = "0.3.0"
 ```
 
 Template file (templates/hello.stpl):
@@ -48,9 +47,6 @@ Template file (templates/hello.stpl):
 Code:
 
 ```rust
-#[macro_use]
-extern crate sailfish_macros;  // enable derive macro
-
 use sailfish::TemplateOnce;
 
 #[derive(TemplateOnce)]

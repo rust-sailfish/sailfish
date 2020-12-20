@@ -29,10 +29,7 @@ templates/
 Import the sailfish crates:
 
 ```rust
-#[macro_use]
-extern crate sailfish_macros;  // enable derive macros
-
-use sailfish::TemplateOnce;  // import `TemplateOnce` trait
+use sailfish::TemplateOnce;
 ```
 
 Define the template struct to be rendered:
