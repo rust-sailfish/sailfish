@@ -180,30 +180,22 @@ fn truncate_impl(
     old_len: usize,
     limit: usize,
 ) -> Result<(), RenderError> {
-    let mut pos = old_len + limit;
-    if b.len() > pos {
-        let tmp = b.as_str();
-        while !tmp.is_char_boundary(pos) {
-            pos += 1;
-        }
+    let new_contents = b
+        .as_str()
+        .get(old_len..)
+        .ok_or_else(|| RenderError::new("buffer size shrinked while rendering"))?;
 
-        unsafe { b._set_len(pos) };
+    if let Some(idx) = new_contents.char_indices().nth(limit).map(|(i, _)| i) {
+        unsafe { b._set_len(old_len.wrapping_add(idx)) };
         b.push_str("...");
-
-        Ok(())
-    } else if b.len() >= old_len {
-        Ok(())
-    } else {
-        Err(RenderError::new("buffer size shrinked while rendering"))
     }
+
+    Ok(())
 }
 
 /// Limit length of rendered contents, appends '...' if truncated
 #[inline]
-pub fn truncate<T: Render>(expr: &T, mut limit: usize) -> Truncate<T> {
-    // SAFETY: since `buf.len() <= isize::MAX`, length of rendered contents never
-    // overflows isize::MAX. If limit > isize::MAX, then truncation never happens
-    limit &= std::usize::MAX >> 1;
+pub fn truncate<T: Render>(expr: &T, limit: usize) -> Truncate<T> {
     Truncate(expr, limit)
 }
 
