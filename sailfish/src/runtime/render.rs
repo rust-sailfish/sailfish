@@ -89,16 +89,16 @@ impl Render for String {
     }
 }
 
-impl Render for &str {
+impl Render for str {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        b.push_str(*self);
+        b.push_str(self);
         Ok(())
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        escape::escape_to_buf(*self, b);
+        escape::escape_to_buf(self, b);
         Ok(())
     }
 }
