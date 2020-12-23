@@ -1,3 +1,0 @@
-<table>
-  <% for row in table { %><tr><% for col in row { %><td><%= col %></td><% } %></tr><% } %>
-</table>

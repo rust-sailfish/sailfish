@@ -113,57 +113,6 @@ fn continue_break() {
 }
 
 #[derive(TemplateOnce)]
-#[template(path = "big-table.stpl", rm_whitespace = true)]
-struct BigTable {
-    table: Vec<Vec<usize>>,
-}
-
-#[test]
-fn test_big_table() {
-    let table = (0..10).map(|_| (0..10).collect()).collect();
-    assert_render("big-table", BigTable { table });
-}
-
-#[derive(TemplateOnce)]
-#[template(path = "teams.stpl", rm_whitespace = true)]
-struct Teams {
-    year: u16,
-    teams: Vec<Team>,
-}
-
-struct Team {
-    name: String,
-    score: u8,
-}
-
-#[test]
-fn test_teams() {
-    let teams = Teams {
-        year: 2015,
-        teams: vec![
-            Team {
-                name: "Jiangsu".into(),
-
-                score: 43,
-            },
-            Team {
-                name: "Beijing".into(),
-                score: 27,
-            },
-            Team {
-                name: "Guangzhou".into(),
-                score: 22,
-            },
-            Team {
-                name: "Shandong".into(),
-                score: 12,
-            },
-        ],
-    };
-    assert_render("teams", teams);
-}
-
-#[derive(TemplateOnce)]
 #[template(path = "techempower.stpl", rm_whitespace = true)]
 struct Techempower {
     items: Vec<Fortune>,
