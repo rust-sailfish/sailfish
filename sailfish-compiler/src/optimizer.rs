@@ -88,6 +88,15 @@ impl VisitMut for OptmizerImpl {
             let mut concat = sl;
             concat += sf.as_str();
 
+            let mut previous;
+            if let Some(prev) = results.last().and_then(get_rendertext_value_from_stmt) {
+                results.pop();
+                previous = prev;
+                previous += sf.as_str();
+            } else {
+                previous = sf;
+            }
+
             fl.body.stmts.remove(0);
             *fl.body.stmts.last_mut().unwrap() = syn::parse2(quote! {
                 __sf_rt::render_text!(__sf_buf, #concat);
@@ -95,7 +104,7 @@ impl VisitMut for OptmizerImpl {
             .unwrap();
 
             let mut new_stmts = syn::parse2::<Block>(quote! {{
-                __sf_rt::render_text!(__sf_buf, #sf);
+                __sf_rt::render_text!(__sf_buf, #previous);
                 #stmt
                 unsafe { __sf_buf._set_len(__sf_buf.len() - #sf_len); }
             }})

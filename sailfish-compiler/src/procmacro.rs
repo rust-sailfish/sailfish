@@ -245,9 +245,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 use sailfish::runtime::{Buffer, SizeHint};
                 static SIZE_HINT: SizeHint = SizeHint::new();
 
-                let mut buf = Buffer::new();
-                buf.reserve(SIZE_HINT.get());
-
+                let mut buf = Buffer::with_capacity(SIZE_HINT.get());
                 self.render_once_to(&mut buf)?;
                 SIZE_HINT.update(buf.len());
 
