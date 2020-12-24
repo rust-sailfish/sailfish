@@ -57,8 +57,8 @@ struct HelloTemplate {
 
 fn main() {
     let ctx = HelloTemplate {
-        messages: vec![String::from("foo"), String::from("bar")]
-    }
+        messages: vec![String::from("foo"), String::from("bar")],
+    };
     println!("{}", ctx.render_once().unwrap());
 }
 ```
