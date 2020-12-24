@@ -20,7 +20,6 @@ struct DeriveTemplateOptions {
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
     rm_whitespace: Option<LitBool>,
-    type_: Option<LitStr>,
 }
 
 impl DeriveTemplateOptions {
@@ -49,8 +48,6 @@ impl DeriveTemplateOptions {
                     self.escape = Some(s.parse::<LitBool>()?);
                 } else if key == "rm_whitespace" {
                     self.rm_whitespace = Some(s.parse::<LitBool>()?);
-                } else if key == "type" {
-                    self.type_ = Some(s.parse::<LitStr>()?);
                 } else {
                     return Err(syn::Error::new(
                         key.span(),
