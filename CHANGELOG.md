@@ -1,12 +1,48 @@
+<a name="v0.3.0"></a>
+## [v0.3.0](https://github.com/Kogia-sima/sailfish/compare/v0.2.2...v0.3.0) (2020-12-20)
+
+## Breaking changes
+
+* No longer requires `extern crate sailfish_macros` (which raise compilation warnings with v0.3.0)
+* Remove `TemplaceOnce::render_to_string` method (already deprecated in v0.2.1)
+* Forbid implementing `TemplateOnce` trait by yourself
+* Change `RenderError` into enum
+* Update error format in `sailfish-compiler`
+
+## New features
+
+* New filters: `json`, `truncate`
+* Impl `Send`/`Sync` for `Buffer`
+
+## Fix
+
+* Fix rendering issue on continue/break statements
+* Do not panic when buffer size decreased
+* Remove unsafe usage of `ptr::add()`
+* Properly handle slices with size greater than `isize::MAX`
+
+<a name="v0.2.3"></a>
+## [v0.2.3](https://github.com/Kogia-sima/sailfish/compare/v0.2.2...v0.2.3) (2020-11-29)
+
+## Fix
+
+* Use `std::result::Result` in derive macro to allow custom Result types (#34)
+
+<a name="v0.2.2"></a>
+## [v0.2.2](https://github.com/Kogia-sima/sailfish/compare/v0.2.1...v0.2.2) (2020-11-11)
+
+## Fix
+
+* Update proc-macro2 version (#32)
 
 <a name="v0.2.1"></a>
-## [v0.2.1](https://github.com/Kogia-sima/sailfish/compare/v0.2.0...v0.2.1) (2020-07-17)
+## [v0.2.1](https://github.com/Kogia-sima/sailfish/compare/v0.2.0...v0.2.1) (2020-08-04)
 
 ### Features
 
 * Add trim filter
 
-### Bug fix
+### Fix
 
 * Fix incorrect syntax highlighting in vim
 * Avoid capacity overflow in `Buffer::with_capacity`
