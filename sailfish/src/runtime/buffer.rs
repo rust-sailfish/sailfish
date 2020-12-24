@@ -69,6 +69,7 @@ impl Buffer {
     #[inline]
     #[doc(hidden)]
     pub unsafe fn _set_len(&mut self, new_len: usize) {
+        debug_assert!(new_len <= self.capacity);
         self.len = new_len;
     }
 
