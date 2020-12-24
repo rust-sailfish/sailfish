@@ -2,8 +2,21 @@
 //!
 //! By default sailfish replaces the characters `&"'<>` with the equivalent html.
 
+#![cfg_attr(
+    all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(miri),
+        target_feature = "avx2"
+    ),
+    allow(dead_code)
+)]
+
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri)))]
+mod avx2;
 mod fallback;
 mod naive;
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri)))]
+mod sse2;
 
 static ESCAPE_LUT: [u8; 256] = [
     9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
@@ -21,20 +34,20 @@ static ESCAPE_LUT: [u8; 256] = [
 const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 5;
 
-#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri)))]
-macro_rules! generate_impl {
-    () => {
-        mod avx2;
-        mod sse2;
+use super::buffer::Buffer;
 
-        use super::buffer::Buffer;
+/// write the escaped contents into `Buffer`
+#[cfg(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri)))]
+#[cfg_attr(feature = "perf-inline", inline)]
+pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+    #[cfg(not(target_feature = "avx2"))]
+    {
         use std::sync::atomic::{AtomicPtr, Ordering};
 
         type FnRaw = *mut ();
+        static FN: AtomicPtr<()> = AtomicPtr::new(detect as FnRaw);
 
-        static FN: AtomicPtr<()> = AtomicPtr::new(escape as FnRaw);
-
-        fn escape(feed: &str, buf: &mut Buffer) {
+        fn detect(feed: &str, buf: &mut Buffer) {
             debug_assert!(feed.len() >= 16);
             let fun = if is_x86_feature_detected!("avx2") {
                 avx2::escape
@@ -48,50 +61,47 @@ macro_rules! generate_impl {
             unsafe { fun(feed, buf) };
         }
 
-        /// write the escaped contents into `Buffer`
-        #[cfg_attr(feature = "perf-inline", inline)]
-        pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
-            unsafe {
-                if feed.len() < 16 {
-                    buf.reserve_small(feed.len() * 6);
-                    let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
-                    buf.advance(l);
-                } else if cfg!(target_feature = "avx2") {
-                    avx2::escape(feed, buf);
-                } else {
-                    let fun = FN.load(Ordering::Relaxed);
-                    std::mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
-                }
+        unsafe {
+            if feed.len() < 16 {
+                buf.reserve_small(feed.len() * 6);
+                let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
+                buf.advance(l);
+            } else {
+                let fun = FN.load(Ordering::Relaxed);
+                std::mem::transmute::<FnRaw, fn(&str, &mut Buffer)>(fun)(feed, buf);
             }
         }
-    };
+    }
+
+    #[cfg(target_feature = "avx2")]
+    unsafe {
+        if feed.len() < 16 {
+            buf.reserve_small(feed.len() * 6);
+            let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
+            buf.advance(l);
+        } else if cfg!(target_feature = "avx2") {
+            avx2::escape(feed, buf);
+        }
+    }
 }
 
+/// write the escaped contents into `Buffer`
 #[cfg(not(all(any(target_arch = "x86", target_arch = "x86_64"), not(miri))))]
-macro_rules! generate_impl {
-    () => {
-        use super::buffer::Buffer;
-
-        /// write the escaped contents into `Buffer`
-        #[cfg_attr(feature = "perf-inline", inline)]
-        pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
-            unsafe {
-                if cfg!(miri) {
-                    let bp = feed.as_ptr();
-                    naive::escape(buf, bp, bp, bp.add(feed.len()))
-                } else if feed.len() < 16 {
-                    buf.reserve_small(feed.len() * 6);
-                    let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
-                    buf.advance(l);
-                } else {
-                    fallback::escape(feed, buf)
-                }
-            }
+#[cfg_attr(feature = "perf-inline", inline)]
+pub fn escape_to_buf(feed: &str, buf: &mut Buffer) {
+    unsafe {
+        if cfg!(miri) {
+            let bp = feed.as_ptr();
+            naive::escape(buf, bp, bp, bp.add(feed.len()))
+        } else if feed.len() < 16 {
+            buf.reserve_small(feed.len() * 6);
+            let l = naive::escape_small(feed, buf.as_mut_ptr().add(buf.len()));
+            buf.advance(l);
+        } else {
+            fallback::escape(feed, buf)
         }
-    };
+    }
 }
-
-generate_impl!();
 
 /// write the escaped contents into `String`
 ///
