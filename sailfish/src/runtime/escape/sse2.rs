@@ -7,8 +7,8 @@ use std::arch::x86_64::*;
 use std::slice;
 
 use super::super::Buffer;
-use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 use super::naive::push_escaped_str;
+use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 
 const VECTOR_BYTES: usize = std::mem::size_of::<__m128i>();
 
