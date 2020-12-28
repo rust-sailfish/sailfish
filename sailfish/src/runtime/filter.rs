@@ -353,37 +353,33 @@ cfg_json! {
 mod tests {
     use super::*;
 
+    fn assert_render<T: Render>(expr: &T, expected: &str) {
+        let mut buf = Buffer::new();
+        Render::render(expr, &mut buf).unwrap();
+        assert_eq!(buf.as_str(), expected);
+    }
+
+    fn assert_render_escaped<T: Render>(expr: &T, expected: &str) {
+        let mut buf = Buffer::new();
+        Render::render_escaped(expr, &mut buf).unwrap();
+        assert_eq!(buf.as_str(), expected);
+    }
+
     #[test]
     fn case() {
-        let mut buf = Buffer::new();
-        upper(&"hElLO, WOrLd!").render(&mut buf).unwrap();
-        assert_eq!(buf.as_str(), "HELLO, WORLD!");
-
-        buf.clear();
-        lower(&"hElLO, WOrLd!").render(&mut buf).unwrap();
-        assert_eq!(buf.as_str(), "hello, world!");
-
-        buf.clear();
-        lower(&"<h1>TITLE</h1>").render_escaped(&mut buf).unwrap();
-        assert_eq!(buf.as_str(), "&lt;h1&gt;title&lt;/h1&gt;");
+        assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
+        assert_render(&lower("hElLo, WOrLd!"), "hello, world!");
+        assert_render_escaped(&lower("<h1>TITLE</h1>"), "&lt;h1&gt;title&lt;/h1&gt;");
     }
 
     #[test]
     fn trim_test() {
-        let mut buf = Buffer::new();
-        trim(&" hello  ").render(&mut buf).unwrap();
-        trim(&"hello ").render(&mut buf).unwrap();
-        trim(&"   hello").render(&mut buf).unwrap();
-        assert_eq!(buf.as_str(), "hellohellohello");
+        assert_render(&trim(""), "");
+        assert_render(&trim("\n \t\r\x0C"), "");
 
-        let mut buf = Buffer::new();
-        trim(&"hello ").render(&mut buf).unwrap();
-        trim(&" hello").render(&mut buf).unwrap();
-        trim(&"hello").render(&mut buf).unwrap();
-        assert_eq!(buf.as_str(), "hellohellohello");
-
-        let mut buf = Buffer::new();
-        trim(&" hello").render(&mut buf).unwrap();
-        assert_eq!(buf.as_str(), "hello");
+        assert_render(&trim("hello world!"), "hello world!");
+        assert_render(&trim("hello world!\n"), "hello world!");
+        assert_render(&trim("\thello world!"), "hello world!");
+        assert_render(&trim("\thello world!\r\n"), "hello world!");
     }
 }
