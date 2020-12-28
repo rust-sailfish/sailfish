@@ -1,7 +1,5 @@
 //! Build-in filters
 
-// TODO: performance improvement
-
 use std::fmt;
 use std::ptr;
 
@@ -52,7 +50,7 @@ impl<'a, T: fmt::Debug> Render for Debug<'a, T> {
 /// ```
 ///
 /// ```text
-/// table content: <%= format!("{:?}", table); %>
+/// table content: <%= format!("{:?}", table) %>
 /// ```
 #[inline]
 pub fn dbg<T: fmt::Debug>(expr: &T) -> Debug<T> {
@@ -260,7 +258,13 @@ fn truncate_impl(
 /// The following example renders the first 20 characters of `message`
 ///
 /// ```test
-/// <%= message | truncate(20) %>
+/// <%= "Hello, world!" | truncate(5) %>
+/// ```
+///
+/// result:
+///
+/// ```text
+/// Hello...
 /// ```
 #[inline]
 pub fn truncate<T: Render>(expr: &T, limit: usize) -> Truncate<T> {
