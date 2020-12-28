@@ -6,9 +6,9 @@ use std::ptr;
 use super::{Buffer, Render, RenderError};
 
 /// Helper struct for 'display' filter
-pub struct Display<'a, T>(&'a T);
+pub struct Display<'a, T: ?Sized>(&'a T);
 
-impl<'a, T: fmt::Display> Render for Display<'a, T> {
+impl<'a, T: fmt::Display + ?Sized> Render for Display<'a, T> {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         use fmt::Write;
 
@@ -24,14 +24,14 @@ impl<'a, T: fmt::Display> Render for Display<'a, T> {
 /// filename: <%= filename.display() | disp %>
 /// ```
 #[inline]
-pub fn disp<T: fmt::Display>(expr: &T) -> Display<T> {
+pub fn disp<T: fmt::Display + ?Sized>(expr: &T) -> Display<T> {
     Display(expr)
 }
 
 /// Helper struct for 'dbg' filter
-pub struct Debug<'a, T>(&'a T);
+pub struct Debug<'a, T: ?Sized>(&'a T);
 
-impl<'a, T: fmt::Debug> Render for Debug<'a, T> {
+impl<'a, T: fmt::Debug + ?Sized> Render for Debug<'a, T> {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         use fmt::Write;
 
@@ -53,14 +53,14 @@ impl<'a, T: fmt::Debug> Render for Debug<'a, T> {
 /// table content: <%= format!("{:?}", table) %>
 /// ```
 #[inline]
-pub fn dbg<T: fmt::Debug>(expr: &T) -> Debug<T> {
+pub fn dbg<T: fmt::Debug + ?Sized>(expr: &T) -> Debug<T> {
     Debug(expr)
 }
 
 /// Helper struct for 'upper' filter
-pub struct Upper<'a, T>(&'a T);
+pub struct Upper<'a, T: ?Sized>(&'a T);
 
-impl<'a, T: Render> Render for Upper<'a, T> {
+impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let old_len = b.len();
         self.0.render(b)?;
@@ -90,14 +90,14 @@ impl<'a, T: Render> Render for Upper<'a, T> {
 /// TSCHÜSS
 /// ```
 #[inline]
-pub fn upper<T: Render>(expr: &T) -> Upper<T> {
+pub fn upper<T: Render + ?Sized>(expr: &T) -> Upper<T> {
     Upper(expr)
 }
 
 /// Helper struct for 'lower' filter
-pub struct Lower<'a, T>(&'a T);
+pub struct Lower<'a, T: ?Sized>(&'a T);
 
-impl<'a, T: Render> Render for Lower<'a, T> {
+impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let old_len = b.len();
         self.0.render(b)?;
@@ -137,14 +137,14 @@ impl<'a, T: Render> Render for Lower<'a, T> {
 /// ὀδυσσεύς
 /// ```
 #[inline]
-pub fn lower<T: Render>(expr: &T) -> Lower<T> {
+pub fn lower<T: Render + ?Sized>(expr: &T) -> Lower<T> {
     Lower(expr)
 }
 
 /// Helper struct for 'trim' filter
-pub struct Trim<'a, T>(&'a T);
+pub struct Trim<'a, T: ?Sized>(&'a T);
 
-impl<'a, T: Render> Render for Trim<'a, T> {
+impl<'a, T: Render + ?Sized> Render for Trim<'a, T> {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let old_len = b.len();
@@ -210,14 +210,14 @@ fn trim_impl(b: &mut Buffer, old_len: usize) -> Result<(), RenderError> {
 /// Hello world
 /// ```
 #[inline]
-pub fn trim<T: Render>(expr: &T) -> Trim<T> {
+pub fn trim<T: Render + ?Sized>(expr: &T) -> Trim<T> {
     Trim(expr)
 }
 
 /// Helper struct for 'truncate' filter
-pub struct Truncate<'a, T>(&'a T, usize);
+pub struct Truncate<'a, T: ?Sized>(&'a T, usize);
 
-impl<'a, T: Render> Render for Truncate<'a, T> {
+impl<'a, T: Render + ?Sized> Render for Truncate<'a, T> {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         let old_len = b.len();
@@ -267,15 +267,15 @@ fn truncate_impl(
 /// Hello...
 /// ```
 #[inline]
-pub fn truncate<T: Render>(expr: &T, limit: usize) -> Truncate<T> {
+pub fn truncate<T: Render + ?Sized>(expr: &T, limit: usize) -> Truncate<T> {
     Truncate(expr, limit)
 }
 
 cfg_json! {
     /// Helper struct for 'json' filter
-    pub struct Json<'a, T>(&'a T);
+    pub struct Json<'a, T: ?Sized>(&'a T);
 
-    impl<'a, T: serde::Serialize> Render for Json<'a, T> {
+    impl<'a, T: serde::Serialize + ?Sized> Render for Json<'a, T> {
         #[inline]
         fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
             struct Writer<'a>(&'a mut Buffer);
@@ -344,7 +344,7 @@ cfg_json! {
     /// }
     /// ```
     #[inline]
-    pub fn json<T: serde::Serialize>(expr: &T) -> Json<T> {
+    pub fn json<T: serde::Serialize + ?Sized>(expr: &T) -> Json<T> {
         Json(expr)
     }
 }
