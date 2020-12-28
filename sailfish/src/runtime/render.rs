@@ -486,6 +486,32 @@ mod tests {
     }
 
     #[test]
+    fn test_char() {
+        let mut b = Buffer::new();
+
+        let funcs: Vec<fn(&char, &mut Buffer) -> Result<(), RenderError>> =
+            vec![Render::render, Render::render_escaped];
+
+        for func in funcs {
+            func(&'a', &mut b).unwrap();
+            func(&'b', &mut b).unwrap();
+            func(&'c', &mut b).unwrap();
+            func(&'d', &mut b).unwrap();
+
+            assert_eq!(b.as_str(), "abcd");
+            b.clear();
+
+            func(&'あ', &mut b).unwrap();
+            func(&'い', &mut b).unwrap();
+            func(&'う', &mut b).unwrap();
+            func(&'え', &mut b).unwrap();
+
+            assert_eq!(b.as_str(), "あいうえ");
+            b.clear();
+        }
+    }
+
+    #[test]
     fn render_error() {
         let err = RenderError::new("custom error");
         assert!(err.source().is_none());

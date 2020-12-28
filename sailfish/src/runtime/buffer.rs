@@ -333,7 +333,9 @@ unsafe impl Sync for Buffer {}
 
 #[cfg(test)]
 mod tests {
-    use super::Buffer;
+    use super::*;
+    use std::sync::{Arc, Barrier, Mutex};
+    use std::thread;
 
     #[test]
     fn push_str() {
@@ -348,6 +350,13 @@ mod tests {
         buffer.push_str("pie");
         assert_eq!(buffer.len(), 8);
         assert_eq!(buffer.capacity(), 10);
+
+        for _ in 0..16 {
+            buffer.push_str("zomg");
+        }
+
+        assert_eq!(buffer.len(), 72);
+        assert_eq!(buffer.capacity(), 80);
     }
 
     #[test]
@@ -361,9 +370,15 @@ mod tests {
     #[test]
     fn string_conversion() {
         // from empty string
-        let s = String::new();
+        let s = String::with_capacity(2);
+        assert!(s.capacity() >= 2);
+
         let mut buf = Buffer::from(s);
         assert_eq!(buf.as_str(), "");
+
+        // capacity should be shrinked for safety
+        assert_eq!(buf.capacity(), 0);
+
         buf.push_str("abc");
         assert_eq!(buf.as_str(), "abc");
 
@@ -387,6 +402,12 @@ mod tests {
 
         s.push_str("apple");
         assert_eq!(s, "apple");
+    }
+
+    #[test]
+    fn from_str() {
+        let buf = Buffer::from("abcdefgh");
+        assert_eq!(buf.as_str(), "abcdefgh");
     }
 
     #[test]
@@ -427,5 +448,46 @@ mod tests {
 
             assert_eq!(s.as_str(), "aéＡ🄫");
         }
+    }
+
+    #[test]
+    fn multi_thread() {
+        const THREADS: usize = 8;
+        const ITERS: usize = 100;
+
+        let barrier = Arc::new(Barrier::new(THREADS));
+        let buffer = Arc::new(Mutex::new(Buffer::new()));
+        let mut handles = Vec::with_capacity(THREADS);
+
+        for _ in 0..THREADS {
+            let barrier = barrier.clone();
+            let buffer = buffer.clone();
+
+            handles.push(thread::spawn(move || {
+                barrier.wait();
+                for _ in 0..ITERS {
+                    buffer.lock().unwrap().push_str("a");
+                }
+            }));
+        }
+
+        for handle in handles {
+            handle.join().unwrap();
+        }
+
+        assert_eq!(buffer.lock().unwrap().as_str(), "a".repeat(ITERS * THREADS));
+    }
+
+    #[test]
+    #[should_panic]
+    fn reserve_overflow() {
+        let mut buf = Buffer::new();
+        buf.reserve(std::isize::MAX as usize + 1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn empty_alloc() {
+        safe_alloc(0);
     }
 }

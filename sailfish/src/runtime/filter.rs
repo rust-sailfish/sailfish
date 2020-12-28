@@ -366,20 +366,111 @@ mod tests {
     }
 
     #[test]
-    fn case() {
-        assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
-        assert_render(&lower("hElLo, WOrLd!"), "hello, world!");
+    fn test_lower() {
+        assert_render(&lower(""), "");
+        assert_render_escaped(&lower(""), "");
+
+        assert_render(&lower("lorem ipsum"), "lorem ipsum");
+        assert_render(&lower("LOREM IPSUM"), "lorem ipsum");
+
+        assert_render_escaped(&lower("hElLo, WOrLd!"), "hello, world!");
+        assert_render_escaped(&lower("hElLo, WOrLd!"), "hello, world!");
+
         assert_render_escaped(&lower("<h1>TITLE</h1>"), "&lt;h1&gt;title&lt;/h1&gt;");
+        assert_render_escaped(&lower("<<&\"\">>"), "&lt;&lt;&amp;&quot;&quot;&gt;&gt;");
+
+        // non-ascii
+        assert_render(&lower("aBcＡｂｃ"), "abcａｂｃ");
+        assert_render(&lower("ὈΔΥΣΣΕΎΣ"), "ὀδυσσεύς");
     }
 
     #[test]
-    fn trim_test() {
+    fn test_upper() {
+        assert_render(&upper(""), "");
+        assert_render_escaped(&upper(""), "");
+
+        assert_render(&upper("lorem ipsum"), "LOREM IPSUM");
+        assert_render(&upper("LOREM IPSUM"), "LOREM IPSUM");
+
+        assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
+        assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
+
+        // non-ascii
+        assert_render(&upper("aBcＡｂｃ"), "ABCＡＢＣ");
+        assert_render(&upper("tschüß"), "TSCHÜSS");
+    }
+
+    #[test]
+    fn test_trim() {
         assert_render(&trim(""), "");
+        assert_render_escaped(&trim(""), "");
+
         assert_render(&trim("\n \t\r\x0C"), "");
 
         assert_render(&trim("hello world!"), "hello world!");
         assert_render(&trim("hello world!\n"), "hello world!");
         assert_render(&trim("\thello world!"), "hello world!");
         assert_render(&trim("\thello world!\r\n"), "hello world!");
+
+        assert_render_escaped(&trim(" <html>  "), "&lt;html&gt;");
+        assert_render_escaped(&lower("<<&\"\">>"), "&lt;&lt;&amp;&quot;&quot;&gt;&gt;");
+
+        // non-ascii whitespace
+        assert_render(&trim("\u{A0}空白\u{3000}\u{205F}"), "空白");
+    }
+
+    #[test]
+    fn test_truncate() {
+        assert_render(&truncate("", 0), "");
+        assert_render(&truncate("", 5), "");
+
+        assert_render(&truncate("apple ", 0), "...");
+        assert_render(&truncate("apple ", 1), "a...");
+        assert_render(&truncate("apple ", 2), "ap...");
+        assert_render(&truncate("apple ", 3), "app...");
+        assert_render(&truncate("apple ", 4), "appl...");
+        assert_render(&truncate("apple ", 5), "apple...");
+        assert_render(&truncate("apple ", 6), "apple ");
+        assert_render(&truncate("apple ", 7), "apple ");
+
+        assert_render(&truncate(&std::f64::consts::PI, 10), "3.14159265...");
+        assert_render(&truncate(&std::f64::consts::PI, 20), "3.141592653589793");
+
+        assert_render_escaped(&truncate("foo<br>bar", 10), "foo&lt;br&...");
+        assert_render_escaped(&truncate("foo<br>bar", 20), "foo&lt;br&gt;bar");
+
+        // non-ascii
+        assert_render(&truncate("魑魅魍魎", 0), "...");
+        assert_render(&truncate("魑魅魍魎", 1), "魑...");
+        assert_render(&truncate("魑魅魍魎", 2), "魑魅...");
+        assert_render(&truncate("魑魅魍魎", 3), "魑魅魍...");
+        assert_render(&truncate("魑魅魍魎", 4), "魑魅魍魎");
+        assert_render(&truncate("魑魅魍魎", 5), "魑魅魍魎");
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn test_json() {
+        assert_render(&json(""), "\"\"");
+        assert_render(&json(&serde_json::json!({})), "{}");
+
+        assert_render_escaped(&json(&123_i32), "123");
+        assert_render_escaped(&json("Pokémon"), "&quot;Pokémon&quot;");
+    }
+
+    #[test]
+    fn compine() {
+        assert_render(
+            &lower(&upper("Li Europan lingues es membres del sam familie.")),
+            "li europan lingues es membres del sam familie.",
+        );
+        assert_render(&lower(&lower("ハートのＡ")), "ハートのａ");
+        assert_render(&upper(&upper("ハートのＡ")), "ハートのＡ");
+
+        assert_render(&truncate(&trim("\t起来！\r\n"), 1), "起...");
+        assert_render(&truncate(&trim("\t起来！\r\n"), 3), "起来！");
+
+        assert_render(&truncate(&lower("Was möchtest du?"), 10), "was möchte...");
+        assert_render(&truncate(&upper("Was möchtest du?"), 10), "WAS MÖCHTE...");
     }
 }
