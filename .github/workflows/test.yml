@@ -82,3 +82,43 @@ jobs:
             override: true
       - name: Build only
         run: cargo build --target=aarch64-apple-ios --workspace
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install toolchain
+        run: |
+          rustup default nightly
+          rustup component add miri
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: x86_64-unknown-linux-gnu
+          toolchain: nightly
+          override: true
+      - name: Install grcov
+        run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
+      - name: Install rust-covfix
+        run: |
+          curl -L https://github.com/Kogia-sima/rust-covfix/releases/download/v0.2.1/rust-covfix-linux-x86_64.tar.xz |tar Jxf -
+          mv rust-covfix-linux-x86_64/rust-covfix ./
+      - name: Test all crates
+        env:
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: -Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -C panic=abort
+          RUSTDOCFLAGS: -C panic=abort
+        run: |
+          cargo build --all-features --workspace
+          cargo test --all-features --workspace
+      - name: collect coverages
+        run: |
+          zip -0 ccov.zip `find . \( -name "sailfish*.gc*" -o -name "integration-tests*.gc*" \) -print`
+          ./grcov ccov.zip --llvm --branch -t lcov -o lcov.info --ignore "/*" --ignore "sailfish-tests/*"
+      - name: fix coverages
+        run: ./rust-covfix -o lcov.info lcov.info
+      - name: upload coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./lcov.info
