@@ -185,8 +185,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         )?
     };
 
-    let out_dir = PathBuf::from(env!("OUT_DIR"));
-    let mut output_file = out_dir.clone();
+    let mut output_file = PathBuf::from(env!("OUT_DIR"));
     output_file.push("templates");
     output_file.push(filename_hash(&*input_file));
 

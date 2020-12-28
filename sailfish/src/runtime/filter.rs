@@ -65,10 +65,7 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
         let old_len = b.len();
         self.0.render(b)?;
 
-        let content = b
-            .as_str()
-            .get(old_len..)
-            .ok_or_else(|| RenderError::BufSize)?;
+        let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
         let s = content.to_uppercase();
         unsafe { b._set_len(old_len) };
         b.push_str(&*s);
@@ -102,10 +99,7 @@ impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
         let old_len = b.len();
         self.0.render(b)?;
 
-        let content = b
-            .as_str()
-            .get(old_len..)
-            .ok_or_else(|| RenderError::BufSize)?;
+        let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
         let s = content.to_lowercase();
         unsafe { b._set_len(old_len) };
         b.push_str(&*s);
@@ -161,10 +155,7 @@ impl<'a, T: Render + ?Sized> Render for Trim<'a, T> {
 }
 
 fn trim_impl(b: &mut Buffer, old_len: usize) -> Result<(), RenderError> {
-    let new_contents = b
-        .as_str()
-        .get(old_len..)
-        .ok_or_else(|| RenderError::BufSize)?;
+    let new_contents = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
 
     let trimmed = new_contents.trim();
     let trimmed_len = trimmed.len();
@@ -238,10 +229,7 @@ fn truncate_impl(
     old_len: usize,
     limit: usize,
 ) -> Result<(), RenderError> {
-    let new_contents = b
-        .as_str()
-        .get(old_len..)
-        .ok_or_else(|| RenderError::BufSize)?;
+    let new_contents = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
 
     if let Some(idx) = new_contents.char_indices().nth(limit).map(|(i, _)| i) {
         unsafe { b._set_len(old_len.wrapping_add(idx)) };
