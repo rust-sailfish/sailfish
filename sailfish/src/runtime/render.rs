@@ -431,8 +431,8 @@ mod tests {
 
         Render::render(&true, &mut b).unwrap();
         Render::render(&&false, &mut b).unwrap();
-        Render::render(&&&true, &mut b).unwrap();
-        Render::render(&&&&false, &mut b).unwrap();
+        Render::render_escaped(&&&true, &mut b).unwrap();
+        Render::render_escaped(&&&&false, &mut b).unwrap();
         assert_eq!(b.as_str(), "truefalsetruefalse");
         b.clear();
 
@@ -455,7 +455,7 @@ mod tests {
 
     #[test]
     fn deref_coercion() {
-        use std::path::PathBuf;
+        use std::path::{Path, PathBuf};
         use std::rc::Rc;
 
         let mut b = Buffer::new();
@@ -463,8 +463,10 @@ mod tests {
         Render::render(&&PathBuf::from("b"), &mut b).unwrap();
         Render::render_escaped(&Rc::new(4u32), &mut b).unwrap();
         Render::render_escaped(&Rc::new(2.3f32), &mut b).unwrap();
+        Render::render_escaped(Path::new("<"), &mut b).unwrap();
+        Render::render_escaped(&Path::new("d"), &mut b).unwrap();
 
-        assert_eq!(b.as_str(), "ab42.3");
+        assert_eq!(b.as_str(), "ab42.3&lt;d");
     }
 
     #[test]
@@ -512,6 +514,14 @@ mod tests {
     }
 
     #[test]
+    fn test_nonzero() {
+        let mut b = Buffer::with_capacity(2);
+        Render::render(&NonZeroU8::new(10).unwrap(), &mut b).unwrap();
+        Render::render_escaped(&NonZeroI16::new(-20).unwrap(), &mut b).unwrap();
+        assert_eq!(b.as_str(), "10-20");
+    }
+
+    #[test]
     fn render_error() {
         let err = RenderError::new("custom error");
         assert!(err.source().is_none());
@@ -519,5 +529,13 @@ mod tests {
 
         let err = RenderError::from(std::fmt::Error::default());
         assert!(err.source().is_some());
+        assert_eq!(
+            format!("{}", err),
+            format!("{}", std::fmt::Error::default())
+        );
+
+        let err = RenderError::BufSize;
+        assert!(err.source().is_none());
+        format!("{}", err);
     }
 }

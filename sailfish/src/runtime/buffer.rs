@@ -386,7 +386,7 @@ mod tests {
         let mut s = buf.into_string();
         assert_eq!(s, "abc");
 
-        s.push_str("defghijklmn");
+        s += "defghijklmn";
         assert_eq!(s, "abcdefghijklmn");
 
         // from non-empty string
