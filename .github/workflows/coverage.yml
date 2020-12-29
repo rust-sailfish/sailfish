@@ -19,7 +19,7 @@ jobs:
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -
       - name: Install rust-covfix
         run: |
-          curl -L https://github.com/Kogia-sima/rust-covfix/releases/download/v0.2.1/rust-covfix-linux-x86_64.tar.xz |tar Jxf -
+          curl -L https://github.com/Kogia-sima/rust-covfix/releases/download/v0.2.2/rust-covfix-linux-x86_64.tar.xz |tar Jxf -
           mv rust-covfix-linux-x86_64/rust-covfix ./
       - name: Test all crates
         env:
