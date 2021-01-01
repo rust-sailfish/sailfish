@@ -4,11 +4,14 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '**/Cargo.toml'
 
 jobs:
   update-badges:
     name: Update Badges
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'Kogia-sima' }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
