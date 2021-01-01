@@ -3,8 +3,6 @@ name: Badges
 on:
   push:
     branches:
-      # FIXME
-      - ci/dynamic-badge
       - master
 
 jobs:
@@ -25,4 +23,4 @@ jobs:
           filename: sailfish-dep-counts.json
           label: Dependencies
           message: ${{ env.dep_counts }}
-          color: orange
+          color: blueviolet
