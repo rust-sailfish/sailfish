@@ -7,6 +7,10 @@ In order to use sailfish templates, you have add two dependencies in your `Cargo
 sailfish = "0.3.0"
 ```
 
-`sailfish` crate contains runtime for rendering contents, and `sailfish-macros` serves you derive macros to compile and import the template files.
+### Feature Flags
 
-These crates are separated so that Rust compiler can compile them independently. This separation makes your compilation faster!
+|Feature|Description|
+|--|--|
+|derive|enable derive macros (enabled by default)|
+|json|enable `json` filter|
+|perf-inline|Add more `#[inline]` attributes. This may improve rendering performance, but generates a bit larger binary (enabled by default)|
