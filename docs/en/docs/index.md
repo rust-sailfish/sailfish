@@ -10,8 +10,8 @@ Currently the documentation is uncompleted. If you want to improve our documenta
 
 There are many libraries for template rendering in Rust. Among those libraries, sailfish aims at **rapid development** and **rapid rendering**. Sailfish has many features that other libraries might not support.
 
-- Write a Rust code directly inside templates, supporting many Rust syntax (struct definision, closure, macro invocation, etc.)
-- Builtin filters
+- Write a Rust code directly inside templates, supporting many Rust syntax (struct definition, closure, macro invocation, etc.)
+- Built-in filters
 - Relatively small number of dependencies (<15 crates in total)
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
@@ -21,7 +21,7 @@ There are many libraries for template rendering in Rust. Among those libraries, 
 
 ## Upcoming features
 
-Since sailfish is on early stage of development, there are many upcoming features that is not supported yet. You can find many [RFC](https://github.com/Kogia-sima/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Type%3A+RFC%22)s in my repository. These RFCs include:
+Since sailfish is on early stage of development, there are many upcoming features that is not supported yet. You can find many [RFC](https://github.com/Kogia-sima/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Type%3A+RFC%22)s in my repository. These RFC include:
 
 - `Template` trait (which does not consume itself)
 - Template inheritance (block, partials, etc.)

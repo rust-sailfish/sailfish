@@ -15,7 +15,7 @@ message: &quot;foo\nbar&quot;
 ```
 
 !!! Note
-    Since `dbg` filter accepts '<T: std::fmt::Debug>' types, that type isn't required to implement [`Render`](https://docs.rs/sailfish/latest/sailfish/runtime/trait.Render.html) trait. That means you can pass the type which doen't implement `Render` trait.
+    Since `dbg` filter accepts '<T: std::fmt::Debug>' types, that type isn't required to implement [`Render`](https://docs.rs/sailfish/latest/sailfish/runtime/trait.Render.html) trait. That means you can pass the type which doesn't implement `Render` trait.
 
 
 ## Syntax

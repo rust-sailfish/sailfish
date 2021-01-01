@@ -15,7 +15,7 @@ Simple, small, and extremely fast template engine for Rust
 ## ✨ Features
 
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
-- Builtin filters
+- Built-in filters
 - Relatively small number of dependencies (<15 crates in total)
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
@@ -74,7 +74,7 @@ You can find more examples in [examples](./examples) directory.
 
 🇯🇵 **Ryohei Machida**
 
-* Github: [@Kogia-sima](https://github.com/Kogia-sima)
+* GitHub: [@Kogia-sima](https://github.com/Kogia-sima)
 
 ## 🤝 Contributing
 

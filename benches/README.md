@@ -1,1 +1,1 @@
-benchmark programs were removed in favor of https://github.com/djc/template-benchmarks-rs
+benchmark programs were removed in favour of https://github.com/djc/template-benchmarks-rs
