@@ -32,8 +32,8 @@ markdown_extensions:
   - footnotes
 
 # Customization
-# extra_css:
-#   - 'assets/css/custom.css'
+extra_css:
+  - 'assets/css/custom.css'
 
 extra:
   social:
