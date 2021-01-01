@@ -1,0 +1,15 @@
+.md-typeset__table table {
+  font-size: .75rem !important;
+}
+
+.md-typeset__table table tr td:first-child {
+  white-space: nowrap;
+}
+
+.md-typeset code {
+  font-size: .95em;
+}
+
+.md-typeset .admonition {
+  font-size: .75rem;
+}
