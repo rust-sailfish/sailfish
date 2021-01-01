@@ -1,0 +1,28 @@
+name: Badges
+
+on:
+  push:
+    branches:
+      # FIXME
+      - ci/dynamic-badge
+      - master
+
+jobs:
+  update-badges:
+    name: Update Badges
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Get the Numbers
+        run: |
+          echo "::set-env name=DEP_COUNTS::$(./scripts/count-dependencies.sh)"
+      - name: Create Dependency-Count-Badge
+        uses: schneegans/dynamic-badges-action@v1.0.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: a2128afe12bf05d85a0d68346236a4f5
+          filename: sailfish-dep-counts.json
+          label: Dependencies
+          message: ${{ env.CODE_LINES }}
+          color: orange
