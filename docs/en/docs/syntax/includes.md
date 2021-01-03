@@ -6,7 +6,7 @@ Consider the following example.
 
 - `templates/header.stpl`
 
-```html
+``` html
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="format-detection" content="telephone=no">
@@ -15,7 +15,7 @@ Consider the following example.
 
 - `templates/index.stpl`
 
-```html
+``` rhtml
 <html>
   <head>
     <% include!("./header.stpl"); %>
@@ -28,7 +28,7 @@ Consider the following example.
 
 Then you can see the `header.stpl` is embedded in the output.
 
-```html
+``` html
 <html>
   <head>
     <meta charset="UTF-8">

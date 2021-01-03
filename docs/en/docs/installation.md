@@ -2,12 +2,14 @@
 
 In order to use sailfish templates, you have add two dependencies in your `Cargo.toml`.
 
-```toml
+``` toml
 [dependencies]
 sailfish = "0.3.0"
 ```
 
-### Feature Flags
+## Feature Flags
+
+Sailfish accepts the following feature flags
 
 |Feature|Description|
 |--|--|

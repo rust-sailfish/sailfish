@@ -4,30 +4,56 @@
 
 You can write Rust statement inside `<% %>` tag.
 
-```ejs
-<% let mut total = 0; %>
-<% for elem in arr.iter().filter(|e| e.is_valid()) { %>
-    <% total += elem.value() as u64; %>
-    <% dbg!(total); %>
-    <% if total > 100 { break; } %>
-    Printed until the total value exceeds 100.
-<% } %>
-```
+=== "Template"
+
+    ``` rhtml
+    <%
+    let mut total = 0;
+    for i in 1.. {
+        total += i;
+        if i > 100 {
+            break;
+        }
+    }
+    %>
+    <div>total = <%= total %></div>
+    ```
+
+=== "Result"
+
+    ``` html
+    <div>total = 105</div>
+    ```
 
 !!! Note
     Make sure that you cannot omit braces, parenthesis, and semicolons.
 
 Sailfish is smart enough to figure out where the code block ends, so you can even include `%>` inside Rust comments or string literals.
 
-```text
-<% /* Tag does not ends at %>! */ %>
-```
+=== "Template"
+
+    ``` text
+    <% /* Tag does not ends at %>! */ %>
+    ```
+
+=== "Result"
+
+    ``` text
+    ```
 
 If you need to simply render `<%` character, you can escape it, or use evaluation block (described below).
 
-```text
-<%% is converted into <%= "<%" %> character.
-```
+=== "Template"
+
+    ``` text
+    <%% is converted into <%- "<%" %> character.
+    ```
+
+=== "Result"
+
+    ``` text
+    <% is converted into <% character
+    ```
 
 Although almost all Rust statement is supported, the following statements inside templates may cause a strange compilation error.
 
@@ -41,32 +67,41 @@ Although almost all Rust statement is supported, the following statements inside
 
 Rust expression inside `<%= %>` tag is evaluated and the result will be rendered.
 
-```ejs
-<%# The following code simple renders `3` %>
-<% let a = 1; %><%= a + 2 %>
-```
+=== "Template"
+
+    ``` rhtml
+    <% let a = 1; %><%= a + 2 %>
+    ```
+
+=== "Result"
+
+    ``` text
+    3
+    ```
 
 If the result contains `&"'<>` characters, sailfish replaces these characters with the equivalent html.
 
-If you want to render the results without escaping, you can use `<%- %>` tag or [configure sailfish to not escape by default](../options.md). For example,
+If you want to render the results without escaping, you can use `<%- %>` tag or [configure sailfish to not escape by default](../options.md).
 
-```ejs
-<div>
-  <%- "<h1>Hello, World!</h1>" %>
-</div>
-```
+=== "Template"
 
-This template results in the following output.
+    ``` rhtml
+    <div>
+      <%- "<h1>Hello, World!</h1>" %>
+    </div>
+    ```
 
-```ejs
-<div>
-  <h1>Hello, World!</h1>
-</div>
-```
+=== "Result"
+
+    ``` html
+    <div>
+      <h1>Hello, World!</h1>
+    </div>
+    ```
 
 !!! Note
     Evaluation block does not return any value, so you cannot use the block to pass the render result to another code block. The following code is invalid.
 
-    ```
+    ``` rhtml
     <% let result = %><%= 1 %><% ; %>
     ```

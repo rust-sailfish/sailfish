@@ -4,7 +4,7 @@
 
 Create a new directory named `templates` in the same directory as `Cargo.toml`. Copy the following contents and paste it to a new file named `templates/hello.stpl`.
 
-```ejs
+``` rhtml
 <html>
   <body>
     <% for msg in &messages { %>
@@ -26,13 +26,13 @@ templates/
 
 ## Render the template
 
-Import the sailfish crates:
+<ol><li>Import the sailfish crates:</li></ol>
 
 ```rust
 use sailfish::TemplateOnce;
 ```
 
-Define the template struct to be rendered:
+<ol start="2"><li>Define the template struct to be rendered:</li></ol>
 
 ```rust
 #[derive(TemplateOnce)]  // automatically implement `TemplateOnce` trait
@@ -43,7 +43,7 @@ struct HelloTemplate {
 }
 ```
 
-And render the data with `render_once()` method.
+<ol start="3"><li>Render the data with <code>render_once()</code> method.</li></ol>
 
 ```rust
 fn main() {
