@@ -18,12 +18,12 @@ Simple, small, and extremely fast template engine for Rust
 ## ✨ Features
 
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
+- Include another template file inside template
 - Built-in filters
-- Relatively small number of dependencies (<15 crates in total)
+- Minimal dependencies (<15 crates in total)
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
-- Automatically re-compile sources when template file is updated.
 - Works on Rust 1.42 or later
 
 ## 🐟 Example

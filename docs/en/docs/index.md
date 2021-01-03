@@ -14,7 +14,6 @@ There are many libraries for template rendering in Rust. Among those libraries, 
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Template rendering is always type-safe because templates are statically compiled.
 - Syntax highlighting ([vscode](http://github.com/Kogia-sima/sailfish/blob/master/syntax/vscode), [vim](http://github.com/Kogia-sima/sailfish/blob/master/syntax/vim))
-- Automatically re-compile sources when template file is updated.
 
 ## Upcoming features
 
