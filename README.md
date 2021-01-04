@@ -7,6 +7,7 @@ Simple, small, and extremely fast template engine for Rust
 [![Tests](https://github.com/Kogia-sima/sailfish/workflows/Tests/badge.svg)](https://github.com/Kogia-sima/sailfish/actions?query=workflow%3ATests)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
 ![Dependency counts](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Kogia-sima/a2128afe12bf05d85a0d68346236a4f5/raw/sailfish-dep-counts.json)
+[![dependency status](https://deps.rs/repo/github/Kogia-sima/sailfish/status.svg)](https://deps.rs/repo/github/Kogia-sima/sailfish)
 [![Rust 1.42](https://img.shields.io/badge/rust-1.42+-lightgray.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
 
