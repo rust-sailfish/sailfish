@@ -71,6 +71,16 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
         b.push_str(&*s);
         Ok(())
     }
+
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        let old_len = b.len();
+        self.0.render_escaped(b)?;
+
+        let s = b.as_str()[old_len..].to_uppercase();
+        unsafe { b._set_len(old_len) };
+        b.push_str(&*s);
+        Ok(())
+    }
 }
 
 /// convert the rendered contents to uppercase
