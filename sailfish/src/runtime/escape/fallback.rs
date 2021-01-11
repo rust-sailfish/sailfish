@@ -14,7 +14,7 @@ const USIZE_BYTES: usize = 8;
 
 const USIZE_ALIGN: usize = USIZE_BYTES - 1;
 
-#[inline(always)]
+#[inline]
 fn contains_zero_byte(x: usize) -> bool {
     const LO_U64: u64 = 0x0101_0101_0101_0101;
     const HI_U64: u64 = 0x8080_8080_8080_8080;
