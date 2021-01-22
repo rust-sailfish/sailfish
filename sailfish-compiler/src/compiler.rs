@@ -11,7 +11,7 @@ use crate::optimizer::Optimizer;
 use crate::parser::Parser;
 use crate::resolver::Resolver;
 use crate::translator::{TranslatedSource, Translator};
-use crate::util::{read_to_string, rustfmt_block};
+use crate::util::{copy_filetimes, read_to_string, rustfmt_block};
 
 #[derive(Default)]
 pub struct Compiler {
@@ -81,6 +81,12 @@ impl Compiler {
                 .chain_err(|| format!("Failed to create artifact: {:?}", output))?;
             writeln!(f, "{}", rustfmt_block(&*string).unwrap_or(string))
                 .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
+            drop(f);
+
+            // FIXME: This is a silly hack to prevent output file from being tracking by
+            // cargo. Another better solution should be considered.
+            let _ = copy_filetimes(input, output);
+
             Ok(report)
         };
 
