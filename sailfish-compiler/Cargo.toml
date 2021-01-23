@@ -26,6 +26,7 @@ memchr = "2.3.3"
 quote = { version = "1.0.6", default-features = false }
 yaml-rust = { version = "0.4.4", optional = true }
 home = "0.5.3"
+filetime = "0.2.14"
 
 [dependencies.syn]
 version = "1.0.21"
