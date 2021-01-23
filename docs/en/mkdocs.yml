@@ -24,16 +24,22 @@ theme:
   font:
     text: 'Ubuntu'
     code: 'Ubuntu Mono'
+  features:
+    - 'navigation.expand'
 
 # Extensions
 markdown_extensions:
-  - admonition
-  - codehilite
-  - footnotes
+  - 'admonition'
+  - 'footnotes'
+  - 'pymdownx.highlight'
+  - 'pymdownx.tabbed'
+  - 'pymdownx.superfences':
+      custom_fences:
+        - name: mermaid
+          class: mermaid
 
-# Customization
-# extra_css:
-#   - 'assets/css/custom.css'
+extra_css:
+  - 'assets/css/custom.css'
 
 extra:
   social:

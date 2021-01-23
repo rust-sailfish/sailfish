@@ -1,0 +1,41 @@
+.md-typeset__table table {
+  font-size: .75rem !important;
+}
+
+.md-typeset__table table tr td:first-child {
+  white-space: nowrap;
+}
+
+.md-typeset code {
+  background-color: rgb(240, 240, 240);
+  font-size: .95em;
+}
+
+.md-typeset pre > code {
+  background-color: rgb(245, 245, 245);
+  font-size: .90em;
+}
+
+.md-typeset .admonition {
+  font-size: .70rem;
+}
+
+body {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-font-smoothing: antialiased !important;
+}
+
+.md-content h2 {
+  border-bottom-color: rgb(234, 236, 239);
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  padding-bottom: .3rem;
+}
+
+.md-content a:hover {
+  text-decoration: underline;
+}
+
+.highlight code .cp {
+  color: #a83;
+}

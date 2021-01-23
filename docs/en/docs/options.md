@@ -4,7 +4,7 @@
 
 You can control the rendering behaviour via `template` attribute.
 
-```rust
+``` rust
 #[derive(TemplateOnce)]
 #[template(path = "template.stpl", escape = false)]
 struct TemplateStruct {
@@ -21,7 +21,7 @@ struct TemplateStruct {
 
 You can split the options into multiple `template` attributes.
 
-```rust
+``` rust
 #[derive(TemplateOnce)]
 #[template(path = "template.stpl")]
 #[template(delimiter = '?')]
@@ -49,7 +49,7 @@ If a key is specified in both configuration file and derive options, then the va
 
 Configuration files are written in the YAML 1.2 format. Here is the default configuration.
 
-```
+``` yaml
 template_dir: "templates"
 escape: true
 delimiter: "%"

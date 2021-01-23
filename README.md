@@ -6,6 +6,9 @@ Simple, small, and extremely fast template engine for Rust
 
 [![Tests](https://github.com/Kogia-sima/sailfish/workflows/Tests/badge.svg)](https://github.com/Kogia-sima/sailfish/actions?query=workflow%3ATests)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
+![Dependency counts](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Kogia-sima/a2128afe12bf05d85a0d68346236a4f5/raw/sailfish-dep-counts.json)
+[![dependency status](https://deps.rs/repo/github/Kogia-sima/sailfish/status.svg)](https://deps.rs/repo/github/Kogia-sima/sailfish)
+[![Rust 1.42](https://img.shields.io/badge/rust-1.42+-lightgray.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
 
 [User Guide](https://sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
@@ -15,12 +18,12 @@ Simple, small, and extremely fast template engine for Rust
 ## ✨ Features
 
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
-- Builtin filters
-- Relatively small number of dependencies (<15 crates in total)
+- Include another template file inside template
+- Built-in filters
+- Minimal dependencies (<15 crates in total)
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
-- Automatically re-compile sources when template file is updated.
 - Works on Rust 1.42 or later
 
 ## 🐟 Example
@@ -29,8 +32,7 @@ Dependencies:
 
 ```toml
 [dependencies]
-sailfish = "0.3.0"
-sailfish-macros = "0.3.0"
+sailfish = "0.3.1"
 ```
 
 Template file (templates/hello.stpl):
@@ -48,9 +50,6 @@ Template file (templates/hello.stpl):
 Code:
 
 ```rust
-#[macro_use]
-extern crate sailfish_macros;  // enable derive macro
-
 use sailfish::TemplateOnce;
 
 #[derive(TemplateOnce)]
@@ -61,8 +60,8 @@ struct HelloTemplate {
 
 fn main() {
     let ctx = HelloTemplate {
-        messages: vec![String::from("foo"), String::from("bar")]
-    }
+        messages: vec![String::from("foo"), String::from("bar")],
+    };
     println!("{}", ctx.render_once().unwrap());
 }
 ```
@@ -78,7 +77,7 @@ You can find more examples in [examples](./examples) directory.
 
 🇯🇵 **Ryohei Machida**
 
-* Github: [@Kogia-sima](https://github.com/Kogia-sima)
+* GitHub: [@Kogia-sima](https://github.com/Kogia-sima)
 
 ## 🤝 Contributing
 

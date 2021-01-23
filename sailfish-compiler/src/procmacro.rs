@@ -20,7 +20,6 @@ struct DeriveTemplateOptions {
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
     rm_whitespace: Option<LitBool>,
-    type_: Option<LitStr>,
 }
 
 impl DeriveTemplateOptions {
@@ -49,8 +48,6 @@ impl DeriveTemplateOptions {
                     self.escape = Some(s.parse::<LitBool>()?);
                 } else if key == "rm_whitespace" {
                     self.rm_whitespace = Some(s.parse::<LitBool>()?);
-                } else if key == "type" {
-                    self.type_ = Some(s.parse::<LitStr>()?);
                 } else {
                     return Err(syn::Error::new(
                         key.span(),
@@ -188,8 +185,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         )?
     };
 
-    let out_dir = PathBuf::from(env!("OUT_DIR"));
-    let mut output_file = out_dir.clone();
+    let mut output_file = PathBuf::from(env!("OUT_DIR"));
     output_file.push("templates");
     output_file.push(filename_hash(&*input_file));
 
@@ -245,9 +241,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 use sailfish::runtime::{Buffer, SizeHint};
                 static SIZE_HINT: SizeHint = SizeHint::new();
 
-                let mut buf = Buffer::new();
-                buf.reserve(SIZE_HINT.get());
-
+                let mut buf = Buffer::with_capacity(SIZE_HINT.get());
                 self.render_once_to(&mut buf)?;
                 SIZE_HINT.update(buf.len());
 

@@ -10,7 +10,7 @@
 
 ## Condition
 
-```ejs
+``` rhtml
 <% if messages.is_empty() { %>
   <div>No messages</div>
 <% } %>
@@ -18,7 +18,7 @@
 
 ## loop
 
-```ejs
+``` rhtml
 <% for (i, msg) in messages.iter().enumerate() { %>
   <div><%= i %>: <%= msg %></div>
 <% } %>
@@ -26,21 +26,19 @@
 
 ## Includes
 
-```ejs
+``` rhtml
 <% include!("path/to/template"); %>
 ```
 
-Unlike EJS, you cannot omit the file extension.
-
 ## Filters
 
-```ejs
+``` rhtml
 <%= message | upper %>
 ```
 
-```ejs
+``` rhtml
 {
     "id": <%= id %>
-    "comment": <%- comment | dbg %>
+    "comment": <%- comment | json %>
 }
 ```

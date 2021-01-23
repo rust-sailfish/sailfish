@@ -2,15 +2,17 @@
 
 In order to use sailfish templates, you have add two dependencies in your `Cargo.toml`.
 
-```toml
+``` toml
 [dependencies]
-sailfish = "0.3.0"
-sailfish-macros = "0.3.0"
+sailfish = "0.3.1"
 ```
 
-`sailfish` crate contains runtime for rendering contents, and `sailfish-macros` serves you derive macros to compile and import the template files.
+## Feature Flags
 
-These crates are separated so that Rust compiler can compile them independently. This separation makes your compilation faster!
+Sailfish accepts the following feature flags
 
-!!! Warning
-    Make sure that the `sailfish-macros` version is larger than `sailfish`, otherwise the compilation may fail.
+|Feature|Description|
+|--|--|
+|derive|enable derive macros (enabled by default)|
+|json|enable `json` filter|
+|perf-inline|Add more `#[inline]` attributes. This may improve rendering performance, but generates a bit larger binary (enabled by default)|

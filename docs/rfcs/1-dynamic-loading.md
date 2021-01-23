@@ -63,7 +63,7 @@ AllocVtable is passed to template function, and then VBuffer is constructed insi
 
 VBuffer should always use AllocVTable to allocate/reallocate a new memory. That cannot achieve with `std::string::String` struct only. We must re-implement the `RawVec` struct.
 
-## Rust standard library confliction problem
+## Rust standard library conflict problem
 
 Rarely, but not never, dynamically compiled templates may use different version of standard library.
 
@@ -77,7 +77,7 @@ We must ensure that all of the data passed to templates should satisfy the follo
 
 - completely immutable
 - does not allocate/deallocate memory
-- can be serialized to/deserialized from byte array (All data is serealized to byte array, and then decoded inside templates)
+- can be serialized to/deserialized from byte array (All data is serialized to byte array, and then decoded inside templates)
 - can be defined inside `#![no_std]` crate
 
 Sailfish provide `TemplateData` trait which satisfies the above restrictions.

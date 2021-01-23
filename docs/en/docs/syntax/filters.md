@@ -4,31 +4,33 @@ Filters are used to format the rendered contents.
 
 Example:
 
-```ejs
-message: <%= "foo\nbar" | dbg %>
-```
+=== "Template"
 
-Output:
+    ``` rhtml
+    message: <%= "foo\nbar" | dbg %>
+    ```
 
-```html
-message: &quot;foo\nbar&quot;
-```
+=== "Result"
+
+    ``` html
+    message: &quot;foo\nbar&quot;
+    ```
 
 !!! Note
-    Since `dbg` filter accepts '<T: std::fmt::Debug>' types, that type isn't required to implement [`Render`](https://docs.rs/sailfish/latest/sailfish/runtime/trait.Render.html) trait. That means you can pass the type which doen't implement `Render` trait.
+    Since `dbg` filter accepts `<T: std::fmt::Debug>` types, that type isn't required to implement [`Render`](https://docs.rs/sailfish/latest/sailfish/runtime/trait.Render.html) trait. That means you can pass the type which doesn't implement `Render` trait.
 
 
 ## Syntax
 
 - Apply filter and HTML escaping
 
-```ejs
+``` rhtml
 <%= expression | filter %>
 ```
 
 - Apply filter only
 
-```ejs
+``` rhtml
 <%- expression | filter %>
 ```
 
