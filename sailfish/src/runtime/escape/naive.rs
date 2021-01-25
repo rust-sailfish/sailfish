@@ -89,6 +89,7 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize {
     buf as usize - buf_begin as usize
 }
 
+#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
 #[inline]
 pub(super) unsafe fn push_escaped_str(value: &str, buffer: &mut Buffer) {
     buffer.reserve_small(value.len());
@@ -104,4 +105,10 @@ pub(super) unsafe fn push_escaped_str(value: &str, buffer: &mut Buffer) {
     ptr::write_unaligned(dst as *mut u32, t1);
 
     buffer._set_len(buffer.len() + value.len());
+}
+
+#[cfg(not(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64")))]
+#[inline]
+pub(super) unsafe fn push_escaped_str(value: &str, buffer: &mut Buffer) {
+    buffer.push_str(value);
 }
