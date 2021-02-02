@@ -162,11 +162,10 @@ impl Buffer {
     }
 
     #[cfg_attr(feature = "perf-inline", inline)]
-    #[cold]
     fn reserve_internal(&mut self, size: usize) {
         debug_assert!(size <= std::isize::MAX as usize);
 
-        let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
+        let new_capacity = std::cmp::max(self.capacity * 2, self.len + size);
         debug_assert!(new_capacity > self.capacity);
         self.data = unsafe { safe_realloc(self.data, self.capacity, new_capacity) };
         self.capacity = new_capacity;
