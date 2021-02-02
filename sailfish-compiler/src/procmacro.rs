@@ -131,7 +131,16 @@ fn compile(
     config: Config,
 ) -> Result<CompilationReport, Error> {
     let compiler = Compiler::with_config(config);
-    compiler.compile_file(input_file, &*output_file)
+
+    // SAFETY:
+    // Any token or span constructed after `proc_macro2::fallback::force()` must not
+    // outlive after `unforce()` because it causes span mismatch error. In this case,
+    // We must ensure that `result` variable does not hold any token or span.
+    proc_macro2::fallback::force();
+    let result = compiler.compile_file(input_file, &*output_file);
+    proc_macro2::fallback::unforce();
+
+    result
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
