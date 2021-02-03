@@ -130,17 +130,30 @@ fn compile(
     output_file: &Path,
     config: Config,
 ) -> Result<CompilationReport, Error> {
+    struct FallbackScope {}
+
+    impl FallbackScope {
+        fn new() -> Self {
+            // SAFETY:
+            // Any token or span constructed after `proc_macro2::fallback::force()` must
+            // not outlive after `unforce()` because it causes span mismatch error. In
+            // this case, we must ensure that `compile_file` does not return any token or
+            // span.
+            proc_macro2::fallback::force();
+            FallbackScope {}
+        }
+    }
+
+    impl Drop for FallbackScope {
+        fn drop(&mut self) {
+            proc_macro2::fallback::unforce();
+        }
+    }
+
     let compiler = Compiler::with_config(config);
 
-    // SAFETY:
-    // Any token or span constructed after `proc_macro2::fallback::force()` must not
-    // outlive after `unforce()` because it causes span mismatch error. In this case,
-    // We must ensure that `result` variable does not hold any token or span.
-    proc_macro2::fallback::force();
-    let result = compiler.compile_file(input_file, &*output_file);
-    proc_macro2::fallback::unforce();
-
-    result
+    let _scope = FallbackScope::new();
+    compiler.compile_file(input_file, &*output_file)
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
