@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use syn::Block;
 
+use crate::analyzer::Analyzer;
 use crate::config::Config;
 use crate::error::*;
 use crate::optimizer::Optimizer;
@@ -57,6 +58,7 @@ impl Compiler {
         });
 
         let resolver = Resolver::new().include_handler(include_handler);
+        let analyzer = Analyzer::new();
         let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
 
         let compile_file = |input: &Path,
@@ -68,6 +70,7 @@ impl Compiler {
             let r = resolver.resolve(&*input, &mut tsource.ast)?;
             report.deps = r.deps;
 
+            analyzer.analyze(&mut tsource.ast)?;
             optimizer.optimize(&mut tsource.ast);
 
             if let Some(parent) = output.parent() {

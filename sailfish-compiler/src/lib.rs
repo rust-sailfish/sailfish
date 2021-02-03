@@ -3,6 +3,7 @@
 #[macro_use]
 mod error;
 
+mod analyzer;
 mod compiler;
 mod config;
 mod optimizer;
