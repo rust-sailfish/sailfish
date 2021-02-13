@@ -3,8 +3,8 @@ unlet b:current_syntax
 
 syn include @rustSyntax syntax/rust.vim
 
-syn region sailfishCodeBlock contained matchgroup=sailfishTag start=/<%/ keepend end=/%>/ contains=@rustSyntax
-syn region sailfishBufferBlock contained matchgroup=sailfishTag start=/<%=/ keepend end=/%>/ contains=@rustSyntax
+syn region sailfishCodeBlock matchgroup=sailfishTag start=/<%/ keepend end=/%>/ contains=@rustSyntax
+syn region sailfishBufferBlock matchgroup=sailfishTag start=/<%=/ keepend end=/%>/ contains=@rustSyntax
 syn region sailfishCommentBlock start=/<%#/ end=/%>/
 
 " Redefine htmlTag so that it can contain jspExpr
