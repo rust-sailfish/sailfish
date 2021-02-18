@@ -22,7 +22,7 @@ json = ["serde", "serde_json"]
 perf-inline = []
 
 [dependencies]
-itoap = "0.1.0"
+itoap = "1.0.1"
 ryu = "1.0.4"
 serde = { version = "1.0.111", optional = true }
 serde_json = { version = "1.0.53", optional = true }
