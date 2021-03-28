@@ -1,3 +1,21 @@
+<a name="v0.3.2"></a>
+## [v0.3.2](https://github.com/Kogia-sima/sailfish/compare/v0.3.1...v0.3.2) (2021-03-29)
+
+## Fix
+
+* Avoid sable/nightly mismatch error caused by proc-macro2 crate 
+
+<a name="v0.3.1"></a>
+## [v0.3.1](https://github.com/Kogia-sima/sailfish/compare/v0.3.0...v0.3.1) (2021-01-23)
+
+## New Features
+
+* Allow unsized types for filters
+
+## Fix
+
+* Workaround for incorrect cargo fingerprints
+
 <a name="v0.3.0"></a>
 ## [v0.3.0](https://github.com/Kogia-sima/sailfish/compare/v0.2.2...v0.3.0) (2020-12-20)
 
