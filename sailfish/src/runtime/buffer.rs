@@ -136,12 +136,12 @@ impl Buffer {
     pub fn push_str(&mut self, data: &str) {
         let size = data.len();
 
-        // NOTE: Since there's no guarantee that the maximum slice size won't overflow
-        // isize::MAX, we must call `reserve()` instead of `reserve_small()`. See
-        // https://github.com/rust-lang/rust/pull/79930#issuecomment-747135498 for more
-        // details.
-        self.reserve(size);
         unsafe {
+            // SAFETY: this operation won't overflow because slice cannot exceeds
+            // isize::MAX bytes.
+            // https://doc.rust-lang.org/reference/behavior-considered-undefined.html
+            self.reserve_small(size);
+
             let p = self.data.add(self.len);
             std::ptr::copy_nonoverlapping(data.as_ptr(), p, size);
             self.len += size;
@@ -162,7 +162,6 @@ impl Buffer {
     }
 
     #[cfg_attr(feature = "perf-inline", inline)]
-    #[cold]
     fn reserve_internal(&mut self, size: usize) {
         debug_assert!(size <= std::isize::MAX as usize);
 

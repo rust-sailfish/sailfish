@@ -130,7 +130,29 @@ fn compile(
     output_file: &Path,
     config: Config,
 ) -> Result<CompilationReport, Error> {
+    struct FallbackScope {}
+
+    impl FallbackScope {
+        fn new() -> Self {
+            // SAFETY:
+            // Any token or span constructed after `proc_macro2::fallback::force()` must
+            // not outlive after `unforce()` because it causes span mismatch error. In
+            // this case, we must ensure that `compile_file` does not return any token or
+            // span.
+            proc_macro2::fallback::force();
+            FallbackScope {}
+        }
+    }
+
+    impl Drop for FallbackScope {
+        fn drop(&mut self) {
+            proc_macro2::fallback::unforce();
+        }
+    }
+
     let compiler = Compiler::with_config(config);
+
+    let _scope = FallbackScope::new();
     compiler.compile_file(input_file, &*output_file)
 }
 

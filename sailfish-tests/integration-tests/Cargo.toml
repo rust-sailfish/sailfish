@@ -1,6 +1,6 @@
 [package]
 name = "integration-tests"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Kogia-sima <orcinus4627@gmail.com>"]
 edition = "2018"
 publish = false
@@ -13,4 +13,4 @@ serde_json = "1.0.53"
 
 [dev-dependencies]
 trybuild = "1.0.28"
-pretty_assertions = "0.6.1"
+pretty_assertions = "0.7.1"

@@ -38,8 +38,10 @@ macro_rules! unlikely {
     };
 }
 
-/// memcpy implementation based on glibc (https://github.molgen.mpg.de/git-mirror/glibc/blob/master/sysdeps/x86_64/multiarch/memcpy-avx-unaligned.S)
+/// Custom memcpy implementation is faster on some platforms
+/// implementation based on glibc (https://github.molgen.mpg.de/git-mirror/glibc/blob/master/sysdeps/x86_64/multiarch/memcpy-avx-unaligned.S)
 #[allow(clippy::cast_ptr_alignment)]
+#[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
 pub unsafe fn memcpy_16(src: *const u8, dst: *mut u8, len: usize) {
     debug_assert!(len <= 16);
     let len_u8 = len as u8;
@@ -66,3 +68,10 @@ pub unsafe fn memcpy_16(src: *const u8, dst: *mut u8, len: usize) {
         *dst = *src;
     }
 }
+
+#[cfg(not(any(
+    target_arch = "x86_64",
+    target_arch = "x86",
+    target_arch = "aarch64"
+)))]
+pub use ptr::copy_nonoverlapping as memcpy_16;

@@ -1,0 +1,18 @@
+error: Template file "not_exist.stpl" not found
+ --> $DIR/template_not_found.rs:9:19
+  |
+9 | #[template(path = "not_exist.stpl")]
+  |                   ^^^^^^^^^^^^^^^^
+
+error[E0599]: no method named `render_once` found for struct `NotExistTemplate` in the current scope
+  --> $DIR/template_not_found.rs:16:51
+   |
+10 | struct NotExistTemplate {
+   | ----------------------- method `render_once` not found for this
+...
+16 |     println!("{}", NotExistTemplate { var: 1996 }.render_once().unwrap());
+   |                                                   ^^^^^^^^^^^ method not found in `NotExistTemplate`
+   |
+   = help: items from traits can only be used if the trait is implemented and in scope
+   = note: the following trait defines an item `render_once`, perhaps you need to implement it:
+           candidate #1: `TemplateOnce`
