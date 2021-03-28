@@ -39,4 +39,4 @@ default-features = false
 features = ["span-locations"]
 
 [dev-dependencies]
-pretty_assertions = "0.6.1"
+pretty_assertions = "0.7.1"
