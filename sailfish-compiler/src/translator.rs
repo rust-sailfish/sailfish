@@ -116,6 +116,14 @@ impl SourceBuilder {
     fn write_text<'a>(&mut self, token: &Token<'a>) -> Result<(), Error> {
         use std::fmt::Write;
 
+        // if error has occured at the first byte of `render_text!` macro, it
+        // will be mapped to the first byte of text
+        self.source_map.entries.push(SourceMapEntry {
+            original: token.offset(),
+            new: self.source.len(),
+            length: 1,
+        });
+
         self.source.push_str("__sf_rt::render_text!(__sf_buf, ");
         // write text token with Debug::fmt
         write!(self.source, "{:?}", token.as_str()).unwrap();
