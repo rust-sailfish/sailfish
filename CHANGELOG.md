@@ -1,3 +1,10 @@
+<a name="v0.3.3"></a>
+## [v0.3.3](https://github.com/Kogia-sima/sailfish/compare/v0.3.2...v0.3.3) (2021-04-06)
+
+## Fix
+
+* Improve error message for missing semicolon in code blocks
+
 <a name="v0.3.2"></a>
 ## [v0.3.2](https://github.com/Kogia-sima/sailfish/compare/v0.3.1...v0.3.2) (2021-03-29)
 
