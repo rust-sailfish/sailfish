@@ -1,5 +1,5 @@
 error: Failed to compile template.
-caused by: Rust Syntax Error (LexError)
+caused by: Rust Syntax Error (lex error)
 
 file: unbalanced_brace.stpl
 

@@ -1,0 +1,37 @@
+error: Failed to compile template.
+caused by: Rust Syntax Error (unexpected token)
+
+file: missing_semicolon.stpl
+position: line 1, column 17
+
+  |
+1 | <div><% "foo" %></div>
+  |                 ^
+
+ --> $DIR/missing_semicolon.rs:4:10
+  |
+4 | #[derive(TemplateOnce)]
+  |          ^^^^^^^^^^^^
+  |
+  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no method named `render_once` found for struct `MissingSemicolon` in the current scope
+ --> $DIR/missing_semicolon.rs:9:42
+  |
+6 | struct MissingSemicolon {}
+  | ----------------------- method `render_once` not found for this
+...
+9 |     println!("{}", (MissingSemicolon {}).render_once().unwrap());
+  |                                          ^^^^^^^^^^^ method not found in `MissingSemicolon`
+  |
+  = help: items from traits can only be used if the trait is implemented and in scope
+  = note: the following trait defines an item `render_once`, perhaps you need to implement it:
+          candidate #1: `TemplateOnce`
+
+warning: unused import: `sailfish::TemplateOnce`
+ --> $DIR/missing_semicolon.rs:1:5
+  |
+1 | use sailfish::TemplateOnce;
+  |     ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default

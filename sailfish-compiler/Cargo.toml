@@ -1,8 +1,8 @@
 [package]
 name = "sailfish-compiler"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
-description = "Really fast, intuitive template engine for Rust"
+description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/Kogia-sima/sailfish"
 repository = "https://github.com/Kogia-sima/sailfish"
 readme = "../README.md"
@@ -34,7 +34,7 @@ default-features = false
 features = ["parsing", "full", "visit-mut", "printing"]
 
 [dependencies.proc-macro2]
-version = ">=1.0.11, <=1.0.24"
+version = ">=1.0.11, <=1.0.26"
 default-features = false
 features = ["span-locations"]
 
