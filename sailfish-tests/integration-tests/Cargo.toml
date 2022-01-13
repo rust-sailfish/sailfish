@@ -1,6 +1,6 @@
 [package]
 name = "integration-tests"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Kogia-sima <orcinus4627@gmail.com>"]
 edition = "2018"
 publish = false
@@ -9,8 +9,8 @@ publish = false
 sailfish = { path = "../../sailfish", default-features = false, features = ["json"] }
 sailfish-macros = { path = "../../sailfish-macros" }
 sailfish-compiler = { path = "../../sailfish-compiler" }
-serde_json = "1.0.53"
+serde_json = "1.0.74"
 
 [dev-dependencies]
-trybuild = "1.0.28"
-pretty_assertions = "0.7.1"
+trybuild = "1.0.54"
+pretty_assertions = "1.0.0"

@@ -1,6 +1,6 @@
 [package]
 name = "sailfish-compiler"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/Kogia-sima/sailfish"
@@ -22,21 +22,21 @@ procmacro = []
 config = ["yaml-rust"]
 
 [dependencies]
-memchr = "2.3.3"
-quote = { version = "1.0.6", default-features = false }
-yaml-rust = { version = "0.4.4", optional = true }
+memchr = "2.4.1"
+quote = { version = "1.0.14", default-features = false }
+yaml-rust = { version = "0.4.5", optional = true }
 home = "0.5.3"
-filetime = "0.2.14"
+filetime = "0.2.15"
 
 [dependencies.syn]
-version = "1.0.21"
+version = "1.0.85"
 default-features = false
 features = ["parsing", "full", "visit-mut", "printing"]
 
 [dependencies.proc-macro2]
-version = ">=1.0.11, <=1.0.26"
+version = ">=1.0.11, <=1.0.36"
 default-features = false
 features = ["span-locations"]
 
 [dev-dependencies]
-pretty_assertions = "0.7.1"
+pretty_assertions = "1.0.0"

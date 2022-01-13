@@ -1,6 +1,6 @@
 [package]
 name = "sailfish"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/Kogia-sima/sailfish"
@@ -23,17 +23,17 @@ perf-inline = []
 
 [dependencies]
 itoap = "1.0.1"
-ryu = "1.0.4"
-serde = { version = "1.0.111", optional = true }
-serde_json = { version = "1.0.53", optional = true }
+ryu = "1.0.9"
+serde = { version = "1.0.133", optional = true }
+serde_json = { version = "1.0.74", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"
-version = "0.3.3"
+version = "0.3.4"
 optional = true
 
 [build-dependencies]
-version_check = "0.9.2"
+version_check = "0.9.4"
 
 [package.metadata.docs.rs]
 all-features = true
