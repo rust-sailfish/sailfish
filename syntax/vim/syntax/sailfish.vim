@@ -1,3 +1,8 @@
+" Sailfish syntax
+" Language:	Sailfish template language
+" Maintainer: Ryohei Machida <orcinus4627@gmail.com>
+" License: MIT
+
 runtime! syntax/html.vim
 unlet b:current_syntax
 
