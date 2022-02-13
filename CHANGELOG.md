@@ -1,3 +1,10 @@
+<a name="v0.3.4"></a>
+## [v0.3.4](https://github.com/Kogia-sima/sailfish/compare/v0.3.3...v0.3.4) (2021-02-13)
+
+## Fix
+
+* Update some dependencies
+
 <a name="v0.3.3"></a>
 ## [v0.3.3](https://github.com/Kogia-sima/sailfish/compare/v0.3.2...v0.3.3) (2021-04-06)
 
