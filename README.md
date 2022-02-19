@@ -4,11 +4,11 @@
 
 Simple, small, and extremely fast template engine for Rust
 
-[![Tests](https://github.com/Kogia-sima/sailfish/workflows/Tests/badge.svg)](https://github.com/Kogia-sima/sailfish/actions?query=workflow%3ATests)
+[![Tests](https://github.com/rust-sailfish/sailfish/workflows/Tests/badge.svg)](https://github.com/rust-sailfish/sailfish/actions?query=workflow%3ATests)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
-[![dependency status](https://deps.rs/repo/github/Kogia-sima/sailfish/status.svg)](https://deps.rs/repo/github/Kogia-sima/sailfish)
+[![dependency status](https://deps.rs/repo/github/rust-sailfish/sailfish/status.svg)](https://deps.rs/repo/github/rust-sailfish/sailfish)
 [![Rust 1.42](https://img.shields.io/badge/rust-1.42+-lightgray.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE)
 
 [User Guide](https://sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
 
@@ -69,7 +69,7 @@ You can find more examples in [examples](./examples) directory.
 
 ## 🐾 Roadmap
 
-- `Template` trait ([RFC](https://github.com/Kogia-sima/sailfish/issues/3))
+- `Template` trait ([RFC](https://github.com/rust-sailfish/sailfish/issues/3))
 - Template inheritance (block, partials, etc.)
 
 ## 👤 Author
@@ -82,9 +82,9 @@ You can find more examples in [examples](./examples) directory.
 
 Contributions, issues and feature requests are welcome!
 
-Since sailfish is an immature library, there are many [planned features](https://github.com/Kogia-sima/sailfish/labels/Type%3A%20RFC) that is on a stage of RFC. Please leave a comment if you have an idea about its design!
+Since sailfish is an immature library, there are many [planned features](https://github.com/rust-sailfish/sailfish/labels/Type%3A%20RFC) that is on a stage of RFC. Please leave a comment if you have an idea about its design!
 
-Also I welcome any pull requests to improve sailfish! Find issue with [Status: PR Welcome](https://github.com/Kogia-sima/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+PR+Welcome%22) label, and [let's create a new pull request](https://github.com/Kogia-sima/sailfish/pulls)!
+Also I welcome any pull requests to improve sailfish! Find issue with [Status: PR Welcome](https://github.com/rust-sailfish/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+PR+Welcome%22) label, and [let's create a new pull request](https://github.com/rust-sailfish/sailfish/pulls)!
 
 ## Show your support
 
@@ -94,7 +94,7 @@ Give a ⭐️ if this project helped you!
 
 Copyright © 2020 [Ryohei Machida](https://github.com/Kogia-sima).
 
-This project is [MIT](https://github.com/Kogia-sima/sailfish/blob/master/LICENSE) licensed.
+This project is [MIT](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE) licensed.
 
 ***
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_

@@ -58,4 +58,4 @@ fn main() {
 
 That's it!
 
-You can find more examples in the [example](https://github.com/Kogia-sima/sailfish/tree/master/examples) directory in the sailfish repository.
+You can find more examples in the [example](https://github.com/rust-sailfish/sailfish/tree/master/examples) directory in the sailfish repository.

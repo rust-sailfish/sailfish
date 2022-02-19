@@ -29,7 +29,7 @@
 //! ```
 
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/icon.png"
+    html_logo_url = "https://raw.githubusercontent.com/rust-sailfish/sailfish/master/resources/icon.png"
 )]
 #![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
 #![cfg_attr(docsrs, feature(doc_cfg))]

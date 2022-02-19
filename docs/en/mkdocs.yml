@@ -8,8 +8,8 @@ site_author: 'Ryohei Machida'
 copyright: '&copy; 2020 Ryohei Machida'
 
 # Repository
-repo_name: 'Kogia-sima/sailfish'
-repo_url: 'https://github.com/Kogia-sima/sailfish'
+repo_name: 'rust-sailfish/sailfish'
+repo_url: 'https://github.com/rust-sailfish/sailfish'
 
 # Configuration
 theme:
@@ -44,7 +44,7 @@ extra_css:
 extra:
   social:
     - icon: 'fontawesome/brands/github-alt'
-      link: 'https://github.com/Kogia-sima'
+      link: 'https://github.com/rust-sailfish'
 
 # Page tree
 nav:

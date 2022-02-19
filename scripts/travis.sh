@@ -10,7 +10,7 @@ if [ "$TRAVIS_RUST_VERSION" = "nightly" ] && [ -z "$TRAVIS_TAG" ]; then
   wget https://github.com/mozilla/grcov/releases/download/v0.5.5/grcov-linux-x86_64.tar.bz2
   tar xvf grcov-linux-x86_64.tar.bz2
 
-  wget https://github.com/Kogia-sima/rust-covfix/releases/download/v0.2.1/rust-covfix-linux-x86_64.tar.xz
+  wget https://github.com/rust-sailfish/rust-covfix/releases/download/v0.2.1/rust-covfix-linux-x86_64.tar.xz
   tar xvf rust-covfix-linux-x86_64.tar.xz
   mv rust-covfix-linux-x86_64/rust-covfix ./
 fi
