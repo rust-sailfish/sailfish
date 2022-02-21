@@ -10,7 +10,7 @@ Simple, small, and extremely fast template engine for Rust
 [![Rust 1.42](https://img.shields.io/badge/rust-1.42+-lightgray.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE)
 
-[User Guide](https://sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
+[User Guide](https://rust-sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
 
 </div>
 
