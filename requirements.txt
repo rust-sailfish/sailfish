@@ -44,7 +44,7 @@ olefile==0.46
 packaging==21.3
 Pillow==7.0.0
 pop-transition==1.1.2
-protobuf==3.6.1
+protobuf==3.15.0
 pycairo==1.16.2
 pycups==1.9.73
 pydbus==0.6.0
