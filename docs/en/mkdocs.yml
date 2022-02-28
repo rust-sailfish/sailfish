@@ -11,15 +11,25 @@ copyright: "&copy; 2020 Ryohei Machida"
 repo_name: "rust-sailfish/sailfish"
 repo_url: "https://github.com/rust-sailfish/sailfish"
 
-# Configuration
 theme:
   name: "material"
   language: "en"
   logo: "images/logo.svg"
   palette:
-    scheme: "default"
-    primary: "deep purple"
-    accent: "deep purple"
+    - media: "(prefers-color-scheme: dark)"
+      scheme: "dark"
+      primary: "deep purple"
+      accent: "deep purple"
+      toggle:
+        icon: "material/lightbulb-outline"
+        name: "Light Mode"
+    - media: "(prefers-color-scheme: light)"
+      scheme: "default"
+      primary: "deep purple"
+      accent: "deep purple"
+      toggle:
+        icon: "material/lightbulb"
+        name: "Dark Mode"
   favicon: "images/favicon.ico"
   font:
     text: "Ubuntu"

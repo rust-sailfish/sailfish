@@ -1,5 +1,5 @@
 .md-typeset__table table {
-  font-size: .75rem !important;
+  font-size: 0.75rem !important;
 }
 
 .md-typeset__table table tr td:first-child {
@@ -8,16 +8,16 @@
 
 .md-typeset code {
   background-color: rgb(240, 240, 240);
-  font-size: .95em;
+  font-size: 0.95em;
 }
 
 .md-typeset pre > code {
   background-color: rgb(245, 245, 245);
-  font-size: .90em;
+  font-size: 0.9em;
 }
 
 .md-typeset .admonition {
-  font-size: .70rem;
+  font-size: 0.7rem;
 }
 
 body {
@@ -29,7 +29,7 @@ body {
   border-bottom-color: rgb(234, 236, 239);
   border-bottom-style: solid;
   border-bottom-width: 1px;
-  padding-bottom: .3rem;
+  padding-bottom: 0.3rem;
 }
 
 .md-content a:hover {
@@ -38,4 +38,19 @@ body {
 
 .highlight code .cp {
   color: #a83;
+}
+
+[data-md-color-scheme="dark"] {
+  --md-primary-fg-color: #321860;
+  --md-default-bg-color: #170a1c;
+  --md-default-fg-color: #dabaff;
+  --md-typeset-color: #ffffff;
+  --md-default-fg-color--light: #b0a8b9;
+  --md-typeset-a-color: #472a63;
+  --md-code-bg-color: #f5f5f5;
+  --md-code-fg-color: #170a1c;
+  --md-admonition-fg-color: #ffffff;
+  --md-default-fg-color--lighter: #acb7c0;
+  --md-default-fg-color--lightest: #d2d5db;
+  --md-code-hl-variable-color: #815abb;
 }
