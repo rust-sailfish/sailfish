@@ -1,59 +1,60 @@
 # Project information
-site_name: 'Sailfish Documentation'
+site_name: "Sailfish Documentation"
 # site_description: 'Sailfish Documentation'
-site_author: 'Ryohei Machida'
+site_author: "Ryohei Machida"
 # site_url: 'https://***.com'
 
 # Copyright
-copyright: '&copy; 2020 Ryohei Machida'
+copyright: "&copy; 2020 Ryohei Machida"
 
 # Repository
-repo_name: 'rust-sailfish/sailfish'
-repo_url: 'https://github.com/rust-sailfish/sailfish'
+repo_name: "rust-sailfish/sailfish"
+repo_url: "https://github.com/rust-sailfish/sailfish"
 
 # Configuration
 theme:
-  name: 'material'
-  language: 'en'
-  logo: 'images/logo.svg'
+  name: "material"
+  language: "en"
+  logo: "images/logo.svg"
   palette:
-    scheme: 'default'
-    primary: 'deep purple'
-    accent: 'deep purple'
-  favicon: 'images/favicon.ico'
+    scheme: "default"
+    primary: "deep purple"
+    accent: "deep purple"
+  favicon: "images/favicon.ico"
   font:
-    text: 'Ubuntu'
-    code: 'Ubuntu Mono'
+    text: "Ubuntu"
+    code: "Ubuntu Mono"
   features:
-    - 'navigation.expand'
+    - "navigation.expand"
 
 # Extensions
 markdown_extensions:
-  - 'admonition'
-  - 'footnotes'
-  - 'pymdownx.highlight'
-  - 'pymdownx.tabbed'
-  - 'pymdownx.superfences':
+  - "admonition"
+  - "footnotes"
+  - "pymdownx.highlight"
+  - "pymdownx.tabbed":
+      alternate_style: true
+  - "pymdownx.superfences":
       custom_fences:
         - name: mermaid
           class: mermaid
 
 extra_css:
-  - 'assets/css/custom.css'
+  - "assets/css/custom.css"
 
 extra:
   social:
-    - icon: 'fontawesome/brands/github-alt'
-      link: 'https://github.com/rust-sailfish'
+    - icon: "fontawesome/brands/github-alt"
+      link: "https://github.com/rust-sailfish"
 
 # Page tree
 nav:
-  - 'Welcome': 'index.md'
-  - 'Installation': 'installation.md'
-  - 'Getting Started': 'getting-started.md'
-  - 'Configuration': 'options.md'
-  - 'Syntax':
-    - 'Overview': 'syntax/overview.md'
-    - 'Tags': 'syntax/tags.md'
-    - 'Includes': 'syntax/includes.md'
-    - 'Filters': 'syntax/filters.md'
+  - "Welcome": "index.md"
+  - "Installation": "installation.md"
+  - "Getting Started": "getting-started.md"
+  - "Configuration": "options.md"
+  - "Syntax":
+      - "Overview": "syntax/overview.md"
+      - "Tags": "syntax/tags.md"
+      - "Includes": "syntax/includes.md"
+      - "Filters": "syntax/filters.md"
