@@ -1,3 +1,14 @@
+<a name="v0.4.0"></a>
+## [v0.4.0](https://github.com/rust-sailfish/sailfish/compare/v0.3.4...v0.4.0) (2022-03-10)
+
+## Fix
+
+* Fix some issues pointing to the wrong documentation links
+
+##Breaking Change
+
+* Changed format to .TOML instead of .yaml to better match what Rust uses.
+
 <a name="v0.3.4"></a>
 ## [v0.3.4](https://github.com/rust-sailfish/sailfish/compare/v0.3.3...v0.3.4) (2021-02-13)
 
