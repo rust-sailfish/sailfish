@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: pull the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+             clean: true
       - name: install dependencies
         run: pip install -r requirements.txt
       - name: build and deploy
