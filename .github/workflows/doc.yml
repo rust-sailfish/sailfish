@@ -10,6 +10,8 @@ jobs:
     name: building documentation and deploying it on gh-pages branch
     runs-on: ubuntu-latest
     steps:
+      - name: clean the directory
+        run: rm -rfv *
       - name: pull the code
         uses: actions/checkout@v3
         with:
