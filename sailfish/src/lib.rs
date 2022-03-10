@@ -1,6 +1,6 @@
 //! Sailfish is a simple, small, and extremely fast template engine for Rust.
 //! Before reading this reference,
-//! I recommend reading [User guide](https://sailfish.netlify.app/en/).
+//! I recommend reading [User guide](https://rust-sailfish.netlify.app/en/).
 //!
 //! This crate contains utilities for rendering sailfish template.
 //! If you want to use sailfish templates, import `sailfish-macros` crate and use
@@ -29,7 +29,7 @@
 //! ```
 
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/Kogia-sima/sailfish/master/resources/icon.png"
+    html_logo_url = "https://raw.githubusercontent.com/rust-sailfish/sailfish/master/resources/icon.png"
 )]
 #![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
 #![cfg_attr(docsrs, feature(doc_cfg))]

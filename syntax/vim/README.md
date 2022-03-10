@@ -5,13 +5,13 @@
 ### Using dein.vim
 
 ```
-call dein#add('Kogia-sima/sailfish', {'rtp': 'syntax/vim'})
+call dein#add('rust-sailfish/sailfish', {'rtp': 'syntax/vim'})
 ```
 
 ### Using vim-plug
 
 ```
-Plug 'Kogia-sima/sailfish', { 'rtp': 'syntax/vim' }
+Plug 'rust-sailfish/sailfish', { 'rtp': 'syntax/vim' }
 ```
 
 ## Screenshot

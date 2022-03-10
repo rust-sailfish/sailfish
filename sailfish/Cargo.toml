@@ -1,10 +1,10 @@
 [package]
 name = "sailfish"
-version = "0.3.4"
+version = "0.4.0"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
-homepage = "https://github.com/Kogia-sima/sailfish"
-repository = "https://github.com/Kogia-sima/sailfish"
+homepage = "https://github.com/rust-sailfish/sailfish"
+repository = "https://github.com/rust-sailfish/sailfish"
 readme = "../README.md"
 keywords = ["markup", "template", "html"]
 categories = ["template-engine"]
@@ -29,7 +29,7 @@ serde_json = { version = "1.0.53", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"
-version = "0.3.4"
+version = "0.4.0"
 optional = true
 
 [build-dependencies]
