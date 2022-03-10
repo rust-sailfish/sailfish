@@ -10,8 +10,6 @@ jobs:
     name: building documentation and deploying it on gh-pages branch
     runs-on: ubuntu-latest
     steps:
-      - name: clean the directory
-        run: rm -rfv *
       - name: pull the code
         uses: actions/checkout@v3
         with:
@@ -19,4 +17,4 @@ jobs:
       - name: install dependencies
         run: pip install -r requirements.txt
       - name: build and deploy
-        run: mkdocs gh-deploy -f docs/en/mkdocs.yml
+        run: mkdocs gh-deploy -f docs/en/mkdocs.yml --clean
