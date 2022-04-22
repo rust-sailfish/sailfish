@@ -1,6 +1,7 @@
 name: building github pages documentation
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - stable
@@ -11,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: pull the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: install dependencies
         run: pip install -r requirements.txt
       - name: build and deploy
-        run: mkdocs gh-deploy -f docs/en/mkdocs.yml
+        run: mkdocs gh-deploy -f docs/en/mkdocs.yml --force
