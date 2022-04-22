@@ -10,7 +10,7 @@ Simple, small, and extremely fast template engine for Rust
 [![Rust 1.42](https://img.shields.io/badge/rust-1.42+-lightgray.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE)
 
-[User Guide](https://rust-sailfish.netlify.app/en/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
+[User Guide](https://rust-sailfish.github.io/sailfish/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
 
 </div>
 
@@ -84,7 +84,7 @@ Contributions, issues and feature requests are welcome!
 
 Since sailfish is an immature library, there are many [planned features](https://github.com/rust-sailfish/sailfish/labels/Type%3A%20RFC) that is on a stage of RFC. Please leave a comment if you have an idea about its design!
 
-Also I welcome any pull requests to improve sailfish! Find issue with [Status: PR Welcome](https://github.com/rust-sailfish/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+PR+Welcome%22) label, and [let's create a new pull request](https://github.com/rust-sailfish/sailfish/pulls)!
+Also I welcome any pull requests to improve sailfish! Find issues with [Status: PR Welcome](https://github.com/rust-sailfish/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+PR+Welcome%22) label, and [let's create a new pull request](https://github.com/rust-sailfish/sailfish/pulls)!
 
 ## Show your support
 

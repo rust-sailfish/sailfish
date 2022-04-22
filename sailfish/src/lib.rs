@@ -1,6 +1,6 @@
 //! Sailfish is a simple, small, and extremely fast template engine for Rust.
 //! Before reading this reference,
-//! I recommend reading [User guide](https://rust-sailfish.netlify.app/en/).
+//! I recommend reading [User guide](https://rust-sailfish.github.io/sailfish/).
 //!
 //! This crate contains utilities for rendering sailfish template.
 //! If you want to use sailfish templates, import `sailfish-macros` crate and use
