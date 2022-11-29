@@ -1,0 +1,60 @@
+.md-typeset__table table {
+  font-size: 0.75rem !important;
+}
+
+.md-typeset__table table tr td:first-child {
+  white-space: nowrap;
+}
+
+.md-typeset code {
+  background-color: rgb(240, 240, 240);
+  font-size: 0.95em;
+}
+
+.md-typeset pre > code {
+  background-color: rgb(245, 245, 245);
+  font-size: 0.9em;
+}
+
+.md-typeset .admonition {
+  font-size: 0.7rem;
+}
+
+body {
+  -webkit-font-smoothing: antialiased !important;
+  -moz-font-smoothing: antialiased !important;
+}
+
+.md-content h2 {
+  border-bottom-color: rgb(234, 236, 239);
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  padding-bottom: 0.3rem;
+}
+
+.md-content a:hover {
+  text-decoration: underline;
+}
+
+.highlight code .cp {
+  color: #a83;
+}
+
+a code {
+  color: #472a63 !important;
+}
+
+[data-md-color-scheme="dark"] {
+  --md-primary-fg-color: #321860;
+  --md-default-bg-color: #170a1c;
+  --md-default-fg-color: #dabaff;
+  --md-typeset-color: #ffffff;
+  --md-default-fg-color--light: #b0a8b9;
+  --md-typeset-a-color: #b596d2;
+  --md-code-bg-color: #f5f5f5;
+  --md-code-fg-color: #170a1c;
+  --md-admonition-fg-color: #ffffff;
+  --md-default-fg-color--lighter: #acb7c0;
+  --md-default-fg-color--lightest: #d2d5db;
+  --md-code-hl-variable-color: #815abb;
+}
