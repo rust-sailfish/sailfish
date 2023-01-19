@@ -56,6 +56,7 @@ impl Default for Parser {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TokenKind {
+    NestedTemplateOnce,
     BufferedCode { escape: bool },
     Code,
     Comment,
@@ -159,6 +160,10 @@ impl<'a> ParseStream<'a> {
             }
             Some(b'-') => {
                 token_kind = TokenKind::BufferedCode { escape: false };
+                start += 1;
+            }
+            Some(b'^') => {
+                token_kind = TokenKind::NestedTemplateOnce;
                 start += 1;
             }
             _ => {}
@@ -401,6 +406,33 @@ fn find_raw_string_end(haystack: &str) -> Option<usize> {
 mod tests {
     use super::*;
     use pretty_assertions::assert_eq;
+
+    #[test]
+    fn nested_render_once() {
+        let src = r#"outer <%^ inner|upper %> outer"#;
+        let parser = Parser::default();
+        let tokens = parser.parse(src).into_vec().unwrap();
+        assert_eq!(
+            &tokens,
+            &[
+                Token {
+                    content: "outer ",
+                    offset: 0,
+                    kind: TokenKind::Text,
+                },
+                Token {
+                    content: "inner|upper",
+                    offset: 10,
+                    kind: TokenKind::NestedTemplateOnce,
+                },
+                Token {
+                    content: " outer",
+                    offset: 24,
+                    kind: TokenKind::Text,
+                },
+            ]
+        );
+    }
 
     #[test]
     fn non_ascii_delimiter() {
