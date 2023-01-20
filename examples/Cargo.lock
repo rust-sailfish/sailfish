@@ -1141,7 +1141,7 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
 name = "sailfish"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "itoap",
  "ryu",
@@ -1151,7 +1151,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-compiler"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "filetime",
  "home",
@@ -1165,7 +1165,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-examples"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "actix-rt",
  "actix-web",
@@ -1175,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "sailfish-macros"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "proc-macro2",
  "sailfish-compiler",
@@ -1260,13 +1260,12 @@ checksum = "f2dd574626839106c320a323308629dcb1acfc96e32a8cba364ddc61ac23ee83"
 
 [[package]]
 name = "socket2"
-version = "0.3.12"
+version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03088793f677dce356f3ccc2edb1b314ad191ab702a5de3faf49304f7e104918"
+checksum = "122e570113d28d773067fab24266b66753f6ea915758651696b6e35e49f88d6e"
 dependencies = [
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
  "libc",
- "redox_syscall 0.1.57",
  "winapi 0.3.9",
 ]
 
