@@ -162,7 +162,7 @@ impl<'a> ParseStream<'a> {
                 token_kind = TokenKind::BufferedCode { escape: false };
                 start += 1;
             }
-            Some(b'^') => {
+            Some(b'+') => {
                 token_kind = TokenKind::NestedTemplateOnce;
                 start += 1;
             }
@@ -409,7 +409,7 @@ mod tests {
 
     #[test]
     fn nested_render_once() {
-        let src = r#"outer <%^ inner|upper %> outer"#;
+        let src = r#"outer <%+ inner|upper %> outer"#;
         let parser = Parser::default();
         let tokens = parser.parse(src).into_vec().unwrap();
         assert_eq!(

@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn translate_nested_render_once() {
-        let src = r#"outer <%^ inner %> outer"#;
+        let src = r#"outer <%+ inner %> outer"#;
         let lexer = Parser::new();
         let token_iter = lexer.parse(src);
         let mut ps = SourceBuilder {
@@ -407,7 +407,7 @@ mod tests {
 
     #[test]
     fn translate_nested_render_once_with_filter() {
-        let src = r#"outer <%^ inner|upper %> outer"#;
+        let src = r#"outer <%+ inner|upper %> outer"#;
         let lexer = Parser::new();
         let token_iter = lexer.parse(src);
         let mut ps = SourceBuilder {
