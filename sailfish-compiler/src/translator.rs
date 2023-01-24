@@ -136,6 +136,15 @@ impl SourceBuilder {
         token: &Token<'a>,
         escape: bool,
     ) -> Result<(), Error> {
+        self.write_buffered_code_with_suffix(token, escape, "")
+    }
+
+    fn write_buffered_code_with_suffix<'a>(
+        &mut self,
+        token: &Token<'a>,
+        escape: bool,
+        suffix: &str,
+    ) -> Result<(), Error> {
         // parse and split off filter
         let code_block = syn::parse_str::<CodeBlock>(token.as_str()).map_err(|e| {
             let span = e.span();
@@ -154,7 +163,7 @@ impl SourceBuilder {
         self.source.push_str("!(__sf_buf, ");
 
         if let Some(filter) = code_block.filter {
-            let expr_str = code_block.expr.into_token_stream().to_string();
+            let expr_str = format!("{}{}", code_block.expr.into_token_stream(), suffix);
             let (name, extra_args) = match filter {
                 Filter::Ident(i) => (i.to_string(), None),
                 Filter::Call(c) => (
@@ -188,6 +197,7 @@ impl SourceBuilder {
             self.source.push(')');
         } else {
             self.write_token(token);
+            self.source.push_str(suffix);
         }
 
         self.source.push_str(");\n");
@@ -205,6 +215,11 @@ impl SourceBuilder {
                 TokenKind::BufferedCode { escape } => {
                     self.write_buffered_code(&token, escape)?
                 }
+                TokenKind::NestedTemplateOnce => self.write_buffered_code_with_suffix(
+                    &token,
+                    false,
+                    ".render_once()?",
+                )?,
                 TokenKind::Text => {
                     // concatenate repeated text token
                     let offset = token.offset();
@@ -366,5 +381,49 @@ mod tests {
         };
         ps.feed_tokens(token_iter.clone()).unwrap();
         Translator::new().translate(token_iter).unwrap();
+    }
+
+    #[test]
+    fn translate_nested_render_once() {
+        let src = r#"outer <%+ inner %> outer"#;
+        let lexer = Parser::new();
+        let token_iter = lexer.parse(src);
+        let mut ps = SourceBuilder {
+            escape: true,
+            source: String::with_capacity(token_iter.original_source.len()),
+            source_map: SourceMap::default(),
+        };
+        ps.feed_tokens(token_iter.clone()).unwrap();
+        assert_eq!(
+            &Translator::new()
+                .translate(token_iter)
+                .unwrap()
+                .ast
+                .into_token_stream()
+                .to_string(),
+            r#"{ __sf_rt :: render_text ! (__sf_buf , "outer ") ; __sf_rt :: render ! (__sf_buf , inner . render_once () ?) ; __sf_rt :: render_text ! (__sf_buf , " outer") ; }"#
+        );
+    }
+
+    #[test]
+    fn translate_nested_render_once_with_filter() {
+        let src = r#"outer <%+ inner|upper %> outer"#;
+        let lexer = Parser::new();
+        let token_iter = lexer.parse(src);
+        let mut ps = SourceBuilder {
+            escape: true,
+            source: String::with_capacity(token_iter.original_source.len()),
+            source_map: SourceMap::default(),
+        };
+        ps.feed_tokens(token_iter.clone()).unwrap();
+        assert_eq!(
+            &Translator::new()
+                .translate(token_iter)
+                .unwrap()
+                .ast
+                .into_token_stream()
+                .to_string(),
+            r#"{ __sf_rt :: render_text ! (__sf_buf , "outer ") ; __sf_rt :: render ! (__sf_buf , sailfish :: runtime :: filter :: upper (& (inner . render_once () ?))) ; __sf_rt :: render_text ! (__sf_buf , " outer") ; }"#
+        );
     }
 }
