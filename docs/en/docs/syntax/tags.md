@@ -105,3 +105,30 @@ If you want to render the results without escaping, you can use `<%- %>` tag or 
     ``` rhtml
     <% let result = %><%= 1 %><% ; %>
     ```
+
+## Component block
+
+Rust expression inside `<%+ %>` tag is evaluated and then rendered by
+calling its `render_once()` method. If the value does not have an
+appropriate method, a compile-time error will be reported.
+
+This makes it easy to use types which are `TemplateOnce` as components
+which can be embedded into other templates.
+
+=== "Template A"
+
+    ``` rhtml
+    <strong>A <%= val %></strong>
+    ```
+
+=== "Template B"
+
+    ``` rhtml
+    B <%+ A { val: "example" } %>
+    ```
+
+=== "Result"
+
+    ``` text
+    B <strong>A example</strong>
+    ```

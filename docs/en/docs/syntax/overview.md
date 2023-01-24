@@ -5,6 +5,7 @@
 - `<% %>`: Inline tag, you can write Rust code inside this tag
 - `<%= %>`: Evaluate the Rust expression and outputs the value into the template (HTML escaped)
 - `<%- %>`: Evaluate the Rust expression and outputs the unescaped value into the template
+- `<%+ %>`: Evaluate the Rust expression producing a `TemplateOnce` value, and render that value into the template
 - `<%# %>`: Comment tag
 - `<%%`: Outputs a literal '<%'
 
