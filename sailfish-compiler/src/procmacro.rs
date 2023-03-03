@@ -1,8 +1,6 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use std::collections::hash_map::DefaultHasher;
 use std::env;
-use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
@@ -103,33 +101,10 @@ fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBu
     None
 }
 
-fn filename_hash(path: &Path) -> String {
-    use std::fmt::Write;
-
-    let mut path_with_hash = String::with_capacity(16);
-
-    if let Some(n) = path.file_name() {
-        let mut filename = &*n.to_string_lossy();
-        if let Some(p) = filename.find('.') {
-            filename = &filename[..p];
-        }
-        path_with_hash.push_str(filename);
-        path_with_hash.push('-');
-    }
-
-    let mut hasher = DefaultHasher::new();
-    path.hash(&mut hasher);
-    let hash = hasher.finish();
-    let _ = write!(path_with_hash, "{:016x}", hash);
-
-    path_with_hash
-}
-
 fn compile(
     input_file: &Path,
-    output_file: &Path,
     config: Config,
-) -> Result<CompilationReport, Error> {
+) -> Result<(CompilationReport, String), Error> {
     struct FallbackScope {}
 
     impl FallbackScope {
@@ -153,7 +128,7 @@ fn compile(
     let compiler = Compiler::with_config(config);
 
     let _scope = FallbackScope::new();
-    compiler.compile_file(input_file, &*output_file)
+    compiler.compile_file(input_file)
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
@@ -207,20 +182,13 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         )?
     };
 
-    let mut output_file = PathBuf::from(env!("OUT_DIR"));
-    output_file.push("templates");
-    output_file.push(filename_hash(&*input_file));
-
     merge_config_options(&mut config, &all_options);
-    let report = compile(&*input_file, &*output_file, config)
+    let (report, output_str) = compile(&*input_file, config)
         .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
     let input_file_string = input_file
         .to_str()
         .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", input_file));
-    let output_file_string = output_file
-        .to_str()
-        .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", output_file));
 
     let mut include_bytes_seq = quote! { include_bytes!(#input_file_string); };
     for dep in report.deps {
@@ -253,6 +221,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     };
 
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
+    let out_tokens: syn::Expr = syn::parse_str(&output_str).expect("Must be an expr; qed");
 
     // render_once method always results in the same code.
     // This method can be implemented in `sailfish` crate, but I found that performance
@@ -275,7 +244,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
                 use sailfish::runtime as __sf_rt;
                 let #name { #field_names } = self;
-                include!(#output_file_string);
+                #out_tokens;
 
                 Ok(())
             }

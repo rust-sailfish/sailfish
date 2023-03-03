@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate sailfish_macros;
-
 use integration_tests::assert_string_eq;
 use sailfish::runtime::RenderResult;
 use sailfish::TemplateOnce;

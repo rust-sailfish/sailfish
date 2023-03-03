@@ -1,4 +1,3 @@
-use filetime::FileTime;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
@@ -76,12 +75,4 @@ pub fn rustfmt_block(source: &str) -> io::Result<String> {
             "rustfmt command failed",
         ))
     }
-}
-
-pub fn copy_filetimes(input: &Path, output: &Path) -> io::Result<()> {
-    let mtime = fs::metadata(input)
-        .and_then(|metadata| metadata.modified())
-        .map_or(FileTime::zero(), |time| FileTime::from_system_time(time));
-
-    filetime::set_file_times(output, mtime, mtime)
 }

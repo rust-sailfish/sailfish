@@ -1,6 +1,5 @@
 use quote::ToTokens;
 use std::fs;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use syn::Block;
@@ -12,7 +11,7 @@ use crate::optimizer::Optimizer;
 use crate::parser::Parser;
 use crate::resolver::Resolver;
 use crate::translator::{TranslatedSource, Translator};
-use crate::util::{copy_filetimes, read_to_string, rustfmt_block};
+use crate::util::{read_to_string, rustfmt_block};
 
 #[derive(Default)]
 pub struct Compiler {
@@ -45,8 +44,7 @@ impl Compiler {
     pub fn compile_file(
         &self,
         input: &Path,
-        output: &Path,
-    ) -> Result<CompilationReport, Error> {
+    ) -> Result<(CompilationReport, String), Error> {
         // TODO: introduce cache system
 
         let input = input
@@ -61,9 +59,8 @@ impl Compiler {
         let analyzer = Analyzer::new();
         let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
 
-        let compile_file = |input: &Path,
-                            output: &Path|
-         -> Result<CompilationReport, Error> {
+        let compile_file = |input: &Path,|
+         -> Result<(CompilationReport, String), Error> {
             let mut tsource = self.translate_file_contents(input)?;
             let mut report = CompilationReport { deps: Vec::new() };
 
@@ -73,27 +70,13 @@ impl Compiler {
             analyzer.analyze(&mut tsource.ast)?;
             optimizer.optimize(&mut tsource.ast);
 
-            if let Some(parent) = output.parent() {
-                fs::create_dir_all(parent)
-                    .chain_err(|| format!("Failed to save artifacts in {:?}", parent))?;
-            }
-
             let string = tsource.ast.into_token_stream().to_string();
+            let ret = format!("{}", rustfmt_block(&*string).unwrap_or(string));
 
-            let mut f = fs::File::create(output)
-                .chain_err(|| format!("Failed to create artifact: {:?}", output))?;
-            writeln!(f, "{}", rustfmt_block(&*string).unwrap_or(string))
-                .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
-            drop(f);
-
-            // FIXME: This is a silly hack to prevent output file from being tracking by
-            // cargo. Another better solution should be considered.
-            let _ = copy_filetimes(input, output);
-
-            Ok(report)
+            Ok((report, ret))
         };
 
-        compile_file(&*input, &*output)
+        compile_file(&*input)
             .chain_err(|| "Failed to compile template.")
             .map_err(|mut e| {
                 e.source = fs::read_to_string(&*input).ok();
