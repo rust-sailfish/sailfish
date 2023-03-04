@@ -271,8 +271,6 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             }
 
             fn render_once_to(self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
-                #include_bytes_seq;
-
                 use sailfish::runtime as __sf_rt;
                 let #name { #field_names } = self;
                 include!(#output_file_string);
