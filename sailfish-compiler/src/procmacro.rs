@@ -271,6 +271,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             }
 
             fn render_once_to(self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
+                // This line is required for cargo to track child templates
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
