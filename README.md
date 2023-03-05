@@ -7,7 +7,7 @@ Simple, small, and extremely fast template engine for Rust
 [![Tests](https://github.com/rust-sailfish/sailfish/workflows/Tests/badge.svg)](https://github.com/rust-sailfish/sailfish/actions?query=workflow%3ATests)
 [![Version](https://img.shields.io/crates/v/sailfish)](https://crates.io/crates/sailfish)
 [![dependency status](https://deps.rs/repo/github/rust-sailfish/sailfish/status.svg)](https://deps.rs/repo/github/rust-sailfish/sailfish)
-[![Rust 1.46](https://img.shields.io/badge/rust-1.42+-lightgray.svg)](https://blog.rust-lang.org/2020/08/27/Rust-1.46.0.html)
+[![Rust 1.60](https://img.shields.io/badge/rust-1.60+-lightgray.svg)](https://blog.rust-lang.org/2022/04/07/Rust-1.60.0.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE)
 
 [User Guide](https://rust-sailfish.github.io/sailfish/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
@@ -23,7 +23,7 @@ Simple, small, and extremely fast template engine for Rust
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
-- Works on Rust 1.46 or later
+- Works on Rust 1.60 or later
 
 ## 🐟 Example
 
