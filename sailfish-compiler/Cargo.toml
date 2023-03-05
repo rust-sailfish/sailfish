@@ -25,7 +25,7 @@ config = ["serde", "toml"]
 memchr = "2.3.3"
 quote = { version = "1.0.6", default-features = false }
 serde = { version = "1.0", features = ["derive"], optional = true }
-toml = { version = "0.5", optional = true }
+toml = { version = "0.7", optional = true }
 home = "0.5.3"
 filetime = "0.2.14"
 
