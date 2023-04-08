@@ -24,10 +24,7 @@ struct DeriveTemplateOptions {
 
 impl DeriveTemplateOptions {
     fn parser<'s>(&'s mut self) -> impl Parser + 's {
-        move |outer: ParseStream| -> ParseResult<()> {
-            let s;
-            syn::parenthesized!(s in outer);
-
+        move |s: ParseStream| -> ParseResult<()> {
             while !s.is_empty() {
                 let key = s.parse::<Ident>()?;
                 s.parse::<Token![=]>()?;
@@ -161,8 +158,8 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let mut all_options = DeriveTemplateOptions::default();
     for attr in strct.attrs {
-        if attr.path.is_ident("template") {
-            syn::parse::Parser::parse2(all_options.parser(), attr.tokens)?;
+        if attr.path().is_ident("template") {
+            attr.parse_args_with(all_options.parser())?;
         }
     }
 

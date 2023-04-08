@@ -1,7 +1,11 @@
+use proc_macro2::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream, Result as ParseResult};
 use syn::visit_mut::VisitMut;
-use syn::{Block, Expr, ExprBreak, ExprContinue, ExprMacro, Ident, LitStr, Stmt, Token};
+use syn::{
+    Block, Expr, ExprBreak, ExprContinue, ExprMacro, Ident, LitStr, Macro, Stmt,
+    StmtMacro, Token,
+};
 
 pub struct Optimizer {
     rm_whitespace: bool,
@@ -44,8 +48,7 @@ impl VisitMut for OptmizerImpl {
 
             // check if statement is for loop
             let fl = match stmt {
-                Stmt::Expr(Expr::ForLoop(ref mut fl))
-                | Stmt::Semi(Expr::ForLoop(ref mut fl), _) => fl,
+                Stmt::Expr(Expr::ForLoop(ref mut fl), _) => fl,
                 _ => {
                     results.push(stmt);
                     continue;
@@ -116,35 +119,29 @@ impl VisitMut for OptmizerImpl {
         i.stmts = results;
     }
 
+    fn visit_stmt_macro_mut(&mut self, i: &mut StmtMacro) {
+        if self.rm_whitespace {
+            if let Some(v) = get_rendertext_value(&i.mac) {
+                let ts = match remove_whitespace(v) {
+                    Some(value) => value,
+                    None => return,
+                };
+                i.mac.tokens = ts;
+                return;
+            }
+        }
+
+        syn::visit_mut::visit_stmt_macro_mut(self, i);
+    }
+
     fn visit_expr_macro_mut(&mut self, i: &mut ExprMacro) {
         if self.rm_whitespace {
-            if let Some(v) = get_rendertext_value(i) {
-                let mut buffer = String::new();
-                let mut it = v.lines().peekable();
-
-                if let Some(line) = it.next() {
-                    if it.peek().is_some() {
-                        buffer.push_str(line.trim_end());
-                        buffer.push('\n');
-                    } else {
-                        return;
-                    }
-                }
-
-                while let Some(line) = it.next() {
-                    if it.peek().is_some() {
-                        if !line.is_empty() {
-                            buffer.push_str(line.trim());
-                            buffer.push('\n');
-                        } else {
-                            // ignore empty line
-                        }
-                    } else {
-                        // last line
-                        buffer.push_str(line.trim_start());
-                    }
-                }
-                i.mac.tokens = quote! { __sf_buf, #buffer };
+            if let Some(v) = get_rendertext_value(&i.mac) {
+                let ts = match remove_whitespace(v) {
+                    Some(value) => value,
+                    None => return,
+                };
+                i.mac.tokens = ts;
                 return;
             }
         }
@@ -153,7 +150,35 @@ impl VisitMut for OptmizerImpl {
     }
 }
 
-fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
+fn remove_whitespace(v: String) -> Option<TokenStream> {
+    let mut buffer = String::new();
+    let mut it = v.lines().peekable();
+    if let Some(line) = it.next() {
+        if it.peek().is_some() {
+            buffer.push_str(line.trim_end());
+            buffer.push('\n');
+        } else {
+            return None;
+        }
+    }
+    while let Some(line) = it.next() {
+        if it.peek().is_some() {
+            if !line.is_empty() {
+                buffer.push_str(line.trim());
+                buffer.push('\n');
+            } else {
+                // ignore empty line
+            }
+        } else {
+            // last line
+            buffer.push_str(line.trim_start());
+        }
+    }
+
+    Some(quote! { __sf_buf, #buffer })
+}
+
+fn get_rendertext_value(mac: &Macro) -> Option<String> {
     struct RenderTextMacroArgument {
         #[allow(dead_code)]
         context: Ident,
@@ -170,13 +195,13 @@ fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
         }
     }
 
-    let mut it = i.mac.path.segments.iter();
+    let mut it = mac.path.segments.iter();
 
     if it.next().map_or(false, |s| s.ident == "__sf_rt")
         && it.next().map_or(false, |s| s.ident == "render_text")
         && it.next().is_none()
     {
-        let tokens = i.mac.tokens.clone();
+        let tokens = mac.tokens.clone();
         if let Ok(macro_arg) = syn::parse2::<RenderTextMacroArgument>(tokens) {
             return Some(macro_arg.arg.value());
         }
@@ -186,12 +211,12 @@ fn get_rendertext_value(i: &ExprMacro) -> Option<String> {
 }
 
 fn get_rendertext_value_from_stmt(stmt: &Stmt) -> Option<String> {
-    let mac = match stmt {
-        Stmt::Semi(Expr::Macro(ref mac), ..) => mac,
+    let em = match stmt {
+        Stmt::Expr(Expr::Macro(ref mac), Some(_)) => mac,
         _ => return None,
     };
 
-    get_rendertext_value(mac)
+    get_rendertext_value(&em.mac)
 }
 
 fn block_has_continue_or_break(i: &mut Block) -> bool {
