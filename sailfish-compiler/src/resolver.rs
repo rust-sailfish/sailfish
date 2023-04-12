@@ -2,7 +2,7 @@ use quote::quote;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use syn::visit_mut::VisitMut;
-use syn::{Block, Expr, ExprBlock, ExprMacro, LitStr};
+use syn::{Block, Expr, ExprBlock, LitStr, Macro, Stmt};
 
 use crate::error::*;
 
@@ -82,8 +82,8 @@ struct ResolverImpl<'h> {
 }
 
 impl<'h> ResolverImpl<'h> {
-    fn resolve_include(&mut self, i: &ExprMacro) -> Result<Expr, Error> {
-        let arg = match syn::parse2::<LitStr>(i.mac.tokens.clone()) {
+    fn resolve_include(&mut self, mac: &Macro) -> Result<Expr, Error> {
+        let arg = match syn::parse2::<LitStr>(mac.tokens.clone()) {
             Ok(l) => l.value(),
             Err(e) => {
                 let mut e = Error::from(e);
@@ -145,6 +145,24 @@ impl<'h> ResolverImpl<'h> {
 }
 
 impl<'h> VisitMut for ResolverImpl<'h> {
+    fn visit_stmt_mut(&mut self, i: &mut Stmt) {
+        return_if_some!(self.error);
+        let sm = matches_or_else!(*i, Stmt::Macro(ref mut sm), sm, {
+            syn::visit_mut::visit_stmt_mut(self, i);
+            return;
+        });
+
+        if sm.mac.path.is_ident("include") {
+            match self.resolve_include(&sm.mac) {
+                Ok(e) => *i = Stmt::Expr(e, None),
+                Err(e) => {
+                    self.error = Some(e);
+                    return;
+                }
+            }
+        }
+    }
+
     fn visit_expr_mut(&mut self, i: &mut Expr) {
         return_if_some!(self.error);
         let em = matches_or_else!(*i, Expr::Macro(ref mut em), em, {
@@ -154,7 +172,7 @@ impl<'h> VisitMut for ResolverImpl<'h> {
 
         // resolve `include`
         if em.mac.path.is_ident("include") {
-            match self.resolve_include(em) {
+            match self.resolve_include(&em.mac) {
                 Ok(e) => *i = e,
                 Err(e) => {
                     self.error = Some(e);
