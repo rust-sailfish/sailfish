@@ -23,7 +23,7 @@ jobs:
             toolchain: beta
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            toolchain: 1.42.0 # MSRV
+            toolchain: 1.60.0 # MSRV
           - os: ubuntu-latest
             deps: sudo apt update ; sudo apt install gcc-multilib
             target: i686-unknown-linux-gnu

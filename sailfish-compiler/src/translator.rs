@@ -1,7 +1,6 @@
-use proc_macro2::Span;
+use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream as SynParseStream, Result as ParseResult};
-use syn::spanned::Spanned;
 use syn::{BinOp, Block, Expr};
 
 use crate::error::*;
@@ -276,11 +275,11 @@ enum Filter {
     Call(syn::ExprCall),
 }
 
-impl Spanned for Filter {
-    fn span(&self) -> Span {
-        match *self {
-            Filter::Ident(ref i) => i.span(),
-            Filter::Call(ref c) => c.span(),
+impl ToTokens for Filter {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Filter::Ident(ident) => ident.to_tokens(tokens),
+            Filter::Call(call) => call.to_tokens(tokens),
         }
     }
 }
