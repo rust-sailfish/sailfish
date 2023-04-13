@@ -6,7 +6,7 @@ if [ $# != 1 ]; then
   exit 1
 fi
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$( pwd )"
 cd $SCRIPT_DIR/..
 
 OLD_VERSION="$(cat README.md |grep '^sailfish\s*=' |cut -d '"' -f2)"
@@ -26,3 +26,7 @@ sed -i -e "s/^\(sailfish.*\) = .*/\1 = \"$NEW_VERSION\"/" README.md
 find docs/en -path "*.md" -type f |while read f; do sed -i -e "s/^\(sailfish.*\) = .*/\1 = \"$NEW_VERSION\"/" "$f"; done
 
 cargo update -p sailfish --precise "${NEW_VERSION}"
+
+#update the sailfish-compiler with cargo publish
+#update the sailfish-macros with cargo publish
+#update the sailfish with cargo publish

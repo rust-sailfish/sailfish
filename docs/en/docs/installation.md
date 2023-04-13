@@ -4,7 +4,7 @@ In order to use sailfish templates, you have add two dependencies in your `Cargo
 
 ``` toml
 [dependencies]
-sailfish = "0.6.0"
+sailfish = "0.6.1"
 ```
 
 ## Feature Flags

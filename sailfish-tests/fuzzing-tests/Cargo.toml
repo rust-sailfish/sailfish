@@ -1,6 +1,6 @@
 [package]
 name = "fuzzing-tests"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 edition = "2018"
 publish = false
