@@ -22,7 +22,7 @@ doctest = false
 
 [features]
 default = ["config"]
-# enable configuration file (sailfish.yml) support
+# enable configuration file (sailfish.toml) support
 config = ["sailfish-compiler/config"]
 
 [dependencies]

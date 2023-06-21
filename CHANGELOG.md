@@ -1,3 +1,14 @@
+## [Unreleased]
+
+### Breaking Change
+
+* Add `config` feature for crate `sailfish`. It is enabled by default. In previous
+  versions, the functionality enabled by the `config` feature was always available. If the
+  feature is disabled, any configuration files (sailfish.toml) are ignored by the template
+  compiler. This speeds up the compiler a bit, and decreases the number of dependencies
+  required, so it can be useful for applications that don't use sailfish.toml configuration
+  files and want to speed up their build process.
+
 <a name="v0.4.0"></a>
 ## [v0.4.0](https://github.com/rust-sailfish/sailfish/compare/v0.3.4...v0.4.0) (2022-03-10)
 
