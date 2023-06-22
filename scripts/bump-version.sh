@@ -6,8 +6,16 @@ if [ $# != 1 ]; then
   exit 1
 fi
 
-SCRIPT_DIR="$( pwd )"
-cd $SCRIPT_DIR/..
+CURRENT_DIR="$( pwd )"
+
+if [ -z "${CURRENT_DIR##*scripts}" ] ; then 
+# Go up now, because we are in the scripts directory
+  cd ..
+else   
+  echo "Please enter the scripts directory, and then execute this script.";
+  exit 1
+fi;
+
 
 OLD_VERSION="$(cat README.md |grep '^sailfish\s*=' |cut -d '"' -f2)"
 NEW_VERSION="${1}"
