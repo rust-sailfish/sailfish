@@ -1,6 +1,6 @@
 [package]
 name = "sailfish"
-version = "0.6.1"
+version = "0.7.0"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/rust-sailfish/sailfish"
@@ -31,7 +31,7 @@ serde_json = { version = "1.0.95", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"
-version = "0.6.1"
+version = "0.7.0"
 default-features = false
 optional = true
 
