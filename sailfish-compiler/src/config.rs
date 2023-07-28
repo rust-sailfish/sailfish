@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct Config {
     pub delimiter: char,
     pub escape: bool,
