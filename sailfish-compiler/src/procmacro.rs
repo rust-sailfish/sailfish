@@ -1,9 +1,11 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use std::collections::hash_map::DefaultHasher;
-use std::env;
 use std::hash::{Hash, Hasher};
+use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
+use std::{env, thread};
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
@@ -100,7 +102,7 @@ fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBu
     None
 }
 
-fn filename_hash(path: &Path) -> String {
+fn filename_hash(path: &Path, config: &Config) -> String {
     use std::fmt::Write;
 
     let mut path_with_hash = String::with_capacity(16);
@@ -114,8 +116,11 @@ fn filename_hash(path: &Path) -> String {
         path_with_hash.push('-');
     }
 
+    let input_bytes = std::fs::read(path).unwrap();
+
     let mut hasher = DefaultHasher::new();
-    path.hash(&mut hasher);
+    input_bytes.hash(&mut hasher);
+    config.hash(&mut hasher);
     let hash = hasher.finish();
     let _ = write!(path_with_hash, "{:016x}", hash);
 
@@ -204,13 +209,64 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         )?
     };
 
+    merge_config_options(&mut config, &all_options);
+
+    // Template compilation through this proc-macro uses a caching mechanism. Output file
+    // names include a hash calculated from input file contents and compiler
+    // configuration. This way, existing files never need updating and can simply be
+    // re-used if they exist.
     let mut output_file = PathBuf::from(env!("OUT_DIR"));
     output_file.push("templates");
-    output_file.push(filename_hash(&*input_file));
+    output_file.push(filename_hash(&*input_file, &config));
 
-    merge_config_options(&mut config, &all_options);
-    let report = compile(&*input_file, &*output_file, config)
-        .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+    std::fs::create_dir_all(&output_file.parent().unwrap()).unwrap();
+
+    const DEPS_END_MARKER: &str = "=--end-of-deps--=";
+    let dep_file = output_file.with_extension("deps");
+
+    // This makes sure max 1 process creates a new file, "create_new" check+create is an
+    // atomic operation. Cargo sometimes runs multiple macro invocations for the same
+    // file in parallel, so that's important to prevent a race condition.
+    let dep_file_status = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&dep_file);
+
+    let deps = match dep_file_status {
+        Ok(mut file) => {
+            // Successfully created new .deps file. Now template needs to be compiled.
+            let report = compile(&*input_file, &*output_file, config)
+                .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+
+            for dep in &report.deps {
+                writeln!(file, "{}", dep.to_str().unwrap()).unwrap();
+            }
+            writeln!(file, "{}", DEPS_END_MARKER).unwrap();
+
+            report.deps
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+            // .deps file exists, template is already (currently being?) compiled.
+            let mut load_attempts = 0;
+            loop {
+                let dep_file_content = std::fs::read_to_string(&dep_file).unwrap();
+                let mut lines_reversed = dep_file_content.rsplit_terminator('\n');
+                if lines_reversed.next() == Some(DEPS_END_MARKER) {
+                    // .deps file is complete, so we can continue.
+                    break lines_reversed.map(PathBuf::from).collect();
+                }
+
+                // .deps file exists, but appears incomplete. Wait a bit and try again.
+                load_attempts += 1;
+                if load_attempts > 100 {
+                    panic!("file {:?} is incomplete. Try deleting it.", dep_file);
+                }
+
+                thread::sleep(Duration::from_millis(10));
+            }
+        }
+        Err(e) => panic!("{:?}: {}. Maybe try `cargo clean`?", dep_file, e),
+    };
 
     let input_file_string = input_file
         .to_str()
@@ -220,7 +276,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", output_file));
 
     let mut include_bytes_seq = quote! { include_bytes!(#input_file_string); };
-    for dep in report.deps {
+    for dep in deps {
         if let Some(dep_string) = dep.to_str() {
             include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
         }
