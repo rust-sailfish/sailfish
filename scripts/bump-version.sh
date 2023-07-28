@@ -37,4 +37,4 @@ cargo update -p sailfish --precise "${NEW_VERSION}"
 
 #update the sailfish-compiler with cargo publish
 #update the sailfish-macros with cargo publish
-#update the sailfish with cargo publish
+#update the sailfish with cargo publish -p sailfish
