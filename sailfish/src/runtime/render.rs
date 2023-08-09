@@ -124,6 +124,36 @@ impl Render for char {
     }
 }
 
+#[cfg(feature="extended_support")]
+impl Render for uuid::Uuid {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        b.push_str(&self.to_string());
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        escape::escape_to_buf(&self.to_string(), b);
+        Ok(())
+    }
+}
+
+#[cfg(feature="extended_support")]
+impl Render for chrono::NaiveDateTime {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        b.push_str(&self.to_string());
+        Ok(())
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        escape::escape_to_buf(&self.to_string(), b);
+        Ok(())
+    }
+}
+
 impl Render for PathBuf {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
