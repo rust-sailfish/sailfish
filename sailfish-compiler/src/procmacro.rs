@@ -3,6 +3,7 @@ use quote::quote;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::io::Write;
+use std::iter;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::{env, thread};
@@ -10,9 +11,10 @@ use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
-use crate::compiler::{CompilationReport, Compiler};
+use crate::compiler::Compiler;
 use crate::config::Config;
 use crate::error::*;
+use crate::util::filetime;
 
 // options for `template` attributes
 #[derive(Default)]
@@ -116,10 +118,7 @@ fn filename_hash(path: &Path, config: &Config) -> String {
         path_with_hash.push('-');
     }
 
-    let input_bytes = std::fs::read(path).unwrap();
-
     let mut hasher = DefaultHasher::new();
-    input_bytes.hash(&mut hasher);
     config.hash(&mut hasher);
     let hash = hasher.finish();
     let _ = write!(path_with_hash, "{:016x}", hash);
@@ -127,11 +126,10 @@ fn filename_hash(path: &Path, config: &Config) -> String {
     path_with_hash
 }
 
-fn compile(
-    input_file: &Path,
-    output_file: &Path,
+fn with_compiler<T, F: FnOnce(Compiler) -> Result<T, Error>>(
     config: Config,
-) -> Result<CompilationReport, Error> {
+    apply: F,
+) -> Result<T, Error> {
     struct FallbackScope {}
 
     impl FallbackScope {
@@ -155,7 +153,7 @@ fn compile(
     let compiler = Compiler::with_config(config);
 
     let _scope = FallbackScope::new();
-    compiler.compile_file(input_file, &*output_file)
+    apply(compiler)
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
@@ -199,14 +197,14 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         let path = all_options.path.as_ref().ok_or_else(|| {
             syn::Error::new(Span::call_site(), "`path` option must be specified.")
         })?;
-        resolve_template_file(&*path.value(), &*config.template_dirs).ok_or_else(
-            || {
+        resolve_template_file(&*path.value(), &*config.template_dirs)
+            .and_then(|path| path.canonicalize().ok())
+            .ok_or_else(|| {
                 syn::Error::new(
                     path.span(),
                     format!("Template file {:?} not found", path.value()),
                 )
-            },
-        )?
+            })?
     };
 
     merge_config_options(&mut config, &all_options);
@@ -221,52 +219,107 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     std::fs::create_dir_all(&output_file.parent().unwrap()).unwrap();
 
-    const DEPS_END_MARKER: &str = "=--end-of-deps--=";
-    let dep_file = output_file.with_extension("deps");
-
     // This makes sure max 1 process creates a new file, "create_new" check+create is an
     // atomic operation. Cargo sometimes runs multiple macro invocations for the same
     // file in parallel, so that's important to prevent a race condition.
-    let dep_file_status = std::fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&dep_file);
+    struct Lock<'path> {
+        path: &'path Path,
+    }
 
-    let deps = match dep_file_status {
-        Ok(mut file) => {
-            // Successfully created new .deps file. Now template needs to be compiled.
-            let report = compile(&*input_file, &*output_file, config)
-                .map_err(|e| syn::Error::new(Span::call_site(), e))?;
-
-            for dep in &report.deps {
-                writeln!(file, "{}", dep.to_str().unwrap()).unwrap();
-            }
-            writeln!(file, "{}", DEPS_END_MARKER).unwrap();
-
-            report.deps
+    impl<'path> Lock<'path> {
+        fn new(path: &'path Path) -> std::io::Result<Self> {
+            std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(path)
+                .map(|_| Lock { path })
         }
-        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-            // .deps file exists, template is already (currently being?) compiled.
-            let mut load_attempts = 0;
-            loop {
-                let dep_file_content = std::fs::read_to_string(&dep_file).unwrap();
-                let mut lines_reversed = dep_file_content.rsplit_terminator('\n');
-                if lines_reversed.next() == Some(DEPS_END_MARKER) {
-                    // .deps file is complete, so we can continue.
-                    break lines_reversed.map(PathBuf::from).collect();
+    }
+
+    impl<'path> Drop for Lock<'path> {
+        fn drop(&mut self) {
+            std::fs::remove_file(self.path)
+                .expect("Failed to clean up lock file {}. Delete it manually, or run `cargo clean`.");
+        }
+    }
+
+    let deps = with_compiler(config, |compiler| {
+        let dep_path = output_file.with_extension("deps");
+        let lock_path = output_file.with_extension("lock");
+        let lock = Lock::new(&lock_path);
+        match lock {
+            Ok(lock) => {
+                let (tsource, report) = compiler.resolve_file(&input_file)?;
+
+                let output_filetime = filetime(&output_file);
+                let input_filetime = iter::once(&input_file)
+                    .chain(&report.deps)
+                    .map(|path| filetime(path))
+                    .max()
+                    .expect("Iterator contains at least `input_file`");
+
+                // Recompile template if any included templates were changed
+                // since the last time we compiled.
+                if input_filetime > output_filetime {
+                    compiler.compile_file(&input_file, tsource, &output_file)?;
+
+                    // Write access to `dep_path` is serialized by `lock`.
+                    let mut dep_file = std::fs::OpenOptions::new()
+                        .write(true)
+                        .create(true)
+                        .truncate(true)
+                        .open(&dep_path)
+                        .unwrap_or_else(|e| {
+                            panic!("Failed to open {:?}: {}", dep_path, e)
+                        });
+
+                    // Write out dependencies for concurrent processes to reuse.
+                    for dep in &report.deps {
+                        writeln!(&mut dep_file, "{}", dep.to_str().unwrap()).unwrap();
+                    }
+
+                    // Prevent output file from being tracked by Cargo. Without this hack,
+                    // every change to a template causes two recompilations:
+                    //
+                    // 1. Change a template at timestamp t.
+                    // 2. Cargo detects template change due to `include_bytes!` macro below.
+                    // 3. Sailfish compiler generates an output file with a later timestamp t'.
+                    // 4. Build finishes with timestamp t.
+                    // 5. Next cargo build detects output file with timestamp t' > t and rebuilds.
+                    // 6. Sailfish compiler does not regenerate output due to timestamp logic above.
+                    // 7. Build finishes with timestamp t'.
+                    let _ = filetime::set_file_times(
+                        &output_file,
+                        input_filetime,
+                        input_filetime,
+                    );
                 }
 
-                // .deps file exists, but appears incomplete. Wait a bit and try again.
-                load_attempts += 1;
-                if load_attempts > 100 {
-                    panic!("file {:?} is incomplete. Try deleting it.", dep_file);
+                drop(lock);
+                Ok(report.deps)
+            }
+            // Lock file exists, template is already (currently being?) compiled.
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
+                let mut load_attempts = 0;
+                while lock_path.exists() {
+                    load_attempts += 1;
+                    if load_attempts > 100 {
+                        panic!("Lock file {:?} is stuck. Try deleting it.", lock_path);
+                    }
+                    thread::sleep(Duration::from_millis(10));
                 }
 
-                thread::sleep(Duration::from_millis(10));
+                Ok(std::fs::read_to_string(&dep_path)
+                    .unwrap()
+                    .trim()
+                    .lines()
+                    .map(PathBuf::from)
+                    .collect())
             }
+            Err(e) => panic!("{:?}: {}. Maybe try `cargo clean`?", lock_path, e),
         }
-        Err(e) => panic!("{:?}: {}. Maybe try `cargo clean`?", dep_file, e),
-    };
+    })
+    .map_err(|e| syn::Error::new(Span::call_site(), e))?;
 
     let input_file_string = input_file
         .to_str()
