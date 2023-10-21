@@ -238,7 +238,6 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         let lock = Lock::new(&lock_path);
         match lock {
             Ok(lock) => {
-
                 let (tsource, report) = compiler.resolve_file(&input_file)?;
 
                 let output_filetime = filetime(&output_file);
