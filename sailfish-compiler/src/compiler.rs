@@ -83,6 +83,8 @@ impl Compiler {
 
             let mut f = fs::File::create(output)
                 .chain_err(|| format!("Failed to create artifact: {:?}", output))?;
+            writeln!(f, "// Template compiled from: {}", input.display())
+                .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
             writeln!(f, "{}", rustfmt_block(&*string).unwrap_or(string))
                 .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
             drop(f);
