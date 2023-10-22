@@ -105,25 +105,14 @@ fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBu
 }
 
 fn filename_hash(path: &Path, config: &Config) -> String {
-    use std::fmt::Write;
-
-    let mut path_with_hash = String::with_capacity(16);
-
-    if let Some(n) = path.file_name() {
-        let mut filename = &*n.to_string_lossy();
-        if let Some(p) = filename.find('.') {
-            filename = &filename[..p];
-        }
-        path_with_hash.push_str(filename);
-        path_with_hash.push('-');
-    }
-
     let mut hasher = DefaultHasher::new();
     config.hash(&mut hasher);
-    let hash = hasher.finish();
-    let _ = write!(path_with_hash, "{:016x}", hash);
+    let config_hash = hasher.finish();
 
-    path_with_hash
+    path.hash(&mut hasher);
+    let path_hash = hasher.finish();
+
+    format!("{:016x}-{:016x}", config_hash, path_hash)
 }
 
 fn with_compiler<T, F: FnOnce(Compiler) -> Result<T, Error>>(
