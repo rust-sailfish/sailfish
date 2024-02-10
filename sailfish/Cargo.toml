@@ -22,6 +22,8 @@ derive = ["sailfish-macros"]
 json = ["serde", "serde_json"]
 # add more #[inline] attribute
 perf-inline = []
+# enable html minification
+minify = ["sailfish-macros/minify"]
 
 [dependencies]
 itoap = "1.0.1"
