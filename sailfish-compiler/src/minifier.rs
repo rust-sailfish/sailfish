@@ -39,7 +39,6 @@ impl Minifier {
                 preserve_chevron_percent_template_syntax: true,
                 ensure_spec_compliant_unquoted_attribute_values: true,
                 keep_spaces_between_attributes: true,
-                allow_noncompliant_unquoted_attribute_values: false,
                 keep_html_and_head_opening_tags: true,
                 keep_input_type_text_attr: true,
                 ..Default::default()
