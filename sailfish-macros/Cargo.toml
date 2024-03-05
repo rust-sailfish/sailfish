@@ -24,6 +24,8 @@ doctest = false
 default = ["config"]
 # enable configuration file (sailfish.toml) support
 config = ["sailfish-compiler/config"]
+# enable html minification
+minify = ["sailfish-compiler/minify"]
 
 [dependencies]
 proc-macro2 = "1.0.56"

@@ -20,6 +20,7 @@ doctest = false
 default = ["config"]
 procmacro = []
 config = ["serde", "toml"]
+minify = ["dep:minify-html"]
 
 [dependencies]
 memchr = "2.5.0"
@@ -28,6 +29,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 toml = { version = "0.8.2", optional = true }
 home = "0.5.4"
 filetime = "0.2.21"
+minify-html = { version = "0.15.0", optional = true }
 
 [dependencies.syn]
 version = "2.0"

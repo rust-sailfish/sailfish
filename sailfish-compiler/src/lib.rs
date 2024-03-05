@@ -6,6 +6,8 @@ mod error;
 mod analyzer;
 mod compiler;
 mod config;
+#[cfg(feature = "minify")]
+mod minifier;
 mod optimizer;
 mod parser;
 mod resolver;

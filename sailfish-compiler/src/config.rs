@@ -6,6 +6,10 @@ pub struct Config {
     pub escape: bool,
     pub rm_whitespace: bool,
     pub template_dirs: Vec<PathBuf>,
+    #[cfg(feature = "minify")]
+    pub minify_css: bool,
+    #[cfg(feature = "minify")]
+    pub minify_js: bool,
     #[doc(hidden)]
     pub cache_dir: PathBuf,
     #[doc(hidden)]
@@ -20,6 +24,10 @@ impl Default for Config {
             escape: true,
             cache_dir: Path::new(env!("OUT_DIR")).join("cache"),
             rm_whitespace: false,
+            #[cfg(feature = "minify")]
+            minify_css: false,
+            #[cfg(feature = "minify")]
+            minify_js: false,
             _non_exhaustive: (),
         }
     }
@@ -83,6 +91,17 @@ mod imp {
                             config.rm_whitespace = rm_whitespace;
                         }
                     }
+
+                    #[cfg(feature = "minify")]
+                    if let Some(minifications) = config_file.minifications {
+                        if let Some(minify_css) = minifications.minify_css {
+                            config.minify_css = minify_css;
+                        }
+
+                        if let Some(minify_js) = minifications.minify_js {
+                            config.minify_js = minify_js;
+                        }
+                    }
                 }
 
                 path.pop();
@@ -98,6 +117,14 @@ mod imp {
         rm_whitespace: Option<bool>,
     }
 
+    #[cfg(feature = "minify")]
+    #[derive(Deserialize, Debug)]
+    #[serde(deny_unknown_fields)]
+    struct Minifications {
+        minify_css: Option<bool>,
+        minify_js: Option<bool>,
+    }
+
     #[derive(Deserialize, Debug)]
     #[serde(deny_unknown_fields)]
     struct ConfigFile {
@@ -105,6 +132,8 @@ mod imp {
         delimiter: Option<char>,
         escape: Option<bool>,
         optimizations: Option<Optimizations>,
+        #[cfg(feature = "minify")]
+        minifications: Option<Minifications>,
     }
 
     impl ConfigFile {

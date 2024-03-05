@@ -8,6 +8,8 @@ use syn::Block;
 use crate::analyzer::Analyzer;
 use crate::config::Config;
 use crate::error::*;
+#[cfg(feature = "minify")]
+use crate::minifier::Minifier;
 use crate::optimizer::Optimizer;
 use crate::parser::Parser;
 use crate::resolver::Resolver;
@@ -35,8 +37,15 @@ impl Compiler {
     fn translate_file_contents(&self, input: &Path) -> Result<TranslatedSource, Error> {
         let parser = Parser::new().delimiter(self.config.delimiter);
         let translator = Translator::new().escape(self.config.escape);
+        #[cfg(feature = "minify")]
+        let minifier = Minifier::new()
+            .minify_css(self.config.minify_css)
+            .minify_js(self.config.minify_js);
         let content = read_to_string(input)
             .chain_err(|| format!("Failed to open template file: {:?}", input))?;
+
+        #[cfg(feature = "minify")]
+        let content = minifier.minify(&content);
 
         let stream = parser.parse(&*content);
         translator.translate(stream)
