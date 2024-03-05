@@ -18,6 +18,7 @@ default = ["config", "derive", "perf-inline"]
 config = ["sailfish-macros/config"]
 # automatically import derive macro
 derive = ["sailfish-macros"]
+extended_support = ["uuid", "chrono"]
 # enable json filter
 json = ["serde", "serde_json"]
 # add more #[inline] attribute
@@ -26,6 +27,8 @@ perf-inline = []
 [dependencies]
 itoap = "1.0.1"
 ryu = "1.0.13"
+uuid = { version = "1.4.1", features = ["v4", "v8", "serde"], optional = true }
+chrono = { version = "0.4.26", features = ["serde"], optional = true}
 serde = { version = "1.0.159", optional = true }
 serde_json = { version = "1.0.95", optional = true }
 
