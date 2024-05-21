@@ -8,8 +8,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::{env, thread};
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
-use syn::punctuated::Punctuated;
-use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
+use syn::{Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
 use crate::compiler::Compiler;
 use crate::config::Config;
@@ -328,25 +327,6 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
 
     let name = strct.ident;
 
-    let field_names: Punctuated<Ident, Token![,]> = match strct.fields {
-        Fields::Named(fields) => fields
-            .named
-            .into_iter()
-            .map(|f| {
-                f.ident.expect(
-                    "Internal error: Failed to get field name (error code: 73621)",
-                )
-            })
-            .collect(),
-        Fields::Unit => Punctuated::new(),
-        _ => {
-            return Err(syn::Error::new(
-                Span::call_site(),
-                "You cannot derive `Template` or `TemplateOnce` for tuple struct",
-            ));
-        }
-    };
-
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
 
     // render_once method always results in the same code.
@@ -370,7 +350,6 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-                let #name { #field_names } = self;
                 include!(#output_file_string);
 
                 Ok(())

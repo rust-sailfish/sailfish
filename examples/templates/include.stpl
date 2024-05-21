@@ -4,7 +4,7 @@
     <% include!("header.stpl"); %>
   </head>
   <body>
-    <h1><%= title %></h1>
-    Hello, <%= name %>!
+    <h1><%= self.title %></h1>
+    Hello, <%= self.name %>!
   </body>
 </html>

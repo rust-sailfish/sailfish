@@ -1,1 +1,1 @@
-raw: <%- raw %>
+raw: <%- self.raw %>

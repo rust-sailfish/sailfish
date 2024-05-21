@@ -1,4 +1,4 @@
 {
-  "name": "<%= name %>",
-  "content": <% =content %>
+  "name": "<%= self.name %>",
+  "content": <% =self.content %>
 }

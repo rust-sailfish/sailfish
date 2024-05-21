@@ -1,5 +1,5 @@
 <html>
   <body>
-    Hello <%= name %>!
+    Hello <%= self.name %>!
   </body>
 </html>

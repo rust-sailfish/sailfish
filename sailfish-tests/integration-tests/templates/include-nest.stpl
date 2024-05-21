@@ -1,5 +1,7 @@
 1
+<% let s = self.s; %>
 <% include!("includes/include-parent.stpl"); %>
 4
+<% let s = self.s; %>
 <% include!("./included.stpl"); %>
 5

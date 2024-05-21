@@ -39,7 +39,7 @@ Template file (templates/hello.stpl):
 ```erb
 <html>
   <body>
-    <% for msg in &messages { %>
+    <% for msg in &self.messages { %>
       <div><%= msg %></div>
     <% } %>
   </body>

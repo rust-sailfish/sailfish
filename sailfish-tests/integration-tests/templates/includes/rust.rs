@@ -1,1 +1,1 @@
-value + 1
+self.value + 1
