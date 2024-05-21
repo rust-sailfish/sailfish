@@ -8,6 +8,6 @@
   trailing spaces   
   This line should be appeared under the previous line
 </div>
-<% for msg in messages { %>
+<% for msg in self.messages { %>
   <div><%= msg %></div>
 <% } %>

@@ -1,4 +1,4 @@
 {
     "name": "JSON test",
-    "data": <%- data | json %>
+    "data": <%- self.data | json %>
 }

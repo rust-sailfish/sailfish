@@ -1,4 +1,4 @@
 {
-    "name": <%- name | dbg %>,
-    "value": <%= value %>
+    "name": <%- self.name | dbg %>,
+    "value": <%= self.value %>
 }

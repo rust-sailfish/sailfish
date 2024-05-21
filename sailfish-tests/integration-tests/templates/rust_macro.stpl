@@ -1,4 +1,4 @@
-<% if matches!(value, Some(_)) { %>
+<% if matches!(self.value, Some(_)) { %>
   Some
 <% } else { %>
   None

@@ -1,5 +1,5 @@
 <html>
   <body>
-    <%= content
+    <%= self.content
   </body>
 </html>
