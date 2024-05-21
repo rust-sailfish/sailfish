@@ -5,7 +5,7 @@
 You can control the rendering behaviour via `template` attribute.
 
 ``` rust
-#[derive(TemplateOnce)]
+#[derive(Template)]
 #[template(path = "template.stpl", escape = false)]
 struct TemplateStruct {
     ...
@@ -22,7 +22,7 @@ struct TemplateStruct {
 You can split the options into multiple `template` attributes.
 
 ``` rust
-#[derive(TemplateOnce)]
+#[derive(Template)]
 #[template(path = "template.stpl")]
 #[template(delimiter = '?')]
 #[template(rm_whitespace = true)]

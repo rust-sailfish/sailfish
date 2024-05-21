@@ -49,9 +49,9 @@ Template file (templates/hello.stpl):
 Code:
 
 ```rust
-use sailfish::TemplateOnce;
+use sailfish::Template;
 
-#[derive(TemplateOnce)]
+#[derive(Template)]
 #[template(path = "hello.stpl")]
 struct HelloTemplate {
     messages: Vec<String>
@@ -61,7 +61,7 @@ fn main() {
     let ctx = HelloTemplate {
         messages: vec![String::from("foo"), String::from("bar")],
     };
-    println!("{}", ctx.render_once().unwrap());
+    println!("{}", ctx.render().unwrap());
 }
 ```
 

@@ -144,11 +144,13 @@ fn with_compiler<T, F: FnOnce(Compiler) -> Result<T, Error>>(
     apply(compiler)
 }
 
-fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+fn derive_template_common_impl(
+    tokens: TokenStream,
+) -> Result<(ItemStruct, TokenStream, String), syn::Error> {
     let strct = syn::parse2::<ItemStruct>(tokens)?;
 
     let mut all_options = DeriveTemplateOptions::default();
-    for attr in strct.attrs {
+    for attr in &strct.attrs {
         if attr.path().is_ident("template") {
             attr.parse_args_with(all_options.parser())?;
         }
@@ -323,6 +325,13 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         }
     }
 
+    Ok((strct, include_bytes_seq, output_file_string.to_string()))
+}
+
+fn derive_template_once_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
+
     // Generate tokens
 
     let name = strct.ident;
@@ -360,6 +369,98 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     };
 
     Ok(tokens)
+}
+
+fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
+
+    // Generate tokens
+
+    let name = strct.ident;
+
+    let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
+
+    // This method can be implemented in `sailfish` crate, but I found that performance
+    // drops when the implementation is written in `sailfish` crate.
+    let tokens = quote! {
+        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
+            fn render_mut(&mut self) -> sailfish::RenderResult {
+                use sailfish::runtime::{Buffer, SizeHint};
+                static SIZE_HINT: SizeHint = SizeHint::new();
+
+                let mut buf = Buffer::with_capacity(SIZE_HINT.get());
+                self.render_once_to(&mut buf)?;
+                SIZE_HINT.update(buf.len());
+
+                Ok(buf.into_string())
+            }
+
+            fn render_mut_to(&self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
+                // This line is required for cargo to track child templates
+                #include_bytes_seq;
+
+                use sailfish::runtime as __sf_rt;
+                include!(#output_file_string);
+
+                Ok(())
+            }
+        }
+
+        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
+    };
+
+    Ok(tokens)
+}
+
+fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
+
+    // Generate tokens
+
+    let name = strct.ident;
+
+    let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
+
+    // This method can be implemented in `sailfish` crate, but I found that performance
+    // drops when the implementation is written in `sailfish` crate.
+    let tokens = quote! {
+        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
+            fn render(&self) -> sailfish::RenderResult {
+                use sailfish::runtime::{Buffer, SizeHint};
+                static SIZE_HINT: SizeHint = SizeHint::new();
+
+                let mut buf = Buffer::with_capacity(SIZE_HINT.get());
+                self.render_once_to(&mut buf)?;
+                SIZE_HINT.update(buf.len());
+
+                Ok(buf.into_string())
+            }
+
+            fn render_to(&self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
+                // This line is required for cargo to track child templates
+                #include_bytes_seq;
+
+                use sailfish::runtime as __sf_rt;
+                include!(#output_file_string);
+
+                Ok(())
+            }
+        }
+
+        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
+    };
+
+    Ok(tokens)
+}
+
+pub fn derive_template_once(tokens: TokenStream) -> TokenStream {
+    derive_template_once_impl(tokens).unwrap_or_else(|e| e.to_compile_error())
+}
+
+pub fn derive_template_mut(tokens: TokenStream) -> TokenStream {
+    derive_template_mut_impl(tokens).unwrap_or_else(|e| e.to_compile_error())
 }
 
 pub fn derive_template(tokens: TokenStream) -> TokenStream {
