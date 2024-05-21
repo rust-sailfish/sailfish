@@ -45,7 +45,7 @@ pub use runtime::{RenderError, RenderResult};
 pub use sailfish_macros::{Template, TemplateMut, TemplateOnce};
 
 /// Template that can be rendered with consuming itself.
-pub trait TemplateOnce: Sized + private::Sealed {
+pub trait TemplateOnce: Sized {
     /// Render the template and return the rendering result as `RenderResult`
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
@@ -81,8 +81,6 @@ pub trait TemplateOnce: Sized + private::Sealed {
     /// #     }
     /// # }
     /// #
-    /// # impl sailfish::private::Sealed for HelloTemplate {}
-    /// #
     /// let tpl = HelloTemplate {
     ///     messages: vec!["foo".to_string()]
     /// };
@@ -95,7 +93,7 @@ pub trait TemplateOnce: Sized + private::Sealed {
 }
 
 /// Template that is mutable and can be rendered any number of times.
-pub trait TemplateMut: TemplateOnce + Sized + private::Sealed {
+pub trait TemplateMut: Sized + TemplateOnce {
     /// Render the template and return the rendering result as `RenderResult`
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
@@ -142,8 +140,6 @@ pub trait TemplateMut: TemplateOnce + Sized + private::Sealed {
     /// #     }
     /// # }
     /// #
-    /// # impl sailfish::private::Sealed for HelloTemplate {}
-    /// #
     /// let mut tpl = HelloTemplate {
     ///     messages: vec!["foo".to_string()]
     /// };
@@ -156,7 +152,7 @@ pub trait TemplateMut: TemplateOnce + Sized + private::Sealed {
 }
 
 /// Template that can be rendered any number of times.
-pub trait Template: TemplateMut + Sized + private::Sealed {
+pub trait Template: Sized + TemplateMut {
     /// Render the template and return the rendering result as `RenderResult`
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
@@ -214,8 +210,6 @@ pub trait Template: TemplateMut + Sized + private::Sealed {
     /// #     }
     /// # }
     /// #
-    /// # impl sailfish::private::Sealed for HelloTemplate {}
-    /// #
     /// let tpl = HelloTemplate {
     ///     messages: vec!["foo".to_string()]
     /// };
@@ -225,9 +219,4 @@ pub trait Template: TemplateMut + Sized + private::Sealed {
     /// tpl.render_to(&mut buffer).unwrap();
     /// ```
     fn render_to(&self, buf: &mut Buffer) -> Result<(), RenderError>;
-}
-
-#[doc(hidden)]
-pub mod private {
-    pub trait Sealed {}
 }

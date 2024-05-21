@@ -328,20 +328,18 @@ fn derive_template_common_impl(
     Ok((strct, include_bytes_seq, output_file_string.to_string()))
 }
 
-fn derive_template_once_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
-        derive_template_common_impl(tokens)?;
-
-    // Generate tokens
-
-    let name = strct.ident;
-
+fn derive_template_once_only_impl(
+    strct: &ItemStruct,
+    include_bytes_seq: &TokenStream,
+    output_file_string: &String,
+) -> TokenStream {
+    let name = &strct.ident;
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
 
     // render_once method always results in the same code.
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
-    let tokens = quote! {
+    quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
             fn render_once(self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
@@ -364,36 +362,20 @@ fn derive_template_once_impl(tokens: TokenStream) -> Result<TokenStream, syn::Er
                 Ok(())
             }
         }
-
-        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
-    };
-
-    Ok(tokens)
+    }
 }
 
-fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
-        derive_template_common_impl(tokens)?;
-
-    // Generate tokens
-
-    let name = strct.ident;
-
+fn derive_template_mut_only_impl(
+    strct: &ItemStruct,
+    include_bytes_seq: &TokenStream,
+    output_file_string: &String,
+) -> TokenStream {
+    let name = &strct.ident;
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
 
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
-    let tokens = quote! {
-        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once(self) -> sailfish::RenderResult {
-                render_mut(&mut self)
-            }
-
-            fn render_once_to(self) -> sailfish::RenderResult {
-                render_mut_to(&mut self)
-            }
-        }
-        
+    quote! {
         impl #impl_generics sailfish::TemplateMut for #name #ty_generics #where_clause {
             fn render_mut(&mut self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
@@ -406,7 +388,7 @@ fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Err
                 Ok(buf.into_string())
             }
 
-            fn render_mut_to(&self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
+            fn render_mut_to(&mut self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
                 // This line is required for cargo to track child templates
                 #include_bytes_seq;
 
@@ -416,46 +398,20 @@ fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Err
                 Ok(())
             }
         }
-
-        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
-    };
-
-    Ok(tokens)
+    }
 }
 
-fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
-        derive_template_common_impl(tokens)?;
-
-    // Generate tokens
-
-    let name = strct.ident;
-
+fn derive_template_only_impl(
+    strct: &ItemStruct,
+    include_bytes_seq: &TokenStream,
+    output_file_string: &String,
+) -> TokenStream {
+    let name = &strct.ident;
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
 
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
-    let tokens = quote! {
-        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once(self) -> sailfish::RenderResult {
-                render_mut(&mut self)
-            }
-
-            fn render_once_to(self) -> sailfish::RenderResult {
-                render_mut_to(&mut self)
-            }
-        }
-
-        impl #impl_generics sailfish::TemplateMut for #name #ty_generics #where_clause {
-            fn render_mut(&mut self) -> sailfish::RenderResult {
-                render(&self)
-            }
-
-            fn render_mut_to(&mut self) -> sailfish::RenderResult {
-                render_to(&self)
-            }
-        }
-
+    quote! {
         impl #impl_generics sailfish::Template for #name #ty_generics #where_clause {
             fn render(&self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
@@ -478,11 +434,70 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
                 Ok(())
             }
         }
+    }
+}
 
-        impl #impl_generics sailfish::private::Sealed for #name #ty_generics #where_clause {}
-    };
+fn derive_template_once_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
 
-    Ok(tokens)
+    let mut output = TokenStream::new();
+
+    output.append_all(derive_template_once_only_impl(
+        &strct,
+        &include_bytes_seq,
+        &output_file_string,
+    ));
+
+    Ok(output)
+}
+
+fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
+
+    let mut output = TokenStream::new();
+
+    output.append_all(derive_template_once_only_impl(
+        &strct,
+        &include_bytes_seq,
+        &output_file_string,
+    ));
+
+    output.append_all(derive_template_mut_only_impl(
+        &strct,
+        &include_bytes_seq,
+        &output_file_string,
+    ));
+
+    Ok(output)
+}
+
+fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
+
+    let mut output = TokenStream::new();
+
+    output.append_all(derive_template_once_only_impl(
+        &strct,
+        &include_bytes_seq,
+        &output_file_string,
+    ));
+
+    output.append_all(derive_template_mut_only_impl(
+        &strct,
+        &include_bytes_seq,
+        &output_file_string,
+    ));
+
+    output.append_all(derive_template_only_impl(
+        &strct,
+        &include_bytes_seq,
+        &output_file_string,
+    ));
+
+    Ok(output)
 }
 
 pub fn derive_template_once(tokens: TokenStream) -> TokenStream {
