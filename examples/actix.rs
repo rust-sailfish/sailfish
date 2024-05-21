@@ -1,9 +1,9 @@
 use actix_web::error::InternalError;
 use actix_web::http::StatusCode;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer};
-use sailfish::TemplateOnce;
+use sailfish::Template;
 
-#[derive(TemplateOnce)]
+#[derive(Template)]
 #[template(path = "actix.stpl")]
 struct Greet<'a> {
     name: &'a str,
@@ -12,7 +12,7 @@ struct Greet<'a> {
 async fn greet(req: HttpRequest) -> actix_web::Result<HttpResponse> {
     let name = req.match_info().get("name").unwrap_or("World");
     let body = Greet { name }
-        .render_once()
+        .render()
         .map_err(|e| InternalError::new(e, StatusCode::INTERNAL_SERVER_ERROR))?;
 
     Ok(HttpResponse::Ok()
