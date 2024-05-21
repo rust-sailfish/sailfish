@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use quote::{quote, TokenStreamExt};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::io::Write;
@@ -384,13 +384,13 @@ fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Err
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
     let tokens = quote! {
-        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
+        impl #impl_generics sailfish::TemplateMut for #name #ty_generics #where_clause {
             fn render_mut(&mut self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
                 static SIZE_HINT: SizeHint = SizeHint::new();
 
                 let mut buf = Buffer::with_capacity(SIZE_HINT.get());
-                self.render_once_to(&mut buf)?;
+                self.render_mut_to(&mut buf)?;
                 SIZE_HINT.update(buf.len());
 
                 Ok(buf.into_string())
@@ -426,13 +426,13 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
     let tokens = quote! {
-        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
+        impl #impl_generics sailfish::Template for #name #ty_generics #where_clause {
             fn render(&self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
                 static SIZE_HINT: SizeHint = SizeHint::new();
 
                 let mut buf = Buffer::with_capacity(SIZE_HINT.get());
-                self.render_once_to(&mut buf)?;
+                self.render_to(&mut buf)?;
                 SIZE_HINT.update(buf.len());
 
                 Ok(buf.into_string())
