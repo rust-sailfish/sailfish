@@ -384,6 +384,16 @@ fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Err
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
     let tokens = quote! {
+        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
+            fn render_once(self) -> sailfish::RenderResult {
+                render_mut(&mut self)
+            }
+
+            fn render_once_to(self) -> sailfish::RenderResult {
+                render_mut_to(&mut self)
+            }
+        }
+        
         impl #impl_generics sailfish::TemplateMut for #name #ty_generics #where_clause {
             fn render_mut(&mut self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
@@ -426,6 +436,26 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     // This method can be implemented in `sailfish` crate, but I found that performance
     // drops when the implementation is written in `sailfish` crate.
     let tokens = quote! {
+        impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
+            fn render_once(self) -> sailfish::RenderResult {
+                render_mut(&mut self)
+            }
+
+            fn render_once_to(self) -> sailfish::RenderResult {
+                render_mut_to(&mut self)
+            }
+        }
+
+        impl #impl_generics sailfish::TemplateMut for #name #ty_generics #where_clause {
+            fn render_mut(&mut self) -> sailfish::RenderResult {
+                render(&self)
+            }
+
+            fn render_mut_to(&mut self) -> sailfish::RenderResult {
+                render_to(&self)
+            }
+        }
+
         impl #impl_generics sailfish::Template for #name #ty_generics #where_clause {
             fn render(&self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
