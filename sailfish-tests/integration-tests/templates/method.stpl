@@ -1,0 +1,9 @@
+ESCAPED: <%= self.uppercase() %>
+NON-ESCAPED: <%- self.uppercase() %>
+PASS-VALUE: <%= Self::uppercase_val(self.s) %>
+PASS-REF: <%= Self::multiply_ref(&self.i) %>
+MUTABLE: <% self.mutate(); %><%= self.mutate %>
+MATCH: <%= match self.uppercase().as_str() {
+  "<TEST>" => "Cool",
+  _ => "Not cool"
+} %>
