@@ -3,7 +3,7 @@ extern crate sailfish_macros;
 
 use integration_tests::assert_string_eq;
 use sailfish::runtime::RenderResult;
-use sailfish::Template;
+use sailfish::{Template, TemplateMut, TemplateOnce};
 use std::path::PathBuf;
 
 fn assert_render_result(name: &str, result: RenderResult) {
@@ -23,7 +23,20 @@ fn assert_render_result(name: &str, result: RenderResult) {
 }
 
 #[inline]
-fn assert_render<T: Template>(name: &str, template: T) {
+fn assert_render_once<T: TemplateOnce>(name: &str, template: T) {
+    assert_render_result(name, template.render_once());
+}
+
+#[inline]
+fn assert_render_mut<T: TemplateMut>(name: &str, mut template: T) {
+    assert_render_result(name, template.render_mut());
+    assert_render_result(name, template.render_once());
+}
+
+#[inline]
+fn assert_render<T: Template>(name: &str, mut template: T) {
+    assert_render_result(name, template.render());
+    assert_render_result(name, template.render_mut());
     assert_render_result(name, template.render_once());
 }
 
@@ -301,4 +314,42 @@ mod unix {
     fn test_include_rust() {
         assert_render("include_rust", IncludeRust { value: 58 });
     }
+}
+
+#[derive(TemplateMut)]
+#[template(path = "method.stpl")]
+struct Method {
+    s: &'static str,
+    i: i32,
+    mutate: String,
+}
+
+impl Method {
+    fn uppercase(&self) -> String {
+        self.s.to_uppercase()
+    }
+
+    fn uppercase_val(s: &str) -> String {
+        s.to_uppercase()
+    }
+
+    fn multiply_ref(i: &i32) -> i32 {
+        i * i
+    }
+
+    fn mutate(&mut self) {
+        self.mutate = self.mutate.to_uppercase();
+    }
+}
+
+#[test]
+fn test_method() {
+    assert_render_mut(
+        "method",
+        Method {
+            s: "<test>",
+            i: 10,
+            mutate: String::from("mutate me"),
+        },
+    );
 }
