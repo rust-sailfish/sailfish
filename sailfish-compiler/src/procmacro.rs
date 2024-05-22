@@ -341,7 +341,7 @@ fn derive_template_once_only_impl(
     // drops when the implementation is written in `sailfish` crate.
     quote! {
         impl #impl_generics sailfish::TemplateOnce for #name #ty_generics #where_clause {
-            fn render_once(self) -> sailfish::RenderResult {
+            fn render_once(mut self) -> sailfish::RenderResult {
                 use sailfish::runtime::{Buffer, SizeHint};
                 static SIZE_HINT: SizeHint = SizeHint::new();
 
@@ -352,7 +352,7 @@ fn derive_template_once_only_impl(
                 Ok(buf.into_string())
             }
 
-            fn render_once_to(self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
+            fn render_once_to(mut self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
                 // This line is required for cargo to track child templates
                 #include_bytes_seq;
 
