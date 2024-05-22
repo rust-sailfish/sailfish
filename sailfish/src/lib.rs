@@ -93,7 +93,7 @@ pub trait TemplateOnce: Sized {
 }
 
 /// Template that is mutable and can be rendered any number of times.
-pub trait TemplateMut: Sized + TemplateOnce {
+pub trait TemplateMut: TemplateOnce {
     /// Render the template and return the rendering result as `RenderResult`
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
@@ -152,7 +152,7 @@ pub trait TemplateMut: Sized + TemplateOnce {
 }
 
 /// Template that can be rendered any number of times.
-pub trait Template: Sized + TemplateMut {
+pub trait Template: TemplateMut {
     /// Render the template and return the rendering result as `RenderResult`
     ///
     /// This method never returns `Err`, unless you explicitly return RenderError
