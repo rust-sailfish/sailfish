@@ -302,3 +302,41 @@ mod unix {
         assert_render("include_rust", IncludeRust { value: 58 });
     }
 }
+
+#[derive(TemplateOnce)]
+#[template(path = "method.stpl")]
+struct Method {
+    s: &'static str,
+    i: i32,
+    mutate: String,
+}
+
+impl Method {
+    fn uppercase(&self) -> String {
+        self.s.to_uppercase()
+    }
+
+    fn uppercase_val(s: &str) -> String {
+        s.to_uppercase()
+    }
+
+    fn multiply_ref(i: &i32) -> i32 {
+        i * i
+    }
+
+    fn mutate(&mut self) {
+        self.mutate = self.mutate.to_uppercase();
+    }
+}
+
+#[test]
+fn test_method() {
+    assert_render(
+        "method",
+        Method {
+            s: "<test>",
+            i: 10,
+            mutate: String::from("mutate me"),
+        },
+    );
+}
