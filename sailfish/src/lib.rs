@@ -100,6 +100,11 @@ pub trait Template: private::Sealed {
     fn render(&self) -> runtime::RenderResult;
 }
 
+#[cfg(feature = "axum_support")]
+mod axum_support;
+#[cfg(feature = "axum_support")]
+pub use axum_support::AxumTemplate;
+
 #[doc(hidden)]
 pub mod private {
     pub trait Sealed {}

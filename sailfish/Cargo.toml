@@ -22,12 +22,16 @@ derive = ["sailfish-macros"]
 json = ["serde", "serde_json"]
 # add more #[inline] attribute
 perf-inline = []
+# Implement axum's .into_response() for templates
+axum_support = ["axum", "tower-http"]
 
 [dependencies]
 itoap = "1.0.1"
 ryu = "1.0.13"
 serde = { version = "1.0.159", optional = true }
 serde_json = { version = "1.0.95", optional = true }
+axum = { version = "0.7.5", optional = true }
+tower-http = { version = "0.5.2", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"
