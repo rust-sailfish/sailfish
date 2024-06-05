@@ -27,7 +27,7 @@ struct DeriveTemplateOptions {
 }
 
 impl DeriveTemplateOptions {
-    fn parser<'s>(&'s mut self) -> impl Parser + 's {
+    fn parser(&mut self) -> impl Parser + '_ {
         move |s: ParseStream| -> ParseResult<()> {
             while !s.is_empty() {
                 let key = s.parse::<Ident>()?;
@@ -161,7 +161,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
             "Internal error: environmental variable `CARGO_MANIFEST_DIR` is not set.",
         ));
 
-        Config::search_file_and_read(&*manifest_dir)
+        Config::search_file_and_read(&manifest_dir)
             .map_err(|e| syn::Error::new(Span::call_site(), e))?
     };
 
@@ -186,7 +186,7 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
         let path = all_options.path.as_ref().ok_or_else(|| {
             syn::Error::new(Span::call_site(), "`path` option must be specified.")
         })?;
-        resolve_template_file(&*path.value(), &*config.template_dirs)
+        resolve_template_file(&path.value(), &config.template_dirs)
             .and_then(|path| path.canonicalize().ok())
             .ok_or_else(|| {
                 syn::Error::new(
@@ -204,9 +204,9 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     // re-used if they exist.
     let mut output_file = PathBuf::from(env!("OUT_DIR"));
     output_file.push("templates");
-    output_file.push(filename_hash(&*input_file, &config));
+    output_file.push(filename_hash(&input_file, &config));
 
-    std::fs::create_dir_all(&output_file.parent().unwrap()).unwrap();
+    std::fs::create_dir_all(output_file.parent().unwrap()).unwrap();
 
     // This makes sure max 1 process creates a new file, "create_new" check+create is an
     // atomic operation. Cargo sometimes runs multiple macro invocations for the same

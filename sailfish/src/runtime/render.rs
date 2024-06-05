@@ -78,13 +78,13 @@ pub trait Render {
 impl Render for String {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        b.push_str(&**self);
+        b.push_str(self);
         Ok(())
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        escape::escape_to_buf(&**self, b);
+        escape::escape_to_buf(self, b);
         Ok(())
     }
 }
@@ -128,13 +128,13 @@ impl Render for PathBuf {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // TODO: speed up on Windows using OsStrExt
-        b.push_str(&*self.to_string_lossy());
+        b.push_str(&self.to_string_lossy());
         Ok(())
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        escape::escape_to_buf(&*self.to_string_lossy(), b);
+        escape::escape_to_buf(&self.to_string_lossy(), b);
         Ok(())
     }
 }
@@ -143,13 +143,13 @@ impl Render for Path {
     #[inline]
     fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
         // TODO: speed up on Windows using OsStrExt
-        b.push_str(&*self.to_string_lossy());
+        b.push_str(&self.to_string_lossy());
         Ok(())
     }
 
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        escape::escape_to_buf(&*self.to_string_lossy(), b);
+        escape::escape_to_buf(&self.to_string_lossy(), b);
         Ok(())
     }
 }
@@ -388,7 +388,7 @@ impl RenderError {
 impl fmt::Display for RenderError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            RenderError::Msg(ref s) => f.pad(&**s),
+            RenderError::Msg(ref s) => f.pad(s),
             RenderError::Fmt(ref e) => fmt::Display::fmt(e, f),
             RenderError::BufSize => f.pad("buffer size shrinked while rendering"),
         }

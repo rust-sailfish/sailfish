@@ -45,7 +45,7 @@ mod imp {
 
                 if path.is_file() {
                     let config_file =
-                        ConfigFile::read_from_file(&*path).map_err(|mut e| {
+                        ConfigFile::read_from_file(&path).map_err(|mut e| {
                             e.source_file = Some(path.to_owned());
                             e
                         })?;
@@ -132,7 +132,7 @@ mod imp {
 
         while let Some((i, c)) = iter.next() {
             match c {
-                '$' if found == false => {
+                '$' if !found => {
                     if let Some((_, cc)) = iter.next() {
                         if cc == '{' {
                             found = true;

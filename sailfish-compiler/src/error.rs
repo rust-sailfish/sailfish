@@ -26,8 +26,8 @@ impl fmt::Display for ErrorKind {
             ErrorKind::ConfigError(ref e) => write!(f, "Invalid configuration ({})", e),
             ErrorKind::ParseError(ref msg) => write!(f, "Parse error ({})", msg),
             ErrorKind::AnalyzeError(ref msg) => write!(f, "Analyzation error ({})", msg),
-            ErrorKind::Unimplemented(ref msg) => f.write_str(&**msg),
-            ErrorKind::Other(ref msg) => f.write_str(&**msg),
+            ErrorKind::Unimplemented(ref msg) => f.write_str(msg),
+            ErrorKind::Other(ref msg) => f.write_str(msg),
         }
     }
 }
