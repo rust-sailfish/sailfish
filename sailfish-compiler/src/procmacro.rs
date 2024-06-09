@@ -8,7 +8,8 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::{env, thread};
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
-use syn::{Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
+use syn::punctuated::Punctuated;
+use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 
 use crate::compiler::Compiler;
 use crate::config::Config;
@@ -500,6 +501,63 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     Ok(output)
 }
 
+fn derive_template_simple_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
+    let (strct, include_bytes_seq, output_file_string) =
+        derive_template_common_impl(tokens)?;
+
+    let name = &strct.ident;
+
+    let field_names: Punctuated<Ident, Token![,]> = match strct.fields {
+        Fields::Named(fields) => fields
+            .named
+            .into_iter()
+            .map(|f| {
+                f.ident.expect(
+                    "Internal error: Failed to get field name (error code: 73621)",
+                )
+            })
+            .collect(),
+        Fields::Unit => Punctuated::new(),
+        _ => {
+            return Err(syn::Error::new(
+                Span::call_site(),
+                "You cannot derive `TemplateSimple` for tuple struct",
+            ));
+        }
+    };
+
+    let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
+
+    // render_once method always results in the same code.
+    // This method can be implemented in `sailfish` crate, but I found that performance
+    // drops when the implementation is written in `sailfish` crate.
+    Ok(quote! {
+        impl #impl_generics sailfish::TemplateSimple for #name #ty_generics #where_clause {
+            fn render_once(self) -> sailfish::RenderResult {
+                use sailfish::runtime::{Buffer, SizeHint};
+                static SIZE_HINT: SizeHint = SizeHint::new();
+
+                let mut buf = Buffer::with_capacity(SIZE_HINT.get());
+                self.render_once_to(&mut buf)?;
+                SIZE_HINT.update(buf.len());
+
+                Ok(buf.into_string())
+            }
+
+            fn render_once_to(self, __sf_buf: &mut sailfish::runtime::Buffer) -> std::result::Result<(), sailfish::runtime::RenderError> {
+                // This line is required for cargo to track child templates
+                #include_bytes_seq;
+
+                use sailfish::runtime as __sf_rt;
+                let #name { #field_names } = self;
+                include!(#output_file_string);
+
+                Ok(())
+            }
+        }
+    })
+}
+
 pub fn derive_template_once(tokens: TokenStream) -> TokenStream {
     derive_template_once_impl(tokens).unwrap_or_else(|e| e.to_compile_error())
 }
@@ -510,4 +568,8 @@ pub fn derive_template_mut(tokens: TokenStream) -> TokenStream {
 
 pub fn derive_template(tokens: TokenStream) -> TokenStream {
     derive_template_impl(tokens).unwrap_or_else(|e| e.to_compile_error())
+}
+
+pub fn derive_template_simple(tokens: TokenStream) -> TokenStream {
+    derive_template_simple_impl(tokens).unwrap_or_else(|e| e.to_compile_error())
 }
