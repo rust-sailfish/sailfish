@@ -46,7 +46,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
+                push_escaped_str(ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
         }
@@ -75,7 +75,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
+                push_escaped_str(ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
         }

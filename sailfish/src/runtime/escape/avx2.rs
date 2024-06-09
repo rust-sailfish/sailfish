@@ -53,7 +53,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
+                push_escaped_str(ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
         }
@@ -82,7 +82,7 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
+                push_escaped_str(ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
         }
@@ -129,7 +129,7 @@ unsafe fn escape_small(feed: &str, buffer: &mut Buffer) {
                     slice::from_raw_parts(start_ptr, ptr2 as usize - start_ptr as usize);
                 buffer.push_str(std::str::from_utf8_unchecked(slc));
             }
-            push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
+            push_escaped_str(ESCAPED.get_unchecked(c), buffer);
             start_ptr = ptr2.add(1);
         }
     }
@@ -153,7 +153,7 @@ unsafe fn escape_small(feed: &str, buffer: &mut Buffer) {
                     );
                     buffer.push_str(std::str::from_utf8_unchecked(slc));
                 }
-                push_escaped_str(*ESCAPED.get_unchecked(c), buffer);
+                push_escaped_str(ESCAPED.get_unchecked(c), buffer);
                 start_ptr = ptr2.add(1);
             }
         }

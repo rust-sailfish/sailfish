@@ -49,7 +49,7 @@ pub fn rustfmt_block(source: &str) -> io::Result<String> {
     new_source.push_str(source);
 
     let mut child = Command::new(rustfmt)
-        .args(&["--emit", "stdout", "--color", "never", "--quiet"])
+        .args(["--emit", "stdout", "--color", "never", "--quiet"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -82,5 +82,5 @@ pub fn filetime(input: &Path) -> filetime::FileTime {
     use filetime::FileTime;
     fs::metadata(input)
         .and_then(|metadata| metadata.modified())
-        .map_or(FileTime::zero(), |time| FileTime::from_system_time(time))
+        .map_or(FileTime::zero(), FileTime::from_system_time)
 }

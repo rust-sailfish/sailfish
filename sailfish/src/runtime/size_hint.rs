@@ -36,6 +36,12 @@ impl SizeHint {
     }
 }
 
+impl Default for SizeHint {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[test]
 fn test_update() {
     let hint = SizeHint::new();

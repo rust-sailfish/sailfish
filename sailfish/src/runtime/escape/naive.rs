@@ -39,7 +39,7 @@ pub(super) unsafe fn proceed(
                     slice::from_raw_parts(start_ptr, ptr as usize - start_ptr as usize);
                 buffer.push_str(std::str::from_utf8_unchecked(slc));
             }
-            push_escaped_str(*ESCAPED.get_unchecked(idx), buffer);
+            push_escaped_str(ESCAPED.get_unchecked(idx), buffer);
             start_ptr = ptr.add(1);
             ptr = ptr.add(1);
         }

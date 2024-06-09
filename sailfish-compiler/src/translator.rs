@@ -24,9 +24,9 @@ impl Translator {
         self
     }
 
-    pub fn translate<'a>(
+    pub fn translate(
         &self,
-        token_iter: ParseStream<'a>,
+        token_iter: ParseStream<'_>,
     ) -> Result<TranslatedSource, Error> {
         let original_source = token_iter.original_source;
 
@@ -34,7 +34,7 @@ impl Translator {
         ps.reserve(original_source.len());
         ps.feed_tokens(token_iter)?;
 
-        Ok(ps.finalize()?)
+        ps.finalize()
     }
 }
 
@@ -95,7 +95,7 @@ impl SourceBuilder {
         self.source.reserve(additional);
     }
 
-    fn write_token<'a>(&mut self, token: &Token<'a>) {
+    fn write_token(&mut self, token: &Token<'_>) {
         let entry = SourceMapEntry {
             original: token.offset(),
             new: self.source.len(),
@@ -105,14 +105,14 @@ impl SourceBuilder {
         self.source.push_str(token.as_str());
     }
 
-    fn write_code<'a>(&mut self, token: &Token<'a>) -> Result<(), Error> {
+    fn write_code(&mut self, token: &Token<'_>) -> Result<(), Error> {
         // TODO: automatically add missing tokens (e.g. ';', '{')
         self.write_token(token);
         self.source.push('\n');
         Ok(())
     }
 
-    fn write_text<'a>(&mut self, token: &Token<'a>) -> Result<(), Error> {
+    fn write_text(&mut self, token: &Token<'_>) -> Result<(), Error> {
         use std::fmt::Write;
 
         // if error has occured at the first byte of `render_text!` macro, it
@@ -130,17 +130,17 @@ impl SourceBuilder {
         Ok(())
     }
 
-    fn write_buffered_code<'a>(
+    fn write_buffered_code(
         &mut self,
-        token: &Token<'a>,
+        token: &Token<'_>,
         escape: bool,
     ) -> Result<(), Error> {
         self.write_buffered_code_with_suffix(token, escape, "")
     }
 
-    fn write_buffered_code_with_suffix<'a>(
+    fn write_buffered_code_with_suffix(
         &mut self,
-        token: &Token<'a>,
+        token: &Token<'_>,
         escape: bool,
         suffix: &str,
     ) -> Result<(), Error> {
@@ -172,7 +172,7 @@ impl SourceBuilder {
             };
 
             self.source.push_str("sailfish::runtime::filter::");
-            self.source.push_str(&*name);
+            self.source.push_str(&name);
             self.source.push('(');
 
             // arguments to filter function
@@ -189,7 +189,7 @@ impl SourceBuilder {
 
                 if let Some(extra_args) = extra_args {
                     self.source.push_str(", ");
-                    self.source.push_str(&*extra_args);
+                    self.source.push_str(&extra_args);
                 }
             }
 
@@ -204,7 +204,7 @@ impl SourceBuilder {
         Ok(())
     }
 
-    pub fn feed_tokens<'a>(&mut self, token_iter: ParseStream<'a>) -> Result<(), Error> {
+    pub fn feed_tokens(&mut self, token_iter: ParseStream<'_>) -> Result<(), Error> {
         let mut it = token_iter.peekable();
         while let Some(token) = it.next() {
             let token = token?;
@@ -225,7 +225,7 @@ impl SourceBuilder {
                     let mut concatenated = String::new();
                     concatenated.push_str(token.as_str());
 
-                    while let Some(&Ok(ref next_token)) = it.peek() {
+                    while let Some(Ok(next_token)) = it.peek() {
                         match next_token.kind() {
                             TokenKind::Text => {
                                 concatenated.push_str(next_token.as_str());
@@ -238,7 +238,7 @@ impl SourceBuilder {
                         }
                     }
 
-                    let new_token = Token::new(&*concatenated, offset, TokenKind::Text);
+                    let new_token = Token::new(&concatenated, offset, TokenKind::Text);
                     self.write_text(&new_token)?;
                 }
             }
@@ -249,14 +249,14 @@ impl SourceBuilder {
 
     pub fn finalize(mut self) -> Result<TranslatedSource, Error> {
         self.source.push_str("\n}");
-        match syn::parse_str::<Block>(&*self.source) {
+        match syn::parse_str::<Block>(&self.source) {
             Ok(ast) => Ok(TranslatedSource {
                 ast,
                 source_map: self.source_map,
             }),
             Err(synerr) => {
                 let span = synerr.span();
-                let original_offset = into_offset(&*self.source, span)
+                let original_offset = into_offset(&self.source, span)
                     .and_then(|o| self.source_map.reverse_mapping(o));
 
                 let mut err =

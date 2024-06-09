@@ -23,9 +23,10 @@ macro_rules! return_if_some {
     };
 }
 
+pub type IncludeHandler<'h> = Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>;
 #[derive(Clone)]
 pub struct Resolver<'h> {
-    include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
+    include_handler: IncludeHandler<'h>,
 }
 
 impl<'h> Resolver<'h> {
@@ -40,10 +41,7 @@ impl<'h> Resolver<'h> {
     }
 
     #[inline]
-    pub fn include_handler(
-        mut self,
-        new: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
-    ) -> Resolver<'h> {
+    pub fn include_handler(mut self, new: IncludeHandler<'h>) -> Resolver<'h> {
         self.include_handler = new;
         self
     }
@@ -78,7 +76,7 @@ struct ResolverImpl<'h> {
     path_stack: Vec<PathBuf>,
     deps: Vec<PathBuf>,
     error: Option<Error>,
-    include_handler: Arc<dyn 'h + Fn(&Path) -> Result<Block, Error>>,
+    include_handler: IncludeHandler<'h>,
 }
 
 impl<'h> ResolverImpl<'h> {
@@ -124,7 +122,7 @@ impl<'h> ResolverImpl<'h> {
         };
 
         // parse and translate the child template
-        let mut blk = (*self.include_handler)(&*child_template_file).chain_err(|| {
+        let mut blk = (*self.include_handler)(&child_template_file).chain_err(|| {
             format!("Failed to include {:?}", child_template_file.clone())
         })?;
 
@@ -157,7 +155,6 @@ impl<'h> VisitMut for ResolverImpl<'h> {
                 Ok(e) => *i = Stmt::Expr(e, None),
                 Err(e) => {
                     self.error = Some(e);
-                    return;
                 }
             }
         }
@@ -176,7 +173,6 @@ impl<'h> VisitMut for ResolverImpl<'h> {
                 Ok(e) => *i = e,
                 Err(e) => {
                     self.error = Some(e);
-                    return;
                 }
             }
         }

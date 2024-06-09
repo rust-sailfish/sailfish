@@ -196,7 +196,7 @@ impl<'a> ParseStream<'a> {
         }
 
         // find closing bracket
-        if let Some(pos) = find_block_end(&self.source[start..], &*self.block_delimiter.1)
+        if let Some(pos) = find_block_end(&self.source[start..], &self.block_delimiter.1)
         {
             // closing bracket was found
             self.take_n(start);
@@ -221,7 +221,7 @@ impl<'a> ParseStream<'a> {
         let end = self
             .source
             .find(&*self.block_delimiter.0)
-            .unwrap_or_else(|| self.source.len());
+            .unwrap_or(self.source.len());
         let token = Token {
             content: self.take_n(end),
             offset,

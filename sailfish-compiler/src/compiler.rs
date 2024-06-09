@@ -38,7 +38,7 @@ impl Compiler {
         let content = read_to_string(input)
             .chain_err(|| format!("Failed to open template file: {:?}", input))?;
 
-        let stream = parser.parse(&*content);
+        let stream = parser.parse(&content);
         translator.translate(stream)
     }
 
@@ -47,7 +47,7 @@ impl Compiler {
         input: &Path,
     ) -> Result<(TranslatedSource, CompilationReport), Error> {
         let include_handler = Arc::new(|child_file: &Path| -> Result<_, Error> {
-            Ok(self.translate_file_contents(&*child_file)?.ast)
+            Ok(self.translate_file_contents(child_file)?.ast)
         });
 
         let resolver = Resolver::new().include_handler(include_handler);
@@ -85,7 +85,7 @@ impl Compiler {
                 .chain_err(|| format!("Failed to create artifact: {:?}", output))?;
             writeln!(f, "// Template compiled from: {}", input.display())
                 .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
-            writeln!(f, "{}", rustfmt_block(&*string).unwrap_or(string))
+            writeln!(f, "{}", rustfmt_block(&string).unwrap_or(string))
                 .chain_err(|| format!("Failed to write artifact into {:?}", output))?;
             drop(f);
 
@@ -95,7 +95,7 @@ impl Compiler {
         compile_file(tsource, output)
             .chain_err(|| "Failed to compile template.")
             .map_err(|mut e| {
-                e.source = fs::read_to_string(&*input).ok();
+                e.source = fs::read_to_string(input).ok();
                 e.source_file = Some(input.to_owned());
                 e
             })

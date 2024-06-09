@@ -68,7 +68,7 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
         let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
         let s = content.to_uppercase();
         unsafe { b._set_len(old_len) };
-        b.push_str(&*s);
+        b.push_str(&s);
         Ok(())
     }
 
@@ -78,7 +78,7 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
 
         let s = b.as_str()[old_len..].to_uppercase();
         unsafe { b._set_len(old_len) };
-        b.push_str(&*s);
+        b.push_str(&s);
         Ok(())
     }
 }
@@ -112,7 +112,7 @@ impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
         let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
         let s = content.to_lowercase();
         unsafe { b._set_len(old_len) };
-        b.push_str(&*s);
+        b.push_str(&s);
         Ok(())
     }
 
@@ -122,7 +122,7 @@ impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
 
         let s = b.as_str()[old_len..].to_lowercase();
         unsafe { b._set_len(old_len) };
-        b.push_str(&*s);
+        b.push_str(&s);
         Ok(())
     }
 }
