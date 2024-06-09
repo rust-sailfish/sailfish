@@ -1,0 +1,5 @@
+<% if matches!(value, Some(_)) { %>
+  Some
+<% } else { %>
+  None
+<% } %>

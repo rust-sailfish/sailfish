@@ -1,0 +1,13 @@
+<div>
+  <span>1</span>
+  <span>2</span>
+
+  <span>3</span>
+</div>
+<div>
+  trailing spaces   
+  This line should be appeared under the previous line
+</div>
+<% for msg in messages { %>
+  <div><%= msg %></div>
+<% } %>

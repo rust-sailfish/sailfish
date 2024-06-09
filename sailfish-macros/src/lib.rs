@@ -24,3 +24,10 @@ pub fn derive_template(tokens: TokenStream) -> TokenStream {
     let output = sailfish_compiler::procmacro::derive_template(input);
     TokenStream::from(output)
 }
+
+#[proc_macro_derive(TemplateSimple, attributes(template))]
+pub fn derive_template_simple(tokens: TokenStream) -> TokenStream {
+    let input = proc_macro2::TokenStream::from(tokens);
+    let output = sailfish_compiler::procmacro::derive_template_simple(input);
+    TokenStream::from(output)
+}

@@ -34,36 +34,78 @@ Dependencies:
 sailfish = "0.8.3"
 ```
 
-Template file (templates/hello.stpl):
+You can choose to use `TemplateSimple` to access fields directly:
 
-```erb
-<html>
-  <body>
-    <% for msg in &self.messages { %>
-      <div><%= msg %></div>
-    <% } %>
-  </body>
-</html>
-```
+> Template file (templates/hello.stpl):
+> 
+> ```erb
+> <html>
+>   <body>
+>     <% for msg in messages { %>
+>       <div><%= msg %></div>
+>     <% } %>
+>   </body>
+> </html>
+> ```
+> 
+> Code:
+> 
+> ```rust
+> use sailfish::TemplateSimple;
+> 
+> #[derive(TemplateSimple)]
+> #[template(path = "hello.stpl")]
+> struct HelloTemplate {
+>     messages: Vec<String>
+> }
+> 
+> fn main() {
+>     let ctx = HelloTemplate {
+>         messages: vec![String::from("foo"), String::from("bar")],
+>     };
+>     println!("{}", ctx.render_once().unwrap());
+> }
+> ```
 
-Code:
+Or use the more powerful `Template/TemplateMut/TemplateOnce`:
 
-```rust
-use sailfish::Template;
-
-#[derive(Template)]
-#[template(path = "hello.stpl")]
-struct HelloTemplate {
-    messages: Vec<String>
-}
-
-fn main() {
-    let ctx = HelloTemplate {
-        messages: vec![String::from("foo"), String::from("bar")],
-    };
-    println!("{}", ctx.render().unwrap());
-}
-```
+> Template file (templates/hello.stpl):
+> 
+> ```erb
+> <html>
+>   <body>
+>     <% for msg in &self.messages { %>
+>       <div><%= msg %></div>
+>     <% } %>
+>     <div><%= self.say_hello() %></div>
+>   </body>
+> </html>
+> ```
+> 
+> Code:
+> 
+> ```rust
+> use sailfish::Template;
+> 
+> #[derive(Template)]
+> #[template(path = "hello.stpl")]
+> struct HelloTemplate {
+>     messages: Vec<String>
+> }
+>
+> impl HelloTemplate {
+>     fn say_hello(&self) -> String {
+>         String::from("Hello!")
+>     }
+> }
+> 
+> fn main() {
+>     let ctx = HelloTemplate {
+>         messages: vec![String::from("foo"), String::from("bar")],
+>     };
+>     println!("{}", ctx.render().unwrap());
+> }
+> ```
 
 You can find more examples in [examples](./examples) directory.
 

@@ -1,0 +1,1 @@
+<% let a = include!("includes/rust_s.rs"); %><%= a %>
