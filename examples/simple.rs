@@ -1,6 +1,6 @@
-use sailfish::Template;
+use sailfish::TemplateSimple;
 
-#[derive(Template)]
+#[derive(TemplateSimple)]
 #[template(path = "simple.stpl")]
 struct Simple {
     messages: Vec<String>,
@@ -8,5 +8,5 @@ struct Simple {
 
 fn main() {
     let messages = vec![String::from("Message 1"), String::from("<Message 2>")];
-    println!("{}", Simple { messages }.render().unwrap());
+    println!("{}", Simple { messages }.render_once().unwrap());
 }

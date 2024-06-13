@@ -1,6 +1,6 @@
-use sailfish::Template;
+use sailfish::TemplateSimple;
 
-#[derive(Template)]
+#[derive(TemplateSimple)]
 #[template(path = "include.stpl")]
 struct Include {
     title: String,
@@ -12,5 +12,5 @@ fn main() {
         title: "Website".to_owned(),
         name: "Hanako".to_owned(),
     };
-    println!("{}", ctx.render().unwrap());
+    println!("{}", ctx.render_once().unwrap());
 }
