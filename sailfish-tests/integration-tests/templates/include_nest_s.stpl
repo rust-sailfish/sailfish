@@ -1,0 +1,5 @@
+1
+<% include!("includes/include_parent.stpl"); %>
+4
+<% include!("./included.stpl"); %>
+5
