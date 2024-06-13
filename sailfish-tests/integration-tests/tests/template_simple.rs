@@ -103,12 +103,12 @@ fn test_include() {
 }
 
 #[derive(TemplateSimple)]
-#[template(path = "continue-break.stpl", rm_whitespace = true)]
+#[template(path = "continue_break.stpl", rm_whitespace = true)]
 struct ContinueBreak;
 
 #[test]
 fn continue_break() {
-    assert_render_simple("continue-break", ContinueBreak);
+    assert_render_simple("continue_break", ContinueBreak);
 }
 
 #[derive(TemplateSimple)]
@@ -248,15 +248,15 @@ fn test_filter2() {
 }
 
 #[derive(TemplateSimple)]
-#[template(path = "truncate-filter.stpl")]
+#[template(path = "truncate_filter.stpl")]
 struct TruncateFilter;
 
 #[test]
 fn test_truncate_filter() {
-    assert_render_simple("truncate-filter", TruncateFilter);
+    assert_render_simple("truncate_filter", TruncateFilter);
 }
 #[derive(TemplateSimple)]
-#[template(path = "json-filter_s.stpl")]
+#[template(path = "json_filter_s.stpl")]
 struct JsonFilter {
     data: serde_json::Value,
 }
@@ -272,7 +272,7 @@ fn test_json_filter() {
         ]
     });
 
-    assert_render_simple("json-filter", JsonFilter { data });
+    assert_render_simple("json_filter", JsonFilter { data });
 }
 
 #[cfg(unix)]
@@ -280,14 +280,14 @@ mod unix {
     use super::*;
 
     #[derive(TemplateSimple)]
-    #[template(path = "include-nest_s.stpl")]
+    #[template(path = "include_nest_s.stpl")]
     struct IncludeNest<'a> {
         s: &'a str,
     }
 
     #[test]
     fn test_include_nest() {
-        assert_render_simple("include-nest_s", IncludeNest { s: "foo" });
+        assert_render_simple("include_nest_s", IncludeNest { s: "foo" });
     }
 
     #[derive(TemplateSimple)]

@@ -1,5 +1,0 @@
-1
-<% include!("includes/include-parent.stpl"); %>
-4
-<% include!("./included.stpl"); %>
-5
