@@ -1,9 +1,0 @@
-<table>
-<% for i in 1..=9 %>
-  <tr>
-  <% for j in 1..=9 %>
-    <td><%= i * j %></td>
-  <% } %>
-  </td>
-<% } %>
-</table>
