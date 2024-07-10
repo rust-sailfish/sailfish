@@ -1,0 +1,69 @@
+{
+  "name": "sailfish",
+  "rules": {
+    "document": {
+      "type": "REPEAT",
+      "content": {
+        "type": "SYMBOL",
+        "name": "_node"
+      }
+    },
+    "_node": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "html_part"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "sailfish_part"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "comment"
+        }
+      ]
+    },
+    "html_part": {
+      "type": "PATTERN",
+      "value": "([^<]|<[^%])+"
+    },
+    "sailfish_part": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "<%[-=+ ]"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "rust_code"
+        },
+        {
+          "type": "STRING",
+          "value": "%>"
+        }
+      ]
+    },
+    "rust_code": {
+      "type": "PATTERN",
+      "value": "([^%]|%[^>])+"
+    },
+    "comment": {
+      "type": "PATTERN",
+      "value": "<%#.*%>"
+    }
+  },
+  "extras": [
+    {
+      "type": "PATTERN",
+      "value": "\\s"
+    }
+  ],
+  "conflicts": [],
+  "precedences": [],
+  "externals": [],
+  "inline": [],
+  "supertypes": []
+}
