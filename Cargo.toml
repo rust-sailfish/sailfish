@@ -6,6 +6,5 @@ members = [
   "sailfish-tests/integration-tests"
 ]
 exclude = [
-  "sailfish-tests/fuzzing-tests",
   "examples"
 ]
