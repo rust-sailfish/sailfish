@@ -1,2 +1,4 @@
 /test.stpl
 *.vsix
+/dist
+/node_modules
