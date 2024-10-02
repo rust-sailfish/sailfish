@@ -1,0 +1,56 @@
+[
+  {
+    "type": "document",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "html_part",
+          "named": true
+        },
+        {
+          "type": "sailfish_part",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "sailfish_part",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "rust_code",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "%>",
+    "named": false
+  },
+  {
+    "type": "comment",
+    "named": true
+  },
+  {
+    "type": "html_part",
+    "named": true
+  },
+  {
+    "type": "rust_code",
+    "named": true
+  }
+]

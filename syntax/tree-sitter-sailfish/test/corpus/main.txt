@@ -1,0 +1,49 @@
+===
+Only HTML
+===
+<div>hello</div>
+---
+(document
+  (html_part))
+
+
+===
+Only Sailfish
+===
+<% hello %>
+---
+(document
+  (sailfish_part
+    (rust_code)))
+
+
+===
+Only comment
+===
+<%# comment %>
+---
+(document
+  (comment))
+
+
+===
+Different Sailfish tags
+===
+<% hello %> <%+ hello %> <%- hello %> <%= hello %>
+---
+(document
+  (sailfish_part (rust_code))
+  (sailfish_part (rust_code))
+  (sailfish_part (rust_code))
+  (sailfish_part (rust_code)))
+
+
+===
+Mix HTML and Sailfish
+===
+<div><%= hello %></div>
+---
+(document
+  (html_part)
+  (sailfish_part (rust_code))
+  (html_part))
