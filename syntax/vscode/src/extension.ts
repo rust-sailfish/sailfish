@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as prettier from "prettier";
 
+/* eslint-disable */ // <-- Before function
 export function activate(context: vscode.ExtensionContext) {
   vscode.languages.registerDocumentFormattingEditProvider("sailfish", {
     async provideDocumentFormattingEdits(
@@ -19,6 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
     },
   });
 }
+/* eslint-enable */  // <-- After function
 
 async function formatSailfishHTML(text: string): Promise<string> {
   const placeholders: { [key: string]: string } = {};

@@ -1,8 +1,8 @@
 {
   "name": "vscode-rust-sailfish",
   "displayName": "vscode-rust-sailfish",
-  "description": "Syntax highlighting and Formatting for sailfish templates in VSCode",
-  "version": "0.1.1",
+  "description": "Syntax highlighting for sailfish templates in VSCode",
+  "version": "0.1.2",
   "author": "Ryohei Machida <orcinus4627@gmail.com>",
   "publisher": "rust-sailfish",
   "repository": "rust-sailfish/sailfish",
@@ -42,20 +42,20 @@
     "compile": "npm run check-types && npm run lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "watch:tsc": "npx tsc --noEmit --watch --project tsconfig.json",
     "package": "npm run check-types && npm run lint && node esbuild.js --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
+    "compile-tests": "npx tsc -p . --outDir out",
+    "watch-tests": "npx tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src --ext ts",
+    "check-types": "npx tsc --noEmit",
+    "lint": "eslint src/**.ts",
     "test": "vscode-test"
   },
   "dependencies": {
-    "esbuild": "^0.24.0",
     "prettier": "^3.3.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.12.0",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
     "@types/vscode": "^1.82.0",
@@ -63,8 +63,10 @@
     "@typescript-eslint/parser": "^7.11.0",
     "@vscode/test-cli": "^0.0.9",
     "@vscode/test-electron": "^2.4.0",
+    "esbuild": "^0.21.5",
     "eslint": "^8.57.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.4.5"
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.8.1"
   }
 }
