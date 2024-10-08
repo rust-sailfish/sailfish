@@ -607,7 +607,7 @@
 <h1 id="configuration">Configuration</h1>
 <h2 id="derive-options">Derive options</h2>
 <p>You can control the rendering behaviour via <code>template</code> attribute.</p>
-<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateOnce)]</span>
+<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateSimple)]</span>
 <span class="cp">#[template(path = </span><span class="s">&quot;template.stpl&quot;</span><span class="cp">, escape = false)]</span>
 <span class="k">struct</span><span class="w"> </span><span class="nc">TemplateStruct</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="o">..</span><span class="p">.</span>
@@ -621,7 +621,7 @@
 <li><code>rm_whitespace</code>: try to strip whitespaces as much as possible without collapsing HTML structure (default: <code>false</code>). This option might not work correctly if your templates have inline <code>script</code> tag.</li>
 </ul>
 <p>You can split the options into multiple <code>template</code> attributes.</p>
-<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateOnce)]</span>
+<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateSimple)]</span>
 <span class="cp">#[template(path = </span><span class="s">&quot;template.stpl&quot;</span><span class="cp">)]</span>
 <span class="cp">#[template(delimiter = &#39;?&#39;)]</span>
 <span class="cp">#[template(rm_whitespace = true)]</span>

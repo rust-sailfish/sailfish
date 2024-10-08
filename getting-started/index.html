@@ -595,11 +595,11 @@ templates/
 <h2 id="render-the-template">Render the template</h2>
 <ol><li>Import the sailfish crates:</li></ol>
 
-<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">sailfish</span><span class="p">::</span><span class="n">TemplateOnce</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">sailfish</span><span class="p">::</span><span class="n">TemplateSimple</span><span class="p">;</span>
 </code></pre></div>
 <ol start="2"><li>Define the template struct to be rendered:</li></ol>
 
-<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateOnce)]</span><span class="w">  </span><span class="c1">// automatically implement `TemplateOnce` trait</span>
+<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateSimple)]</span><span class="w">  </span><span class="c1">// automatically implement `TemplateSimple` trait</span>
 <span class="cp">#[template(path = </span><span class="s">&quot;hello.stpl&quot;</span><span class="cp">)]</span><span class="w">  </span><span class="c1">// specify the path to template</span>
 <span class="k">struct</span><span class="w"> </span><span class="nc">HelloTemplate</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// data to be passed to the template</span>
