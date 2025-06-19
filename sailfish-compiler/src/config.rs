@@ -5,6 +5,7 @@ pub struct Config {
     pub delimiter: char,
     pub escape: bool,
     pub rm_whitespace: bool,
+    pub rm_newline: bool,
     pub template_dirs: Vec<PathBuf>,
     #[doc(hidden)]
     pub cache_dir: PathBuf,
@@ -20,6 +21,7 @@ impl Default for Config {
             escape: true,
             cache_dir: Path::new(env!("OUT_DIR")).join("cache"),
             rm_whitespace: false,
+            rm_newline: false,
             _non_exhaustive: (),
         }
     }
@@ -82,6 +84,10 @@ mod imp {
                         if let Some(rm_whitespace) = optimizations.rm_whitespace {
                             config.rm_whitespace = rm_whitespace;
                         }
+
+                        if let Some(rm_newline) = optimizations.rm_newline {
+                            config.rm_newline = rm_newline;
+                        }
                     }
                 }
 
@@ -96,6 +102,7 @@ mod imp {
     #[serde(deny_unknown_fields)]
     struct Optimizations {
         rm_whitespace: Option<bool>,
+        rm_newline: Option<bool>,
     }
 
     #[derive(Deserialize, Debug)]

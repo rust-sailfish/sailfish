@@ -24,6 +24,7 @@ struct DeriveTemplateOptions {
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
     rm_whitespace: Option<LitBool>,
+    rm_newline: Option<LitBool>,
 }
 
 impl DeriveTemplateOptions {
@@ -49,6 +50,8 @@ impl DeriveTemplateOptions {
                     self.escape = Some(s.parse::<LitBool>()?);
                 } else if key == "rm_whitespace" {
                     self.rm_whitespace = Some(s.parse::<LitBool>()?);
+                } else if key == "rm_newline" {
+                    self.rm_newline = Some(s.parse::<LitBool>()?);
                 } else {
                     return Err(syn::Error::new(
                         key.span(),
@@ -80,6 +83,9 @@ fn merge_config_options(config: &mut Config, options: &DeriveTemplateOptions) {
     }
     if let Some(ref rm_whitespace) = options.rm_whitespace {
         config.rm_whitespace = rm_whitespace.value;
+    }
+    if let Some(ref rm_newline) = options.rm_newline {
+        config.rm_newline = rm_newline.value;
     }
 }
 

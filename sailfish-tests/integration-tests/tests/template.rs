@@ -221,6 +221,40 @@ fn test_rm_whitespace() {
 }
 
 #[derive(Template)]
+#[template(path = "rm_newline.stpl")]
+#[template(rm_newline = true)]
+struct RmNewline<'a, 'b> {
+    messages: &'a [&'b str],
+}
+
+#[test]
+fn test_rm_newline() {
+    assert_render(
+        "rm_newline",
+        RmNewline {
+            messages: &["foo", "bar"],
+        },
+    );
+}
+
+#[derive(Template)]
+#[template(path = "rm_newline.stpl")]
+#[template(rm_whitespace = true, rm_newline = true)]
+struct RmWhitespaceNewline<'a, 'b> {
+    messages: &'a [&'b str],
+}
+
+#[test]
+fn test_rm_whitespace_newline() {
+    assert_render(
+        "rm_whitespace_newline",
+        RmWhitespaceNewline {
+            messages: &["foo", "bar"],
+        },
+    );
+}
+
+#[derive(Template)]
 #[template(path = "comment.stpl")]
 struct Comment {}
 
