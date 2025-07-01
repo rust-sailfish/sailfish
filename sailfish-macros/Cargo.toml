@@ -1,6 +1,6 @@
 [package]
 name = "sailfish-macros"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/rust-sailfish/sailfish"
@@ -30,6 +30,6 @@ proc-macro2 = "1.0.56"
 
 [dependencies.sailfish-compiler]
 path = "../sailfish-compiler"
-version = "0.9.0"
+version = "0.9.1"
 default-features = false
 features = ["procmacro"]
