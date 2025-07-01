@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"extensions": {
+		"recommendations": [
+			"fill-labs.dependi",
+			"rust-lang.rust-analyzer",
+			"ms-vscode.cmake-tools",
+			"tamasfe.even-better-toml",
+			"rust-sailfish.vscode-rust-sailfish"
+		]
+	}
+}
