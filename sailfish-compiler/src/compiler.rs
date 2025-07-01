@@ -66,7 +66,9 @@ impl Compiler {
         output: &Path,
     ) -> Result<(), Error> {
         let analyzer = Analyzer::new();
-        let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
+        let optimizer = Optimizer::new()
+            .rm_whitespace(self.config.rm_whitespace)
+            .rm_newline(self.config.rm_newline);
 
         let compile_file = |mut tsource: TranslatedSource,
                             output: &Path|
@@ -116,7 +118,9 @@ impl Compiler {
         let parser = Parser::new().delimiter(self.config.delimiter);
         let translator = Translator::new().escape(self.config.escape);
         let resolver = Resolver::new().include_handler(include_handler);
-        let optimizer = Optimizer::new().rm_whitespace(self.config.rm_whitespace);
+        let optimizer = Optimizer::new()
+            .rm_whitespace(self.config.rm_whitespace)
+            .rm_newline(self.config.rm_newline);
 
         let compile = || -> Result<String, Error> {
             let stream = parser.parse(input);

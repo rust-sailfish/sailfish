@@ -9,6 +9,7 @@ use syn::{
 
 pub struct Optimizer {
     rm_whitespace: bool,
+    rm_newline: bool,
 }
 
 impl Optimizer {
@@ -16,6 +17,7 @@ impl Optimizer {
     pub fn new() -> Self {
         Self {
             rm_whitespace: false,
+            rm_newline: false,
         }
     }
 
@@ -26,9 +28,16 @@ impl Optimizer {
     }
 
     #[inline]
+    pub fn rm_newline(mut self, new: bool) -> Self {
+        self.rm_newline = new;
+        self
+    }
+
+    #[inline]
     pub fn optimize(&self, i: &mut Block) {
         OptmizerImpl {
             rm_whitespace: self.rm_whitespace,
+            rm_newline: self.rm_newline,
         }
         .visit_block_mut(i);
     }
@@ -36,6 +45,27 @@ impl Optimizer {
 
 struct OptmizerImpl {
     rm_whitespace: bool,
+    rm_newline: bool,
+}
+
+impl OptmizerImpl {
+    fn apply_optimizations(&self, v: String) -> Option<TokenStream> {
+        let mut optimized = v.to_string();
+
+        if self.rm_whitespace {
+            optimized = remove_whitespace(&optimized);
+        }
+        if self.rm_newline {
+            optimized = remove_newlines(&optimized);
+        }
+
+        // Only return a token stream if the string was actually modified
+        if optimized != v {
+            Some(quote! { __sf_buf, #optimized })
+        } else {
+            None
+        }
+    }
 }
 
 impl VisitMut for OptmizerImpl {
@@ -120,12 +150,8 @@ impl VisitMut for OptmizerImpl {
     }
 
     fn visit_stmt_macro_mut(&mut self, i: &mut StmtMacro) {
-        if self.rm_whitespace {
-            if let Some(v) = get_rendertext_value(&i.mac) {
-                let ts = match remove_whitespace(v) {
-                    Some(value) => value,
-                    None => return,
-                };
+        if let Some(v) = get_rendertext_value(&i.mac) {
+            if let Some(ts) = self.apply_optimizations(v) {
                 i.mac.tokens = ts;
                 return;
             }
@@ -135,12 +161,8 @@ impl VisitMut for OptmizerImpl {
     }
 
     fn visit_expr_macro_mut(&mut self, i: &mut ExprMacro) {
-        if self.rm_whitespace {
-            if let Some(v) = get_rendertext_value(&i.mac) {
-                let ts = match remove_whitespace(v) {
-                    Some(value) => value,
-                    None => return,
-                };
+        if let Some(v) = get_rendertext_value(&i.mac) {
+            if let Some(ts) = self.apply_optimizations(v) {
                 i.mac.tokens = ts;
                 return;
             }
@@ -150,7 +172,7 @@ impl VisitMut for OptmizerImpl {
     }
 }
 
-fn remove_whitespace(v: String) -> Option<TokenStream> {
+fn remove_whitespace(v: &str) -> String {
     let mut buffer = String::new();
     let mut it = v.lines().peekable();
     if let Some(line) = it.next() {
@@ -158,7 +180,7 @@ fn remove_whitespace(v: String) -> Option<TokenStream> {
             buffer.push_str(line.trim_end());
             buffer.push('\n');
         } else {
-            return None;
+            return v.to_string();
         }
     }
     while let Some(line) = it.next() {
@@ -174,8 +196,11 @@ fn remove_whitespace(v: String) -> Option<TokenStream> {
             buffer.push_str(line.trim_start());
         }
     }
+    buffer
+}
 
-    Some(quote! { __sf_buf, #buffer })
+fn remove_newlines(v: &str) -> String {
+    v.replace(['\n', '\r'], "")
 }
 
 fn get_rendertext_value(mac: &Macro) -> Option<String> {
