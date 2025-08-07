@@ -1,12 +1,11 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, TokenStreamExt};
 use std::collections::hash_map::DefaultHasher;
+use std::env;
 use std::hash::{Hash, Hasher};
 use std::io::Write;
 use std::iter;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
-use std::{env, thread};
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
@@ -216,36 +215,16 @@ fn derive_template_common_impl(
 
     std::fs::create_dir_all(output_file.parent().unwrap()).unwrap();
 
-    // This makes sure max 1 process creates a new file, "create_new" check+create is an
-    // atomic operation. Cargo sometimes runs multiple macro invocations for the same
-    // file in parallel, so that's important to prevent a race condition.
-    struct Lock<'path> {
-        path: &'path Path,
-    }
-
-    impl<'path> Lock<'path> {
-        fn new(path: &'path Path) -> std::io::Result<Self> {
-            std::fs::OpenOptions::new()
-                .write(true)
-                .create_new(true)
-                .open(path)
-                .map(|_| Lock { path })
-        }
-    }
-
-    impl<'path> Drop for Lock<'path> {
-        fn drop(&mut self) {
-            std::fs::remove_file(self.path)
-                .expect("Failed to clean up lock file {}. Delete it manually, or run `cargo clean`.");
-        }
-    }
-
     let deps = with_compiler(config, |compiler| {
         let dep_path = output_file.with_extension("deps");
         let lock_path = output_file.with_extension("lock");
-        let lock = Lock::new(&lock_path);
-        match lock {
-            Ok(lock) => {
+        let lock_file = std::fs::OpenOptions::new()
+            .create(true)
+            .truncate(false)
+            .write(true)
+            .open(&lock_path);
+        match lock_file.as_ref().map(|file| file.lock()) {
+            Ok(_) => {
                 let (tsource, report) = compiler.resolve_file(&input_file)?;
 
                 let output_filetime = filetime(&output_file);
@@ -292,26 +271,7 @@ fn derive_template_common_impl(
                     );
                 }
 
-                drop(lock);
                 Ok(report.deps)
-            }
-            // Lock file exists, template is already (currently being?) compiled.
-            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-                let mut load_attempts = 0;
-                while lock_path.exists() {
-                    load_attempts += 1;
-                    if load_attempts > 100 {
-                        panic!("Lock file {:?} is stuck. Try deleting it.", lock_path);
-                    }
-                    thread::sleep(Duration::from_millis(10));
-                }
-
-                Ok(std::fs::read_to_string(&dep_path)
-                    .unwrap()
-                    .trim()
-                    .lines()
-                    .map(PathBuf::from)
-                    .collect())
             }
             Err(e) => panic!("{:?}: {}. Maybe try `cargo clean`?", lock_path, e),
         }
