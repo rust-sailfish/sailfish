@@ -19,7 +19,7 @@ Simple, small, and extremely fast template engine for Rust
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
-- Works on Rust 1.60 or later
+- Works on Rust 1.89 or later
 
 ## 🐟 Example
 
