@@ -388,8 +388,8 @@ impl RenderError {
 impl fmt::Display for RenderError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            RenderError::Msg(ref s) => f.pad(s),
-            RenderError::Fmt(ref e) => fmt::Display::fmt(e, f),
+            RenderError::Msg(s) => f.pad(s),
+            RenderError::Fmt(e) => fmt::Display::fmt(e, f),
             RenderError::BufSize => f.pad("buffer size shrinked while rendering"),
         }
     }
@@ -399,7 +399,7 @@ impl std::error::Error for RenderError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             RenderError::Msg(_) | RenderError::BufSize => None,
-            RenderError::Fmt(ref e) => Some(e),
+            RenderError::Fmt(e) => Some(e),
         }
     }
 }
@@ -536,6 +536,7 @@ mod tests {
 
         let err = RenderError::BufSize;
         assert!(err.source().is_none());
-        format!("{}", err);
+
+        assert!(format!("{}", err).is_empty().eq(&false));
     }
 }

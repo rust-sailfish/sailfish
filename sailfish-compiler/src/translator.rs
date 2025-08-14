@@ -368,7 +368,6 @@ mod tests {
     use crate::parser::Parser;
 
     #[test]
-    #[ignore]
     fn translate() {
         let src = "<% pub fn sample() { %> <%% <%=//%>\n1%><% } %>";
         let lexer = Parser::new();

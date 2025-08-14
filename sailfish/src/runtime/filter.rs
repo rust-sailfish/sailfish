@@ -24,7 +24,7 @@ impl<'a, T: fmt::Display + ?Sized> Render for Display<'a, T> {
 /// filename: <%= filename.display() | disp %>
 /// ```
 #[inline]
-pub fn disp<T: fmt::Display + ?Sized>(expr: &T) -> Display<T> {
+pub fn disp<T: fmt::Display + ?Sized>(expr: &'_ T) -> Display<'_, T> {
     Display(expr)
 }
 
@@ -53,7 +53,7 @@ impl<'a, T: fmt::Debug + ?Sized> Render for Debug<'a, T> {
 /// table content: <%= format!("{:?}", table) %>
 /// ```
 #[inline]
-pub fn dbg<T: fmt::Debug + ?Sized>(expr: &T) -> Debug<T> {
+pub fn dbg<T: fmt::Debug + ?Sized>(expr: &'_ T) -> Debug<'_, T> {
     Debug(expr)
 }
 
@@ -97,7 +97,7 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
 /// TSCHÜSS
 /// ```
 #[inline]
-pub fn upper<T: Render + ?Sized>(expr: &T) -> Upper<T> {
+pub fn upper<T: Render + ?Sized>(expr: &'_ T) -> Upper<'_, T> {
     Upper(expr)
 }
 
@@ -141,7 +141,7 @@ impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
 /// ὀδυσσεύς
 /// ```
 #[inline]
-pub fn lower<T: Render + ?Sized>(expr: &T) -> Lower<T> {
+pub fn lower<T: Render + ?Sized>(expr: &'_ T) -> Lower<'_, T> {
     Lower(expr)
 }
 
@@ -211,7 +211,7 @@ fn trim_impl(b: &mut Buffer, old_len: usize) -> Result<(), RenderError> {
 /// Hello world
 /// ```
 #[inline]
-pub fn trim<T: Render + ?Sized>(expr: &T) -> Trim<T> {
+pub fn trim<T: Render + ?Sized>(expr: &'_ T) -> Trim<'_, T> {
     Trim(expr)
 }
 
@@ -265,7 +265,7 @@ fn truncate_impl(
 /// Hello...
 /// ```
 #[inline]
-pub fn truncate<T: Render + ?Sized>(expr: &T, limit: usize) -> Truncate<T> {
+pub fn truncate<T: Render + ?Sized>(expr: &'_ T, limit: usize) -> Truncate<'_, T> {
     Truncate(expr, limit)
 }
 
@@ -342,7 +342,7 @@ cfg_json! {
     /// }
     /// ```
     #[inline]
-    pub fn json<T: serde::Serialize + ?Sized>(expr: &T) -> Json<T> {
+    pub fn json<T: serde::Serialize + ?Sized>(expr: &'_ T) -> Json<'_, T> {
         Json(expr)
     }
 }

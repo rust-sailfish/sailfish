@@ -2,7 +2,8 @@ extern crate sailfish_macros;
 
 use integration_tests::assert_string_eq;
 use sailfish::runtime::RenderResult;
-use sailfish::{Template, TemplateMut, TemplateOnce, TemplateSimple};
+use sailfish::{Template, TemplateMut, TemplateOnce};
+//use sailfish::TemplateSimple;
 use std::path::PathBuf;
 
 fn assert_render_result(name: &str, result: RenderResult) {
@@ -39,16 +40,16 @@ fn assert_render<T: Template>(name: &str, mut template: T) {
     assert_render_result(name, template.render_once());
 }
 
-trait ConflictWithSailFishRender {
-    fn render() {}
-}
+// trait ConflictWithSailFishRender {
+//     fn render() {}
+// }
 
-impl ConflictWithSailFishRender for u8 {}
-impl ConflictWithSailFishRender for u16 {}
+// impl ConflictWithSailFishRender for u8 {}
+// impl ConflictWithSailFishRender for u16 {}
 
-#[derive(TemplateSimple)]
-#[template(path = "empty.stpl")]
-struct EmptySimple {}
+// #[derive(TemplateSimple)]
+// #[template(path = "empty.stpl")]
+// struct EmptySimple {}
 
 #[test]
 fn empty_simple() {

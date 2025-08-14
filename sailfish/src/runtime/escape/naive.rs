@@ -11,14 +11,14 @@ pub(super) unsafe fn escape(
     mut start_ptr: *const u8,
     ptr: *const u8,
     end_ptr: *const u8,
-) {
+) { unsafe {
     start_ptr = proceed(buffer, start_ptr, ptr, end_ptr);
 
     if likely!(end_ptr > start_ptr) {
         let slc = slice::from_raw_parts(start_ptr, end_ptr as usize - start_ptr as usize);
         buffer.push_str(std::str::from_utf8_unchecked(slc));
     }
-}
+}}
 
 #[inline]
 pub(super) unsafe fn proceed(
@@ -26,7 +26,7 @@ pub(super) unsafe fn proceed(
     mut start_ptr: *const u8,
     mut ptr: *const u8,
     end_ptr: *const u8,
-) -> *const u8 {
+) -> *const u8 { unsafe {
     while ptr < end_ptr {
         debug_assert!(start_ptr <= ptr);
         let idx = ESCAPE_LUT[*ptr as usize] as usize;
@@ -48,9 +48,9 @@ pub(super) unsafe fn proceed(
     debug_assert_eq!(ptr, end_ptr);
     debug_assert!(start_ptr <= ptr);
     start_ptr
-}
+}}
 
-pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize {
+pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize { unsafe {
     let mut start_ptr = feed.as_ptr();
     let mut ptr = start_ptr;
     let end_ptr = start_ptr.add(feed.len());
@@ -87,11 +87,11 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize {
     }
 
     buf as usize - buf_begin as usize
-}
+}}
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
 #[inline]
-pub(super) unsafe fn push_escaped_str(value: &str, buffer: &mut Buffer) {
+pub(super) unsafe fn push_escaped_str(value: &str, buffer: &mut Buffer) { unsafe {
     buffer.reserve_small(value.len());
 
     let src = value.as_ptr();
@@ -105,7 +105,7 @@ pub(super) unsafe fn push_escaped_str(value: &str, buffer: &mut Buffer) {
     ptr::write_unaligned(dst as *mut u32, t1);
 
     buffer._set_len(buffer.len() + value.len());
-}
+}}
 
 #[cfg(not(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64")))]
 #[inline]

@@ -42,7 +42,7 @@ macro_rules! unlikely {
 /// implementation based on glibc (https://github.molgen.mpg.de/git-mirror/glibc/blob/master/sysdeps/x86_64/multiarch/memcpy-avx-unaligned.S)
 #[allow(clippy::cast_ptr_alignment)]
 #[cfg(any(target_arch = "x86_64", target_arch = "x86", target_arch = "aarch64"))]
-pub unsafe fn memcpy_16(src: *const u8, dst: *mut u8, len: usize) {
+pub unsafe fn memcpy_16(src: *const u8, dst: *mut u8, len: usize) { unsafe {
     debug_assert!(len <= 16);
     let len_u8 = len as u8;
 
@@ -67,7 +67,7 @@ pub unsafe fn memcpy_16(src: *const u8, dst: *mut u8, len: usize) {
     } else if len_u8 >= 1 {
         *dst = *src;
     }
-}
+}}
 
 #[cfg(not(any(
     target_arch = "x86_64",

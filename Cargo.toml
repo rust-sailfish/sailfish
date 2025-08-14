@@ -8,3 +8,4 @@ members = [
 exclude = [
   "examples"
 ]
+resolver = "2"

@@ -193,20 +193,23 @@ mod imp {
 
     #[cfg(test)]
     mod tests {
+
         use crate::config::imp::expand_env_vars;
         use std::env;
 
         #[test]
+        #[allow(unsafe_code)]
         fn expands_env_vars() {
-            env::set_var("TESTVAR", "/a/path");
+            unsafe { env::set_var("TESTVAR", "/a/path") };
             let input = "/path/to/${TESTVAR}Templates";
             let output = expand_env_vars(input).unwrap();
             assert_eq!(output, "/path/to//a/pathTemplates");
         }
 
         #[test]
+        #[allow(unsafe_code)]
         fn retains_case_sensitivity() {
-            env::set_var("tEstVar", "/a/path");
+            unsafe { env::set_var("tEstVar", "/a/path") };
             let input = "/path/${tEstVar}";
             let output = expand_env_vars(input).unwrap();
             assert_eq!(output, "/path//a/path");

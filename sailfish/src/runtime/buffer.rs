@@ -201,7 +201,7 @@ fn safe_alloc(capacity: usize) -> *mut u8 {
 /// of memory pointed by `ptr`.
 #[cold]
 #[inline(never)]
-unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 {
+unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 { unsafe {
     assert!(new_capacity > 0);
     assert!(
         new_capacity <= std::isize::MAX as usize,
@@ -221,7 +221,7 @@ unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *m
     }
 
     data
-}
+}}
 
 impl Clone for Buffer {
     fn clone(&self) -> Self {

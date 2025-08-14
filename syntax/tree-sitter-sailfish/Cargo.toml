@@ -1,12 +1,12 @@
 [package]
 name = "tree-sitter-sailfish"
 description = "Sailfish grammar for tree-sitter"
-version = "0.9.1"
+version = "0.10.0"
 license = "MIT"
 readme = "README.md"
 keywords = ["incremental", "parsing", "tree-sitter", "sailfish"]
 categories = ["parsing", "text-editors"]
-edition = "2021"
+edition = "2024"
 autoexamples = false
 
 build = "bindings/rust/build.rs"

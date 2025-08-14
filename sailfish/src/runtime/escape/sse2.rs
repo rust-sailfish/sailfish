@@ -13,7 +13,7 @@ use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 const VECTOR_BYTES: usize = std::mem::size_of::<__m128i>();
 
 #[target_feature(enable = "sse2")]
-pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+pub unsafe fn escape(feed: &str, buffer: &mut Buffer) { unsafe {
     let len = feed.len();
     let mut start_ptr = feed.as_ptr();
     let mut ptr = start_ptr;
@@ -85,4 +85,4 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         let slc = slice::from_raw_parts(start_ptr, end_ptr as usize - start_ptr as usize);
         buffer.push_str(std::str::from_utf8_unchecked(slc));
     }
-}
+}}

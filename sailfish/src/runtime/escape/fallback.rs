@@ -39,7 +39,7 @@ fn contains_key(x: usize) -> bool {
 }
 
 #[inline]
-pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+pub unsafe fn escape(feed: &str, buffer: &mut Buffer) { unsafe {
     debug_assert!(feed.len() >= 16);
 
     let len = feed.len();
@@ -70,4 +70,4 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
     debug_assert!(ptr <= end_ptr);
     debug_assert!(start_ptr <= ptr);
     naive::escape(buffer, start_ptr, ptr, end_ptr);
-}
+}}

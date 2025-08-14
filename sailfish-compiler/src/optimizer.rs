@@ -237,7 +237,7 @@ fn get_rendertext_value(mac: &Macro) -> Option<String> {
 
 fn get_rendertext_value_from_stmt(stmt: &Stmt) -> Option<String> {
     let em = match stmt {
-        Stmt::Expr(Expr::Macro(ref mac), Some(_)) => mac,
+        Stmt::Expr(Expr::Macro(mac), Some(_)) => mac,
         _ => return None,
     };
 

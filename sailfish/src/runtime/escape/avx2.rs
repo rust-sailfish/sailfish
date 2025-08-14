@@ -13,7 +13,7 @@ use super::{ESCAPED, ESCAPED_LEN, ESCAPE_LUT};
 const VECTOR_BYTES: usize = std::mem::size_of::<__m256i>();
 
 #[target_feature(enable = "avx2")]
-pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
+pub unsafe fn escape(feed: &str, buffer: &mut Buffer) { unsafe {
     debug_assert!(feed.len() >= 16);
 
     let len = feed.len();
@@ -92,11 +92,11 @@ pub unsafe fn escape(feed: &str, buffer: &mut Buffer) {
         let slc = slice::from_raw_parts(start_ptr, end_ptr as usize - start_ptr as usize);
         buffer.push_str(std::str::from_utf8_unchecked(slc));
     }
-}
+}}
 
 #[inline]
 #[target_feature(enable = "avx2")]
-unsafe fn escape_small(feed: &str, buffer: &mut Buffer) {
+unsafe fn escape_small(feed: &str, buffer: &mut Buffer) { unsafe {
     debug_assert!(feed.len() >= 16);
     debug_assert!(feed.len() < VECTOR_BYTES);
 
@@ -163,4 +163,4 @@ unsafe fn escape_small(feed: &str, buffer: &mut Buffer) {
         let slc = slice::from_raw_parts(start_ptr, end_ptr as usize - start_ptr as usize);
         buffer.push_str(std::str::from_utf8_unchecked(slc));
     }
-}
+}}

@@ -10,7 +10,8 @@
 //! if you want to render custom data inside templates, you must implement
 //! `runtime::Render` trait for that type.
 //!
-//! ```ignore
+//! ```compile_fail
+//! #[allow(rustdoc::invalid_rust_codeblocks)]
 //! use sailfish::Template;
 //!
 //! #[derive(Template)]
