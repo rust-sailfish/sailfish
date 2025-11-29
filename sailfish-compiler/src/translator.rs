@@ -130,20 +130,10 @@ impl SourceBuilder {
         Ok(())
     }
 
-    fn write_buffered_code(
+    fn parse_filter(
         &mut self,
         token: &Token<'_>,
-        escape: bool,
-    ) -> Result<(), Error> {
-        self.write_buffered_code_with_suffix(token, escape, "")
-    }
-
-    fn write_buffered_code_with_suffix(
-        &mut self,
-        token: &Token<'_>,
-        escape: bool,
-        suffix: &str,
-    ) -> Result<(), Error> {
+    ) -> Result<Option<(Filter, TokenStream)>, Error> {
         // parse and split off filter
         let code_block = syn::parse_str::<CodeBlock>(token.as_str()).map_err(|e| {
             let span = e.span();
@@ -151,6 +141,58 @@ impl SourceBuilder {
             err.offset = into_offset(token.as_str(), span).map(|p| token.offset() + p);
             err
         })?;
+
+        Ok(code_block
+            .filter
+            .map(|filter| (filter, code_block.expr.into_token_stream())))
+    }
+
+    fn write_with_filter(
+        &mut self,
+        token: &Token<'_>,
+        filter: Filter,
+        expr_str: &str,
+    ) -> Result<(), Error> {
+        let (name, extra_args) = match filter {
+            Filter::Ident(i) => (i.to_string(), None),
+            Filter::Call(c) => (
+                c.func.into_token_stream().to_string(),
+                Some(c.args.into_token_stream().to_string()),
+            ),
+        };
+
+        self.source.push_str("sailfish::runtime::filter::");
+        self.source.push_str(&name);
+        self.source.push('(');
+
+        // arguments to filter function
+        {
+            self.source.push_str("&(");
+            let entry = SourceMapEntry {
+                original: token.offset(),
+                new: self.source.len(),
+                length: expr_str.len(),
+            };
+            self.source_map.entries.push(entry);
+            self.source.push_str(expr_str);
+            self.source.push(')');
+
+            if let Some(extra_args) = extra_args {
+                self.source.push_str(", ");
+                self.source.push_str(&extra_args);
+            }
+        }
+
+        self.source.push(')');
+
+        Ok(())
+    }
+
+    fn write_buffered_code(
+        &mut self,
+        token: &Token<'_>,
+        escape: bool,
+    ) -> Result<(), Error> {
         let method = if self.escape && escape {
             "render_escaped"
         } else {
@@ -161,45 +203,29 @@ impl SourceBuilder {
         self.source.push_str(method);
         self.source.push_str("!(__sf_buf, ");
 
-        if let Some(filter) = code_block.filter {
-            let expr_str = format!("{}{}", code_block.expr.into_token_stream(), suffix);
-            let (name, extra_args) = match filter {
-                Filter::Ident(i) => (i.to_string(), None),
-                Filter::Call(c) => (
-                    c.func.into_token_stream().to_string(),
-                    Some(c.args.into_token_stream().to_string()),
-                ),
-            };
-
-            self.source.push_str("sailfish::runtime::filter::");
-            self.source.push_str(&name);
-            self.source.push('(');
-
-            // arguments to filter function
-            {
-                self.source.push_str("&(");
-                let entry = SourceMapEntry {
-                    original: token.offset(),
-                    new: self.source.len(),
-                    length: expr_str.len(),
-                };
-                self.source_map.entries.push(entry);
-                self.source.push_str(&expr_str);
-                self.source.push(')');
-
-                if let Some(extra_args) = extra_args {
-                    self.source.push_str(", ");
-                    self.source.push_str(&extra_args);
-                }
-            }
-
-            self.source.push(')');
+        if let Some((filter, code_token_stream)) = self.parse_filter(token)? {
+            let expr_str = format!("{}", code_token_stream);
+            self.write_with_filter(token, filter, &expr_str)?;
         } else {
             self.write_token(token);
-            self.source.push_str(suffix);
         }
 
         self.source.push_str(");\n");
+
+        Ok(())
+    }
+
+    fn write_nested_template_once(&mut self, token: &Token<'_>) -> Result<(), Error> {
+        if let Some((filter, code_token_stream)) = self.parse_filter(token)? {
+            self.source.push_str("__sf_rt::render!(__sf_buf, ");
+            let expr_str = format!("{}{}", code_token_stream, ".render_once()?");
+            self.write_with_filter(token, filter, &expr_str)?;
+            self.source.push_str(");\n");
+        } else {
+            self.source.push('(');
+            self.write_token(token);
+            self.source.push_str(").render_once_to(__sf_buf)?;\n");
+        }
 
         Ok(())
     }
@@ -214,11 +240,9 @@ impl SourceBuilder {
                 TokenKind::BufferedCode { escape } => {
                     self.write_buffered_code(&token, escape)?
                 }
-                TokenKind::NestedTemplateOnce => self.write_buffered_code_with_suffix(
-                    &token,
-                    false,
-                    ".render_once()?",
-                )?,
+                TokenKind::NestedTemplateOnce => {
+                    self.write_nested_template_once(&token)?
+                }
                 TokenKind::Text => {
                     // concatenate repeated text token
                     let offset = token.offset();
@@ -399,7 +423,7 @@ mod tests {
                 .ast
                 .into_token_stream()
                 .to_string(),
-            r#"{ __sf_rt :: render_text ! (__sf_buf , "outer ") ; __sf_rt :: render ! (__sf_buf , inner . render_once () ?) ; __sf_rt :: render_text ! (__sf_buf , " outer") ; }"#
+            r#"{ __sf_rt :: render_text ! (__sf_buf , "outer ") ; (inner) . render_once_to (__sf_buf) ? ; __sf_rt :: render_text ! (__sf_buf , " outer") ; }"#
         );
     }
 
