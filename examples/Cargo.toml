@@ -1,6 +1,6 @@
 [package]
 name = "sailfish-examples"
-version = "0.10.0"
+version = "0.10.1"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 edition = "2024"
 publish = false
