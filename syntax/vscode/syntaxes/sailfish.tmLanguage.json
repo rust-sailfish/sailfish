@@ -357,6 +357,9 @@
   "name": "sailfish",
   "patterns": [
     {
+      "include": "#languagemarkerblock"
+    },
+    {
       "include": "#commentblock"
     },
     {
@@ -367,6 +370,79 @@
     }
   ],
   "repository": {
+    "languagemarkerblock": {
+      "patterns": [
+        {
+          "name": "meta.block.embedded.cpp",
+          "begin": "<(%|\\?)#\\s*#language:cpp\\s*(%|\\?)>",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.tag.begin.html"
+            }
+          },
+          "end": "<(%|\\?)#\\s*#endlanguage\\s*(%|\\?)>",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "patterns": [
+            {
+              "include": "$self"
+            },
+            {
+              "include": "source.cpp"
+            }
+          ]
+        },
+        {
+          "name": "meta.block.embedded.rust",
+          "begin": "<(%|\\?)#\\s*#language:rust\\s*(%|\\?)>",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.tag.begin.html"
+            }
+          },
+          "end": "<(%|\\?)#\\s*#endlanguage\\s*(%|\\?)>",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "patterns": [
+            {
+              "include": "$self"
+            },
+            {
+              "include": "source.rust"
+            }
+          ]
+        },
+        {
+          "name": "meta.block.embedded.html",
+          "begin": "<(%|\\?)#\\s*#language:html\\s*(%|\\?)>",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.tag.begin.html"
+            }
+          },
+          "end": "<(%|\\?)#\\s*#endlanguage\\s*(%|\\?)>",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.tag.end.html"
+            }
+          },
+          "patterns": [
+            {
+              "include": "$self"
+            },
+            {
+              "include": "text.html.basic"
+            }
+          ]
+        }
+      ]
+    },
     "commentblock": {
       "patterns": [
         {
@@ -384,7 +460,7 @@
     "codeblock": {
       "patterns": [
         {
-          "name": "source.rust.embedded.html",
+          "name": "meta.block.embedded.rust",
           "begin": "<(%|\\?)(=|-)?",
           "beginCaptures": {
             "0": {
