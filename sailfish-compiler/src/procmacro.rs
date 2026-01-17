@@ -152,7 +152,7 @@ fn with_compiler<T, F: FnOnce(Compiler) -> Result<T, Error>>(
 
 fn derive_template_common_impl(
     tokens: TokenStream,
-) -> Result<(ItemStruct, TokenStream, String), syn::Error> {
+) -> Result<(ItemStruct, TokenStream, TokenStream), syn::Error> {
     let strct = syn::parse2::<ItemStruct>(tokens)?;
 
     let mut all_options = DeriveTemplateOptions::default();
@@ -212,6 +212,7 @@ fn derive_template_common_impl(
     let mut output_file = PathBuf::from(env!("OUT_DIR"));
     output_file.push("templates");
     output_file.push(filename_hash(&input_file, &config));
+    output_file.set_extension("rs");
 
     std::fs::create_dir_all(output_file.parent().unwrap()).unwrap();
 
@@ -281,10 +282,6 @@ fn derive_template_common_impl(
     let input_file_string = input_file
         .to_str()
         .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", input_file));
-    let output_file_string = output_file
-        .to_str()
-        .unwrap_or_else(|| panic!("Non UTF-8 file name: {:?}", output_file));
-
     let mut include_bytes_seq = quote! { include_bytes!(#input_file_string); };
     for dep in deps {
         if let Some(dep_string) = dep.to_str() {
@@ -292,13 +289,26 @@ fn derive_template_common_impl(
         }
     }
 
-    Ok((strct, include_bytes_seq, output_file_string.to_string()))
+    let compiled_source = std::fs::read_to_string(&output_file).map_err(|e| {
+        syn::Error::new(
+            Span::call_site(),
+            format!("Failed to read compiled template {:?}: {}", output_file, e),
+        )
+    })?;
+    let compiled_tokens = compiled_source.parse::<TokenStream>().map_err(|e| {
+        syn::Error::new(
+            Span::call_site(),
+            format!("Failed to parse compiled template {:?}: {}", output_file, e),
+        )
+    })?;
+
+    Ok((strct, include_bytes_seq, compiled_tokens))
 }
 
 fn derive_template_once_only_impl(
     strct: &ItemStruct,
     include_bytes_seq: &TokenStream,
-    output_file_string: &String,
+    compiled_tokens: &TokenStream,
 ) -> TokenStream {
     let name = &strct.ident;
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
@@ -324,7 +334,7 @@ fn derive_template_once_only_impl(
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-                include!(#output_file_string);
+                #compiled_tokens;
 
                 Ok(())
             }
@@ -335,7 +345,7 @@ fn derive_template_once_only_impl(
 fn derive_template_mut_only_impl(
     strct: &ItemStruct,
     include_bytes_seq: &TokenStream,
-    output_file_string: &String,
+    compiled_tokens: &TokenStream,
 ) -> TokenStream {
     let name = &strct.ident;
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
@@ -360,7 +370,7 @@ fn derive_template_mut_only_impl(
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-                include!(#output_file_string);
+                #compiled_tokens;
 
                 Ok(())
             }
@@ -371,7 +381,7 @@ fn derive_template_mut_only_impl(
 fn derive_template_only_impl(
     strct: &ItemStruct,
     include_bytes_seq: &TokenStream,
-    output_file_string: &String,
+    compiled_tokens: &TokenStream,
 ) -> TokenStream {
     let name = &strct.ident;
     let (impl_generics, ty_generics, where_clause) = strct.generics.split_for_impl();
@@ -396,7 +406,7 @@ fn derive_template_only_impl(
                 #include_bytes_seq;
 
                 use sailfish::runtime as __sf_rt;
-                include!(#output_file_string);
+                #compiled_tokens;
 
                 Ok(())
             }
@@ -405,7 +415,7 @@ fn derive_template_only_impl(
 }
 
 fn derive_template_once_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
+    let (strct, include_bytes_seq, compiled_tokens) =
         derive_template_common_impl(tokens)?;
 
     let mut output = TokenStream::new();
@@ -413,14 +423,14 @@ fn derive_template_once_impl(tokens: TokenStream) -> Result<TokenStream, syn::Er
     output.append_all(derive_template_once_only_impl(
         &strct,
         &include_bytes_seq,
-        &output_file_string,
+        &compiled_tokens,
     ));
 
     Ok(output)
 }
 
 fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
+    let (strct, include_bytes_seq, compiled_tokens) =
         derive_template_common_impl(tokens)?;
 
     let mut output = TokenStream::new();
@@ -428,20 +438,20 @@ fn derive_template_mut_impl(tokens: TokenStream) -> Result<TokenStream, syn::Err
     output.append_all(derive_template_once_only_impl(
         &strct,
         &include_bytes_seq,
-        &output_file_string,
+        &compiled_tokens,
     ));
 
     output.append_all(derive_template_mut_only_impl(
         &strct,
         &include_bytes_seq,
-        &output_file_string,
+        &compiled_tokens,
     ));
 
     Ok(output)
 }
 
 fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
+    let (strct, include_bytes_seq, compiled_tokens) =
         derive_template_common_impl(tokens)?;
 
     let mut output = TokenStream::new();
@@ -449,26 +459,26 @@ fn derive_template_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> 
     output.append_all(derive_template_once_only_impl(
         &strct,
         &include_bytes_seq,
-        &output_file_string,
+        &compiled_tokens,
     ));
 
     output.append_all(derive_template_mut_only_impl(
         &strct,
         &include_bytes_seq,
-        &output_file_string,
+        &compiled_tokens,
     ));
 
     output.append_all(derive_template_only_impl(
         &strct,
         &include_bytes_seq,
-        &output_file_string,
+        &compiled_tokens,
     ));
 
     Ok(output)
 }
 
 fn derive_template_simple_impl(tokens: TokenStream) -> Result<TokenStream, syn::Error> {
-    let (strct, include_bytes_seq, output_file_string) =
+    let (strct, include_bytes_seq, compiled_tokens) =
         derive_template_common_impl(tokens)?;
 
     let name = &strct.ident;
@@ -516,7 +526,7 @@ fn derive_template_simple_impl(tokens: TokenStream) -> Result<TokenStream, syn::
 
                 use sailfish::runtime as __sf_rt;
                 let #name { #field_names } = self;
-                include!(#output_file_string);
+                #compiled_tokens;
 
                 Ok(())
             }
