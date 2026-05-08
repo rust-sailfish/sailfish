@@ -3,6 +3,8 @@ site_name: "Sailfish Documentation"
 # site_description: 'Sailfish Documentation'
 site_author: "Ryohei Machida"
 # site_url: 'https://***.com'
+site_dir: "output_site"
+docs_dir: "input_docs"
 
 # Copyright
 copyright: "&copy; 2024 Ryohei Machida"

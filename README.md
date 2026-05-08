@@ -137,3 +137,12 @@ This project is [MIT](https://github.com/rust-sailfish/sailfish/blob/master/LICE
 ---
 
 *This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)*
+
+## Documentation Deployment Instructions
+```
+sudo apt install mkdocs mkdocs-material
+cd sailfish_root_folder &&
+cd docs && cd en 
+mkdocs build
+
+```
