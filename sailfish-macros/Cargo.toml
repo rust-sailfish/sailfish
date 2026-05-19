@@ -24,6 +24,7 @@ doctest = false
 default = ["config"]
 # enable configuration file (sailfish.toml) support
 config = ["sailfish-compiler/config"]
+hermetic = ["sailfish-compiler/hermetic"]
 
 [dependencies]
 proc-macro2 = "1.0.56"

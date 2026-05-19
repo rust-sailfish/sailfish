@@ -20,6 +20,7 @@ doctest = false
 default = ["config"]
 procmacro = []
 config = ["serde", "toml"]
+hermetic = []
 
 [dependencies]
 memchr = "2.5.0"

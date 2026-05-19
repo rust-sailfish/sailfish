@@ -22,6 +22,8 @@ derive = ["sailfish-macros"]
 json = ["serde", "serde_json"]
 # add more #[inline] attribute
 perf-inline = []
+# avoid writing compiled template files to disk
+hermetic = ["sailfish-macros/hermetic"]
 
 [dependencies]
 itoap = "1.0.1"
