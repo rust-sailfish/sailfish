@@ -32,7 +32,6 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/rust-sailfish/sailfish/master/resources/icon.png"
 )]
-#![cfg_attr(sailfish_nightly, feature(core_intrinsics))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![allow(clippy::redundant_closure)]
 #![deny(missing_docs)]
