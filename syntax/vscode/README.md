@@ -17,7 +17,7 @@ The extension is available at [VisualStudio Marketplace](https://marketplace.vis
 ## Developer Instructions
 1. Open the /sailfish/syntax/vscode/ directory in VS Code.
 2. Run the following commands:
-    `sudo apt install nodejs`
+    `sudo apt install npm`
     `npm install typescript --save-dev`
     `npm install @eslint/js -D`
     `npm install typescript-eslint -D`

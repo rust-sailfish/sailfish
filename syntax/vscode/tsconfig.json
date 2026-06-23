@@ -1,13 +1,18 @@
 {
 	"compilerOptions": {
-		"module": "Node16",
-		"target": "ES2022",
+		"module": "nodenext",
+		"target": "es2025",
 		"lib": [
-			"ES2022"
+			"ES2025"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
-		"strict": true   /* enable all strict type-checking options */
+		"strict": true /* enable all strict type-checking options */,
+		"typeRoots": [
+			"./node_modules/@types/",
+			"./src/@types/"
+		],
+		"types": ["mocha", "node"],
 		/* Additional Checks */
 		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
 		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
