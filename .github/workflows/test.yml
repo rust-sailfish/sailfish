@@ -30,14 +30,12 @@ jobs:
             toolchain: nightly
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
-          target: ${{ matrix.target }}
           toolchain: ${{ matrix.toolchain }}
-          override: true
+          targets: ${{ matrix.target }}
       - run: ${{ matrix.deps }}
       - name: Test sailfish
         run: |
@@ -55,7 +53,7 @@ jobs:
   test-miri:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install toolchain
         run: |
           MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
@@ -69,13 +67,10 @@ jobs:
   test-ios:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-            profile: minimal
-            toolchain: nightly
-            target: aarch64-apple-ios
-            override: true
+          targets: aarch64-apple-ios
       - name: Build only
         run: cargo build --target=aarch64-apple-ios --workspace

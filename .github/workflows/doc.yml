@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: pull the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: install dependencies
         run: pip install -r requirements.txt
       - name: build and deploy
