@@ -6,11 +6,11 @@ jobs:
   coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@nightly
         with:
-          targets: x86_64-unknown-linux-gnu
+          target: x86_64-unknown-linux-gnu
           components: rustfmt
       - name: Install grcov
         run: curl -L https://github.com/mozilla/grcov/releases/download/v0.6.1/grcov-linux-x86_64.tar.bz2 | tar jxf -

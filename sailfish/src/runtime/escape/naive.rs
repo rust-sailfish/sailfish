@@ -1,5 +1,6 @@
 use std::ptr;
 use std::slice;
+use crate::runtime::utils::likely;
 
 use super::super::utils::memcpy_16;
 use super::super::Buffer;
@@ -14,7 +15,8 @@ pub(super) unsafe fn escape(
 ) { unsafe {
     start_ptr = proceed(buffer, start_ptr, ptr, end_ptr);
 
-    if likely!(end_ptr > start_ptr) {
+
+    if likely(end_ptr > start_ptr) {
         let slc = slice::from_raw_parts(start_ptr, end_ptr as usize - start_ptr as usize);
         buffer.push_str(std::str::from_utf8_unchecked(slc));
     }
@@ -31,7 +33,7 @@ pub(super) unsafe fn proceed(
         debug_assert!(start_ptr <= ptr);
         let idx = ESCAPE_LUT[*ptr as usize] as usize;
         debug_assert!(idx <= 9);
-        if likely!(idx >= ESCAPED_LEN) {
+        if likely(idx >= ESCAPED_LEN) {
             ptr = ptr.add(1);
         } else {
             if ptr > start_ptr {
@@ -60,7 +62,7 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize { unsaf
         debug_assert!(start_ptr <= ptr);
         let idx = *ESCAPE_LUT.get_unchecked(*ptr as usize) as usize;
         debug_assert!(idx <= 9);
-        if likely!(idx >= ESCAPED_LEN) {
+        if likely(idx >= ESCAPED_LEN) {
             ptr = ptr.add(1);
         } else {
             let escaped = ESCAPED.get_unchecked(idx);
@@ -80,7 +82,7 @@ pub(super) unsafe fn escape_small(feed: &str, mut buf: *mut u8) -> usize { unsaf
     debug_assert_eq!(ptr, end_ptr);
     debug_assert!(start_ptr <= ptr);
 
-    if likely!(end_ptr > start_ptr) {
+    if likely(end_ptr > start_ptr) {
         let len = end_ptr as usize - start_ptr as usize;
         memcpy_16(start_ptr, buf, len);
         buf = buf.add(len);
