@@ -1,6 +1,6 @@
 [package]
 name = "sailfish-compiler"
-version = "0.11.3"
+version = "0.11.4"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/rust-sailfish/sailfish"
@@ -20,17 +20,18 @@ doctest = false
 default = ["config"]
 procmacro = []
 config = ["serde", "toml"]
+hermetic = []
 
 [dependencies]
 memchr = "2.8.3"
 quote = { version = "1.0.47", default-features = false }
 serde = { version = "1.0.229", features = ["derive"], optional = true }
-toml = { version = "1.1.4+spec-1.1.0", optional = true }
+toml = { version = "1.1.4", optional = true }
 home = "0.5.12"
 filetime = "0.2.29"
 
 [dependencies.syn]
-version = "3.0.3"
+version = "3.0.4"
 default-features = false
 features = ["parsing", "full", "visit-mut", "printing"]
 

@@ -103,6 +103,35 @@ impl Compiler {
             })
     }
 
+
+    /// Used for hermetic builds to avoid I/O
+    pub fn compile_to_string(
+        &self,
+        input: &Path,
+        tsource: TranslatedSource,
+    ) -> Result<String, Error> {
+        let compile = |mut tsource: TranslatedSource| -> Result<String, Error> {
+            let analyzer = Analyzer::new();
+            let optimizer = Optimizer::new()
+                .rm_whitespace(self.config.rm_whitespace)
+                .rm_newline(self.config.rm_newline);
+
+            analyzer.analyze(&mut tsource.ast)?;
+            optimizer.optimize(&mut tsource.ast);
+
+            let string = tsource.ast.into_token_stream().to_string();
+            Ok(rustfmt_block(&string).unwrap_or(string))
+        };
+
+        compile(tsource)
+            .chain_err(|| "Failed to compile template.")
+            .map_err(|mut e| {
+                e.source = fs::read_to_string(input).ok();
+                e.source_file = Some(input.to_owned());
+                e
+            })
+    }
+
     pub fn compile_str(&self, input: &str) -> Result<String, Error> {
         let dummy_path = Path::new(env!("CARGO_MANIFEST_DIR"));
 

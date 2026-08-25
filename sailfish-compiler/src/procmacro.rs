@@ -1,11 +1,18 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, TokenStreamExt};
+#[cfg(not(feature = "hermetic"))]
 use std::collections::hash_map::DefaultHasher;
 use std::env;
+#[cfg(not(feature = "hermetic"))]
 use std::hash::{Hash, Hasher};
+#[cfg(not(feature = "hermetic"))]
 use std::io::Write;
+#[cfg(not(feature = "hermetic"))]
 use std::iter;
+#[cfg(not(feature = "hermetic"))]
 use std::path::{Path, PathBuf};
+#[cfg(feature = "hermetic")]
+use std::path::PathBuf;
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
@@ -13,6 +20,7 @@ use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
 use crate::compiler::Compiler;
 use crate::config::Config;
 use crate::error::*;
+#[cfg(not(feature = "hermetic"))]
 use crate::util::filetime;
 
 // options for `template` attributes
@@ -109,6 +117,7 @@ fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBu
     None
 }
 
+#[cfg(not(feature = "hermetic"))]
 fn filename_hash(path: &Path, config: &Config) -> String {
     let mut hasher = DefaultHasher::new();
     config.hash(&mut hasher);
@@ -205,79 +214,116 @@ fn derive_template_common_impl(
 
     merge_config_options(&mut config, &all_options);
 
-    // Template compilation through this proc-macro uses a caching mechanism. Output file
-    // names include a hash calculated from input file contents and compiler
-    // configuration. This way, existing files never need updating and can simply be
-    // re-used if they exist.
-    let mut output_file = PathBuf::from(env!("OUT_DIR"));
-    output_file.push("templates");
-    output_file.push(filename_hash(&input_file, &config));
-    output_file.set_extension("rs");
+    #[cfg(not(feature = "hermetic"))]
+    let (deps, compiled_tokens) = {
+        // Template compilation through this proc-macro uses a caching mechanism. Output file
+        // names include a hash calculated from input file contents and compiler
+        // configuration. This way, existing files never need updating and can simply be
+        // re-used if they exist.
+        let mut output_file = PathBuf::from(env!("OUT_DIR"));
+        output_file.push("templates");
+        output_file.push(filename_hash(&input_file, &config));
+        output_file.set_extension("rs");
 
-    std::fs::create_dir_all(output_file.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(output_file.parent().unwrap()).unwrap();
 
-    let deps = with_compiler(config, |compiler| {
-        let dep_path = output_file.with_extension("deps");
-        let lock_path = output_file.with_extension("lock");
-        let lock_file = std::fs::OpenOptions::new()
-            .create(true)
-            .truncate(false)
-            .write(true)
-            .open(&lock_path);
-        match lock_file.as_ref().map(|file| file.lock()) {
-            Ok(_) => {
-                let (tsource, report) = compiler.resolve_file(&input_file)?;
+        let deps = with_compiler(config, |compiler| {
+            let dep_path = output_file.with_extension("deps");
+            let lock_path = output_file.with_extension("lock");
+            let lock_file = std::fs::OpenOptions::new()
+                .create(true)
+                .truncate(false)
+                .write(true)
+                .open(&lock_path);
+            match lock_file.as_ref().map(|file| file.lock()) {
+                Ok(_) => {
+                    let (tsource, report) = compiler.resolve_file(&input_file)?;
 
-                let output_filetime = filetime(&output_file);
-                let input_filetime = iter::once(&input_file)
-                    .chain(&report.deps)
-                    .map(|path| filetime(path))
-                    .max()
-                    .expect("Iterator contains at least `input_file`");
+                    let output_filetime = filetime(&output_file);
+                    let input_filetime = iter::once(&input_file)
+                        .chain(&report.deps)
+                        .map(|path| filetime(path))
+                        .max()
+                        .expect("Iterator contains at least `input_file`");
 
-                // Recompile template if any included templates were changed
-                // since the last time we compiled.
-                if input_filetime > output_filetime {
-                    compiler.compile_file(&input_file, tsource, &output_file)?;
+                    // Recompile template if any included templates were changed
+                    // since the last time we compiled.
+                    if input_filetime > output_filetime {
+                        compiler.compile_file(&input_file, tsource, &output_file)?;
 
-                    // Write access to `dep_path` is serialized by `lock`.
-                    let mut dep_file = std::fs::OpenOptions::new()
-                        .write(true)
-                        .create(true)
-                        .truncate(true)
-                        .open(&dep_path)
-                        .unwrap_or_else(|e| {
-                            panic!("Failed to open {:?}: {}", dep_path, e)
-                        });
+                        // Write access to `dep_path` is serialized by `lock`.
+                        let mut dep_file = std::fs::OpenOptions::new()
+                            .write(true)
+                            .create(true)
+                            .truncate(true)
+                            .open(&dep_path)
+                            .unwrap_or_else(|e| {
+                                panic!("Failed to open {:?}: {}", dep_path, e)
+                            });
 
-                    // Write out dependencies for concurrent processes to reuse.
-                    for dep in &report.deps {
-                        writeln!(&mut dep_file, "{}", dep.to_str().unwrap()).unwrap();
+                        // Write out dependencies for concurrent processes to reuse.
+                        for dep in &report.deps {
+                            writeln!(&mut dep_file, "{}", dep.to_str().unwrap()).unwrap();
+                        }
+
+                        // Prevent output file from being tracked by Cargo. Without this hack,
+                        // every change to a template causes two recompilations:
+                        //
+                        // 1. Change a template at timestamp t.
+                        // 2. Cargo detects template change due to `include_bytes!` macro below.
+                        // 3. Sailfish compiler generates an output file with a later timestamp t'.
+                        // 4. Build finishes with timestamp t.
+                        // 5. Next cargo build detects output file with timestamp t' > t and rebuilds.
+                        // 6. Sailfish compiler does not regenerate output due to timestamp logic above.
+                        // 7. Build finishes with timestamp t'.
+                        let _ = filetime::set_file_times(
+                            &output_file,
+                            input_filetime,
+                            input_filetime,
+                        );
                     }
 
-                    // Prevent output file from being tracked by Cargo. Without this hack,
-                    // every change to a template causes two recompilations:
-                    //
-                    // 1. Change a template at timestamp t.
-                    // 2. Cargo detects template change due to `include_bytes!` macro below.
-                    // 3. Sailfish compiler generates an output file with a later timestamp t'.
-                    // 4. Build finishes with timestamp t.
-                    // 5. Next cargo build detects output file with timestamp t' > t and rebuilds.
-                    // 6. Sailfish compiler does not regenerate output due to timestamp logic above.
-                    // 7. Build finishes with timestamp t'.
-                    let _ = filetime::set_file_times(
-                        &output_file,
-                        input_filetime,
-                        input_filetime,
-                    );
+                    Ok(report.deps)
                 }
-
-                Ok(report.deps)
+                Err(e) => panic!("{:?}: {}. Maybe try `cargo clean`?", lock_path, e),
             }
-            Err(e) => panic!("{:?}: {}. Maybe try `cargo clean`?", lock_path, e),
-        }
-    })
-    .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+        })
+        .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+
+        let compiled_source = std::fs::read_to_string(&output_file).map_err(|e| {
+            syn::Error::new(
+                Span::call_site(),
+                format!("Failed to read compiled template {:?}: {}", output_file, e),
+            )
+        })?;
+        let compiled_tokens = compiled_source.parse::<TokenStream>().map_err(|e| {
+            syn::Error::new(
+                Span::call_site(),
+                format!("Failed to parse compiled template {:?}: {}", output_file, e),
+            )
+        })?;
+
+        (deps, compiled_tokens)
+    };
+
+    #[cfg(feature = "hermetic")]
+    let (deps, compiled_tokens) = {
+        let (compiled_string, deps) = with_compiler(config, |compiler| {
+            let (tsource, report) = compiler.resolve_file(&input_file)?;
+            let compiled = compiler.compile_to_string(&input_file, tsource)?;
+            Ok::<_, Error>((compiled, report.deps))
+        })
+        .map_err(|e| syn::Error::new(Span::call_site(), e))?;
+
+        let compiled_tokens = compiled_string.parse::<TokenStream>().map_err(|e| {
+            syn::Error::new(
+                Span::call_site(),
+                format!("Failed to parse compiled template: {}", e),
+            )
+        })?;
+
+        (deps, compiled_tokens)
+    };
 
     let input_file_string = input_file
         .to_str()
@@ -288,19 +334,6 @@ fn derive_template_common_impl(
             include_bytes_seq.extend(quote! { include_bytes!(#dep_string); });
         }
     }
-
-    let compiled_source = std::fs::read_to_string(&output_file).map_err(|e| {
-        syn::Error::new(
-            Span::call_site(),
-            format!("Failed to read compiled template {:?}: {}", output_file, e),
-        )
-    })?;
-    let compiled_tokens = compiled_source.parse::<TokenStream>().map_err(|e| {
-        syn::Error::new(
-            Span::call_site(),
-            format!("Failed to parse compiled template {:?}: {}", output_file, e),
-        )
-    })?;
 
     Ok((strct, include_bytes_seq, compiled_tokens))
 }

@@ -1,6 +1,6 @@
 [package]
 name = "sailfish"
-version = "0.11.3"
+version = "0.11.4"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 description = "Simple, small, and extremely fast template engine for Rust"
 homepage = "https://github.com/rust-sailfish/sailfish"
@@ -22,6 +22,8 @@ derive = ["sailfish-macros"]
 json = ["serde", "serde_json"]
 # add more #[inline] attribute
 perf-inline = []
+# avoid writing compiled template files to disk
+hermetic = ["sailfish-macros/hermetic"]
 
 [dependencies]
 itoap = "1.0.1"
@@ -31,7 +33,7 @@ serde_json = { version = "1.0.151", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"
-version = "0.11.3"
+version = "0.11.4"
 default-features = false
 optional = true
 
@@ -42,3 +44,5 @@ version_check = "0.9.5"
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
+[lints.rust]
+ unexpected_cfgs = { level = "warn", check-cfg = ['cfg(sailfish_nightly)'] }

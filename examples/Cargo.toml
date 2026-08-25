@@ -1,13 +1,13 @@
 [package]
 name = "sailfish-examples"
-version = "0.11.3"
+version = "0.11.4"
 authors = ["Ryohei Machida <orcinus4627@gmail.com>"]
 edition = "2024"
 publish = false
 
 [dependencies]
-actix-web = { version = "4.3.1", default-features = false }
-actix-rt = "2.8.0"
+actix-web = { version = "4.15.0", default-features = false }
+actix-rt = "2.12.0"
 sailfish = { path = "../sailfish" }
 sailfish-macros = { path = "../sailfish-macros" }
 
