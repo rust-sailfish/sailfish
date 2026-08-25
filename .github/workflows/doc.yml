@@ -6,6 +6,9 @@ on:
     branches:
       - stable
 
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     name: building documentation and deploying it on gh-pages branch
