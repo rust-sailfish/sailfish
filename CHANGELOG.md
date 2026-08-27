@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Fix
+
+* `upper` filter no longer rewrites Sailfish's HTML escape sequences:
+  `<%= "&" | upper %>` now renders `&amp;` instead of `&AMP;`
+
 ### Breaking Change
 
 * Add `config` feature for crate `sailfish`. It is enabled by default. In previous

@@ -3,6 +3,7 @@
 use std::fmt;
 use std::ptr;
 
+use super::escape::ESCAPED;
 use super::{Buffer, Render, RenderError};
 
 /// Helper struct for 'display' filter
@@ -73,14 +74,56 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
     }
 
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        let old_len = b.len();
-        self.0.render_escaped(b)?;
+        let mut tmp = Buffer::new();
+        self.0.render_escaped(&mut tmp)?;
 
-        let s = b.as_str()[old_len..].to_uppercase();
-        unsafe { b._set_len(old_len) };
-        b.push_str(&s);
+        uppercase_escaped(tmp.as_str(), b);
         Ok(())
     }
+}
+
+fn uppercase_escaped(s: &str, b: &mut Buffer) {
+    b.reserve(s.len());
+
+    let bytes = s.as_bytes();
+    let mut start = 0;
+    let mut i = 0;
+
+    while i < bytes.len() {
+        if bytes[i] != b'&' {
+            i += 1;
+            continue;
+        }
+
+        push_uppercase(&s[start..i], b);
+
+        if let Some(len) = escaped_entity_len(&bytes[i..]) {
+            b.push_str(&s[i..i + len]);
+            i += len;
+        } else {
+            b.push('&');
+            i += 1;
+        }
+
+        start = i;
+    }
+
+    push_uppercase(&s[start..], b);
+}
+
+fn push_uppercase(s: &str, b: &mut Buffer) {
+    for c in s.chars() {
+        for c in c.to_uppercase() {
+            b.push(c);
+        }
+    }
+}
+
+fn escaped_entity_len(s: &[u8]) -> Option<usize> {
+    ESCAPED
+        .iter()
+        .find(|escaped| s.starts_with(escaped.as_bytes()))
+        .map(|escaped| escaped.len())
 }
 
 /// convert the rendered contents to uppercase
@@ -393,9 +436,65 @@ mod tests {
         assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
         assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
 
+        assert_render_escaped(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
+        assert_render_escaped(&upper("<h1>TITLE</h1>"), "&lt;H1&gt;TITLE&lt;/H1&gt;");
+        assert_render_escaped(
+            &upper("<<&\"'\">>"),
+            "&lt;&lt;&amp;&quot;&#039;&quot;&gt;&gt;",
+        );
+        assert_render_escaped(&upper("&copy;"), "&amp;COPY;");
+
         // non-ascii
         assert_render(&upper("aBcＡｂｃ"), "ABCＡＢＣ");
         assert_render(&upper("tschüß"), "TSCHÜSS");
+        assert_render_escaped(&upper("tschüß"), "TSCHÜSS");
+    }
+
+    struct FailingRender;
+
+    impl Render for FailingRender {
+        fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+            b.push_str("raw");
+            Ok(())
+        }
+
+        fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+            b.push_str("<partial>");
+            Err(RenderError::new("render failed"))
+        }
+    }
+
+    struct CustomEscapedRender;
+
+    impl Render for CustomEscapedRender {
+        fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+            b.push_str("raw");
+            Ok(())
+        }
+
+        fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+            b.push_str("escaped &copy; &amp;copy; &bad &#039x;");
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn test_upper_preserves_escaped_rendering() {
+        assert_render_escaped(
+            &upper(&CustomEscapedRender),
+            "ESCAPED &COPY; &amp;COPY; &BAD &#039X;",
+        );
+    }
+
+    #[test]
+    fn test_upper_render_error_keeps_destination_unchanged() {
+        let mut buf = Buffer::new();
+        buf.push_str("prefix");
+
+        let result = upper(&FailingRender).render_escaped(&mut buf);
+
+        assert!(result.is_err());
+        assert_eq!(buf.as_str(), "prefix");
     }
 
     #[test]
@@ -470,5 +569,6 @@ mod tests {
 
         assert_render(&truncate(&lower("Was möchtest du?"), 10), "was möchte...");
         assert_render(&truncate(&upper("Was möchtest du?"), 10), "WAS MÖCHTE...");
+        assert_render_escaped(&upper(&truncate("foo<br>bar", 10)), "FOO&lt;BR&...");
     }
 }
