@@ -473,7 +473,7 @@ mod tests {
         }
 
         fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-            b.push_str("escaped &copy; &amp;copy; &bad");
+            b.push_str("escaped &copy; &amp;copy; &bad &#039x;");
             Ok(())
         }
     }
@@ -482,7 +482,7 @@ mod tests {
     fn test_upper_preserves_escaped_rendering() {
         assert_render_escaped(
             &upper(&CustomEscapedRender),
-            "ESCAPED &COPY; &amp;COPY; &BAD",
+            "ESCAPED &COPY; &amp;COPY; &BAD &#039X;",
         );
     }
 
