@@ -1,4 +1,4 @@
-error: `path` option must be specified.
+error: Either `path` or `source` option must be specified.
  --> $DIR/no_path.rs:4:10
   |
 4 | #[derive(TemplateOnce)]

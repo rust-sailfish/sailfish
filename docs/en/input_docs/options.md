@@ -14,10 +14,21 @@ struct TemplateStruct {
 
 `template` attribute accepts the following options.
 
-- `path`: path to template file. This options is always required.
+- `path`: path to template file. Either `path` or `source` is required.
+- `source`: inline template source given as a string literal, compiled at compile time. Either `path` or `source` is required, and the two cannot be combined. `include` is not available in inline templates since there is no directory to resolve against.
 - `escape`: Enable HTML escaping (default: `true`)
 - `delimiter`: Replace the '%' character used for the tag delimiter (default: '%')
 - `rm_whitespace`: try to strip whitespaces as much as possible without collapsing HTML structure (default: `false`). This option might not work correctly if your templates have inline `script` tag.
+
+For small templates you can inline the source instead of pointing to a file.
+
+``` rust
+#[derive(TemplateSimple)]
+#[template(source = "<div><%= name %></div>", escape = false)]
+struct TemplateStruct<'a> {
+    name: &'a str,
+}
+```
 
 You can split the options into multiple `template` attributes.
 

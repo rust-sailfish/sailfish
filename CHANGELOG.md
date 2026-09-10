@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Feature
+
+* Add a `source` derive option so templates can be written inline as a string
+  literal instead of pointing to a file, e.g. `#[template(source = "<%= x %>")]`.
+  Either `path` or `source` is required, and they cannot be combined.
+
 ### Breaking Change
 
 * Add `config` feature for crate `sailfish`. It is enabled by default. In previous

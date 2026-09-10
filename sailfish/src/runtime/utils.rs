@@ -10,28 +10,12 @@ macro_rules! cfg_json {
     }
 }
 
-#[cfg(sailfish_nightly)]
-macro_rules! likely {
-    ($val:expr) => {
-        std::intrinsics::likely($val)
-    };
-}
-
-#[cfg(not(sailfish_nightly))]
 macro_rules! likely {
     ($val:expr) => {
         $val
     };
 }
 
-#[cfg(sailfish_nightly)]
-macro_rules! unlikely {
-    ($val:expr) => {
-        std::intrinsics::unlikely($val)
-    };
-}
-
-#[cfg(not(sailfish_nightly))]
 macro_rules! unlikely {
     ($val:expr) => {
         $val
