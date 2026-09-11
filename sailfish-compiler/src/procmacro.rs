@@ -240,18 +240,14 @@ fn derive_template_common_impl(
         (Some(path), None) => path,
     };
 
-    let input_file = {
-        resolve_template_file(&path.value(), &config.template_dirs)
-            .and_then(|path| path.canonicalize().ok())
-            .ok_or_else(|| {
-                syn::Error::new(
-                    path.span(),
-                    format!("Template file {:?} not found", path.value()),
-                )
-            })?
-    };
-
-    merge_config_options(&mut config, &all_options);
+    let input_file = resolve_template_file(&path.value(), &config.template_dirs)
+        .and_then(|path| path.canonicalize().ok())
+        .ok_or_else(|| {
+            syn::Error::new(
+                path.span(),
+                format!("Template file {:?} not found", path.value()),
+            )
+        })?;
 
     // Hermetic means that we are skipping the IO file writes
     #[cfg(not(feature = "hermetic"))]
