@@ -1,22 +1,4 @@
 use std::ptr;
-use core::hint::cold_path;
-
-#[inline(always)]
-pub const fn likely(b: bool) -> bool {
-    if !b {
-        cold_path();
-    }
-    b
-}
-
-#[inline(always)]
-pub const fn unlikely(b: bool) -> bool {
-    if b {
-        cold_path();
-    }
-    b
-}
-
 
 macro_rules! cfg_json {
     ($($item:item)*) => {
@@ -26,6 +8,18 @@ macro_rules! cfg_json {
             $item
         )*
     }
+}
+
+macro_rules! likely {
+    ($val:expr) => {
+        $val
+    };
+}
+
+macro_rules! unlikely {
+    ($val:expr) => {
+        $val
+    };
 }
 
 /// Custom memcpy implementation is faster on some platforms

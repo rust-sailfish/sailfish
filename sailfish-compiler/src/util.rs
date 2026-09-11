@@ -77,7 +77,7 @@ pub fn rustfmt_block(source: &str) -> io::Result<String> {
     }
 }
 
-#[cfg(feature = "procmacro")]
+#[cfg(all(feature = "procmacro", not(feature = "hermetic")))]
 pub fn filetime(input: &Path) -> filetime::FileTime {
     use filetime::FileTime;
     fs::metadata(input)

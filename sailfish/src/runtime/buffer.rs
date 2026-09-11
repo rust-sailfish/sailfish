@@ -3,7 +3,6 @@ use std::fmt;
 use std::mem::{align_of, ManuallyDrop};
 use std::ops::{Add, AddAssign};
 use std::ptr;
-use crate::runtime::utils::{likely, unlikely};
 
 /// Buffer for rendered contents
 ///
@@ -29,7 +28,7 @@ impl Buffer {
     /// Create a empty buffer with a particular capacity
     #[inline]
     pub fn with_capacity(n: usize) -> Buffer {
-        if unlikely(n == 0) {
+        if unlikely!(n == 0) {
             Self::new()
         } else {
             Self {
@@ -98,7 +97,7 @@ impl Buffer {
     /// This method panics if `size` overflows `isize::MAX`.
     #[inline]
     pub fn reserve(&mut self, size: usize) {
-        if likely(size <= self.capacity - self.len) {
+        if likely!(size <= self.capacity - self.len) {
             return;
         }
         self.reserve_internal(size);
@@ -109,7 +108,7 @@ impl Buffer {
     #[inline]
     pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
         debug_assert!(size <= std::isize::MAX as usize);
-        if likely(self.len + size <= self.capacity) {
+        if likely!(self.len + size <= self.capacity) {
             return;
         }
         self.reserve_internal(size);
@@ -209,7 +208,7 @@ unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *m
         "capacity is too large"
     );
 
-    let data = if unlikely(capacity == 0) {
+    let data = if unlikely!(capacity == 0) {
         let new_layout = Layout::from_size_align_unchecked(new_capacity, 1);
         alloc(new_layout)
     } else {
