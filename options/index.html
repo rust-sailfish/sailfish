@@ -594,11 +594,19 @@
 </code></pre></div>
 <p><code>template</code> attribute accepts the following options.</p>
 <ul>
-<li><code>path</code>: path to template file. This options is always required.</li>
+<li><code>path</code>: path to template file. Either <code>path</code> or <code>source</code> is required.</li>
+<li><code>source</code>: inline template source given as a string literal, compiled at compile time. Either <code>path</code> or <code>source</code> is required, and the two cannot be combined. <code>include</code> is not available in inline templates since there is no directory to resolve against.</li>
 <li><code>escape</code>: Enable HTML escaping (default: <code>true</code>)</li>
 <li><code>delimiter</code>: Replace the '%' character used for the tag delimiter (default: '%')</li>
 <li><code>rm_whitespace</code>: try to strip whitespaces as much as possible without collapsing HTML structure (default: <code>false</code>). This option might not work correctly if your templates have inline <code>script</code> tag.</li>
 </ul>
+<p>For small templates you can inline the source instead of pointing to a file.</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateSimple)]</span>
+<span class="cp">#[template(source = </span><span class="s">&quot;&lt;div&gt;&lt;%= name %&gt;&lt;/div&gt;&quot;</span><span class="cp">, escape = false)]</span>
+<span class="k">struct</span> <span class="nc">TemplateStruct</span><span class="o">&lt;&#39;</span><span class="na">a</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">name</span>: <span class="kp">&amp;</span><span class="o">&#39;</span><span class="na">a</span> <span class="kt">str</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>You can split the options into multiple <code>template</code> attributes.</p>
 <div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateSimple)]</span>
 <span class="cp">#[template(path = </span><span class="s">&quot;template.stpl&quot;</span><span class="cp">)]</span>
