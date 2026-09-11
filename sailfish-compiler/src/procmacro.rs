@@ -1,5 +1,5 @@
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, TokenStreamExt};
+use quote::{TokenStreamExt, quote};
 #[cfg(not(feature = "hermetic"))]
 use std::collections::hash_map::DefaultHasher;
 use std::env;
@@ -9,10 +9,10 @@ use std::hash::{Hash, Hasher};
 use std::io::Write;
 #[cfg(not(feature = "hermetic"))]
 use std::iter;
-#[cfg(not(feature = "hermetic"))]
-use std::path::{Path, PathBuf};
 #[cfg(feature = "hermetic")]
 use std::path::PathBuf;
+#[cfg(not(feature = "hermetic"))]
+use std::path::{Path, PathBuf};
 use syn::parse::{ParseStream, Parser, Result as ParseResult};
 use syn::punctuated::Punctuated;
 use syn::{Fields, Ident, ItemStruct, LitBool, LitChar, LitStr, Token};
@@ -28,6 +28,7 @@ use crate::util::filetime;
 struct DeriveTemplateOptions {
     found_keys: Vec<Ident>,
     path: Option<LitStr>,
+    source: Option<LitStr>,
     delimiter: Option<LitChar>,
     escape: Option<LitBool>,
     rm_whitespace: Option<LitBool>,
@@ -51,6 +52,8 @@ impl DeriveTemplateOptions {
 
                 if key == "path" {
                     self.path = Some(s.parse::<LitStr>()?);
+                } else if key == "source" {
+                    self.source = Some(s.parse::<LitStr>()?);
                 } else if key == "delimiter" {
                     self.delimiter = Some(s.parse::<LitChar>()?);
                 } else if key == "escape" {
@@ -94,6 +97,19 @@ fn merge_config_options(config: &mut Config, options: &DeriveTemplateOptions) {
     if let Some(ref rm_newline) = options.rm_newline {
         config.rm_newline = rm_newline.value;
     }
+}
+
+fn compile_source(config: Config, source: &LitStr) -> Result<TokenStream, syn::Error> {
+    let compiled_source =
+        with_compiler(config, |compiler| compiler.compile_str(&source.value()))
+            .map_err(|e| syn::Error::new(source.span(), e))?;
+
+    compiled_source.parse::<TokenStream>().map_err(|e| {
+        syn::Error::new(
+            source.span(),
+            format!("Failed to parse compiled template: {}", e),
+        )
+    })
 }
 
 fn resolve_template_file(path: &str, template_dirs: &[PathBuf]) -> Option<PathBuf> {
@@ -198,10 +214,33 @@ fn derive_template_common_impl(
         config.template_dirs.push(template_dir);
     }
 
+    merge_config_options(&mut config, &all_options);
+
+    // A template is defined either by a file `path` or by an inline `source` string,
+    // but not both.
+    let path = match (&all_options.path, &all_options.source) {
+        (Some(_), Some(_)) => {
+            return Err(syn::Error::new(
+                Span::call_site(),
+                "`path` and `source` options cannot be used at the same time.",
+            ));
+        }
+        (None, None) => {
+            return Err(syn::Error::new(
+                Span::call_site(),
+                "Either `path` or `source` option must be specified.",
+            ));
+        }
+        (None, Some(source)) => {
+            let compiled_tokens = compile_source(config, source)?;
+            // Inline templates have no backing file, so there is nothing for cargo to
+            // track through `include_bytes!`.
+            return Ok((strct, TokenStream::new(), compiled_tokens));
+        }
+        (Some(path), None) => path,
+    };
+
     let input_file = {
-        let path = all_options.path.as_ref().ok_or_else(|| {
-            syn::Error::new(Span::call_site(), "`path` option must be specified.")
-        })?;
         resolve_template_file(&path.value(), &config.template_dirs)
             .and_then(|path| path.canonicalize().ok())
             .ok_or_else(|| {
@@ -214,6 +253,7 @@ fn derive_template_common_impl(
 
     merge_config_options(&mut config, &all_options);
 
+    // Hermetic means that we are skipping the IO file writes
     #[cfg(not(feature = "hermetic"))]
     let (deps, compiled_tokens) = {
         // Template compilation through this proc-macro uses a caching mechanism. Output file
@@ -324,6 +364,7 @@ fn derive_template_common_impl(
 
         (deps, compiled_tokens)
     };
+
 
     let input_file_string = input_file
         .to_str()
