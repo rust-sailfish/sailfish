@@ -31,7 +31,7 @@ static ESCAPE_LUT: [u8; 256] = [
     9, 9, 9, 9,
 ];
 
-const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
+pub(super) const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 5;
 
 use super::buffer::Buffer;

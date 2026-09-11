@@ -1,10 +1,9 @@
 ## [Unreleased]
 
-### Feature
+### Fix
 
-* Add a `source` derive option so templates can be written inline as a string
-  literal instead of pointing to a file, e.g. `#[template(source = "<%= x %>")]`.
-  Either `path` or `source` is required, and they cannot be combined.
+* `upper` filter no longer rewrites Sailfish's HTML escape sequences:
+  `<%= "&" | upper %>` now renders `&amp;` instead of `&AMP;`
 
 ### Breaking Change
 

@@ -1,3 +1,4 @@
 trim: &lt;html&gt;
 lower: abcａｂｃ
 upper: ABCＡＢＣ
+upper: A&amp;B&lt;C&gt;

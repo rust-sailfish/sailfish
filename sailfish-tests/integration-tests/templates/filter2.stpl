@@ -1,3 +1,4 @@
 trim: <%= " <html>  " | trim %>
 lower: <%= "aBcＡｂｃ" | lower %>
 upper: <%= "aBcＡｂｃ" | upper %>
+upper: <%= "a&b<c>" | upper %>
