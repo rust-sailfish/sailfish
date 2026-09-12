@@ -362,6 +362,26 @@ impl<T: Render> Render for Wrapping<T> {
     }
 }
 
+impl<T: Render> Render for Option<T> {
+    #[inline]
+    fn render(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        if let Some(inner) = self {
+            inner.render(b)
+        } else {
+            Ok(())
+        }
+    }
+
+    #[inline]
+    fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
+        if let Some(inner) = self {
+            inner.render_escaped(b)
+        } else {
+            Ok(())
+        }
+    }
+}
+
 /// The error type which is returned from template function
 #[derive(Clone, Debug)]
 pub enum RenderError {
@@ -519,6 +539,18 @@ mod tests {
         Render::render(&NonZeroU8::new(10).unwrap(), &mut b).unwrap();
         Render::render_escaped(&NonZeroI16::new(-20).unwrap(), &mut b).unwrap();
         assert_eq!(b.as_str(), "10-20");
+    }
+
+    #[test]
+    fn test_option() {
+        let mut b = Buffer::new();
+        Render::render(&Some("apple"), &mut b).unwrap();
+        Render::render_escaped(&Some("apple"), &mut b).unwrap();
+
+        Render::render(&Option::<&str>::None, &mut b).unwrap();
+        Render::render_escaped(&Option::<&str>::None, &mut b).unwrap();
+
+        assert_eq!(b.as_str(), "appleapple");
     }
 
     #[test]
