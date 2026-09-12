@@ -4,6 +4,8 @@
 
 * `upper` filter no longer rewrites Sailfish's HTML escape sequences:
   `<%= "&" | upper %>` now renders `&amp;` instead of `&AMP;`
+* `lower` filter no longer leaves partial output behind when rendering
+  fails, and no longer panics when a custom renderer shrinks the buffer
 
 ### Breaking Change
 

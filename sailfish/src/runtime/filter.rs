@@ -3,7 +3,7 @@
 use std::fmt;
 use std::ptr;
 
-use super::escape::ESCAPED;
+use super::escape::escaped_entity_len;
 use super::{Buffer, Render, RenderError};
 
 /// Helper struct for 'display' filter
@@ -112,18 +112,98 @@ fn uppercase_escaped(s: &str, b: &mut Buffer) {
 }
 
 fn push_uppercase(s: &str, b: &mut Buffer) {
-    for c in s.chars() {
-        for c in c.to_uppercase() {
-            b.push(c);
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i].is_ascii() {
+            let start = i;
+            while i < bytes.len() && bytes[i].is_ascii() {
+                i += 1;
+            }
+            let chunk = &bytes[start..i];
+            b.reserve(chunk.len());
+            unsafe {
+                let dst = b.as_mut_ptr().add(b.len());
+                for (offset, &byte) in chunk.iter().enumerate() {
+                    *dst.add(offset) = if byte.is_ascii_lowercase() {
+                        byte - 32
+                    } else {
+                        byte
+                    };
+                }
+                b.advance(chunk.len());
+            }
+        } else if let Some(c) = s[i..].chars().next() {
+            for c in c.to_uppercase() {
+                b.push(c);
+            }
+            i += c.len_utf8();
+        } else {
+            break;
         }
     }
 }
 
-fn escaped_entity_len(s: &[u8]) -> Option<usize> {
-    ESCAPED
-        .iter()
-        .find(|escaped| s.starts_with(escaped.as_bytes()))
-        .map(|escaped| escaped.len())
+fn push_lowercase(s: &str, b: &mut Buffer) {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i].is_ascii() {
+            let start = i;
+            while i < bytes.len() && bytes[i].is_ascii() {
+                i += 1;
+            }
+            let chunk = &bytes[start..i];
+            b.reserve(chunk.len());
+            unsafe {
+                let dst = b.as_mut_ptr().add(b.len());
+                for (offset, &byte) in chunk.iter().enumerate() {
+                    *dst.add(offset) = if byte.is_ascii_uppercase() {
+                        byte + 32
+                    } else {
+                        byte
+                    };
+                }
+                b.advance(chunk.len());
+            }
+        } else if let Some(c) = s[i..].chars().next() {
+            for c in c.to_lowercase() {
+                b.push(c);
+            }
+            i += c.len_utf8();
+        } else {
+            break;
+        }
+    }
+}
+
+fn lowercase_escaped(s: &str, b: &mut Buffer) {
+    b.reserve(s.len());
+
+    let bytes = s.as_bytes();
+    let mut start = 0;
+    let mut i = 0;
+
+    while i < bytes.len() {
+        if bytes[i] != b'&' {
+            i += 1;
+            continue;
+        }
+
+        push_lowercase(&s[start..i], b);
+
+        if let Some(len) = escaped_entity_len(&bytes[i..]) {
+            b.push_str(&s[i..i + len]);
+            i += len;
+        } else {
+            b.push('&');
+            i += 1;
+        }
+
+        start = i;
+    }
+
+    push_lowercase(&s[start..], b);
 }
 
 /// convert the rendered contents to uppercase
@@ -160,12 +240,10 @@ impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
     }
 
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        let old_len = b.len();
-        self.0.render_escaped(b)?;
+        let mut tmp = Buffer::new();
+        self.0.render_escaped(&mut tmp)?;
 
-        let s = b.as_str()[old_len..].to_lowercase();
-        unsafe { b._set_len(old_len) };
-        b.push_str(&s);
+        lowercase_escaped(tmp.as_str(), b);
         Ok(())
     }
 }
@@ -415,14 +493,18 @@ mod tests {
         assert_render(&lower("LOREM IPSUM"), "lorem ipsum");
 
         assert_render_escaped(&lower("hElLo, WOrLd!"), "hello, world!");
-        assert_render_escaped(&lower("hElLo, WOrLd!"), "hello, world!");
+        assert_render_escaped(&lower("&COPY;"), "&amp;copy;");
 
         assert_render_escaped(&lower("<h1>TITLE</h1>"), "&lt;h1&gt;title&lt;/h1&gt;");
         assert_render_escaped(&lower("<<&\"\">>"), "&lt;&lt;&amp;&quot;&quot;&gt;&gt;");
+        assert_render_escaped(&lower("&"), "&amp;");
+        assert_render_escaped(&lower("ABC&\"'<>"), "abc&amp;&quot;&#039;&lt;&gt;");
 
         // non-ascii
         assert_render(&lower("aBcＡｂｃ"), "abcａｂｃ");
         assert_render(&lower("ὈΔΥΣΣΕΎΣ"), "ὀδυσσεύς");
+        assert_render(&lower("Tschüß"), "tschüß");
+        assert_render_escaped(&lower("Tschüß"), "tschüß");
     }
 
     #[test]
@@ -437,6 +519,7 @@ mod tests {
         assert_render(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
 
         assert_render_escaped(&upper("hElLo, WOrLd!"), "HELLO, WORLD!");
+        assert_render_escaped(&upper("&"), "&amp;");
         assert_render_escaped(&upper("<h1>TITLE</h1>"), "&lt;H1&gt;TITLE&lt;/H1&gt;");
         assert_render_escaped(
             &upper("<<&\"'\">>"),
@@ -495,6 +578,38 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(buf.as_str(), "prefix");
+    }
+
+    #[test]
+    fn test_lower_preserves_escaped_rendering() {
+        assert_render_escaped(
+            &lower(&CustomEscapedRender),
+            "escaped &copy; &amp;copy; &bad &#039x;",
+        );
+    }
+
+    #[test]
+    fn test_lower_render_error_keeps_destination_unchanged() {
+        let mut buf = Buffer::new();
+        buf.push_str("prefix");
+
+        let result = lower(&FailingRender).render_escaped(&mut buf);
+
+        assert!(result.is_err());
+        assert_eq!(buf.as_str(), "prefix");
+    }
+
+    #[test]
+    fn test_case_filters_append_to_existing_buffer() {
+        let mut buf = Buffer::new();
+        buf.push_str("prefix:");
+        upper("ab").render_escaped(&mut buf).unwrap();
+        assert_eq!(buf.as_str(), "prefix:AB");
+
+        let mut buf = Buffer::new();
+        buf.push_str("prefix:");
+        lower("AB").render_escaped(&mut buf).unwrap();
+        assert_eq!(buf.as_str(), "prefix:ab");
     }
 
     #[test]

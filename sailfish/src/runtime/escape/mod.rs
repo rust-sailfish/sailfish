@@ -31,8 +31,24 @@ static ESCAPE_LUT: [u8; 256] = [
     9, 9, 9, 9,
 ];
 
-pub(super) const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
+const ESCAPED: [&str; 5] = ["&quot;", "&amp;", "&#039;", "&lt;", "&gt;"];
 const ESCAPED_LEN: usize = 5;
+
+#[cfg_attr(feature = "perf-inline", inline)]
+pub(crate) fn escaped_entity_len(haystack: &[u8]) -> Option<usize> {
+    let idx = match haystack.get(1)? {
+        b'q' => 0,
+        b'a' => 1,
+        b'#' => 2,
+        b'l' => 3,
+        b'g' => 4,
+        _ => return None,
+    };
+    let entity = ESCAPED[idx];
+    haystack
+        .starts_with(entity.as_bytes())
+        .then_some(entity.len())
+}
 
 use super::buffer::Buffer;
 
@@ -162,6 +178,23 @@ mod tests {
             "&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello, world&lt;/h1&gt;\
             &lt;/body&gt;&lt;/html&gt;"
         );
+    }
+
+    #[test]
+    fn escaped_entity_len_matches_canonical_entities() {
+        assert_eq!(escaped_entity_len(b"&quot;rest"), Some(6));
+        assert_eq!(escaped_entity_len(b"&amp;rest"), Some(5));
+        assert_eq!(escaped_entity_len(b"&#039;rest"), Some(6));
+        assert_eq!(escaped_entity_len(b"&lt;rest"), Some(4));
+        assert_eq!(escaped_entity_len(b"&gt;rest"), Some(4));
+
+        assert_eq!(escaped_entity_len(b""), None);
+        assert_eq!(escaped_entity_len(b"&"), None);
+        assert_eq!(escaped_entity_len(b"&amp"), None);
+        assert_eq!(escaped_entity_len(b"&nbsp;"), None);
+        assert_eq!(escaped_entity_len(b"&copy;"), None);
+        assert_eq!(escaped_entity_len(b"&AMP;"), None);
+        assert_eq!(escaped_entity_len(b"plain"), None);
     }
 
     #[test]
