@@ -68,3 +68,38 @@ fn source_works_with_template_trait() {
     let t = Borrowed { name: "there" };
     assert_string_eq!(&*t.render().unwrap(), "Hi there");
 }
+
+#[test]
+fn json_in_script_preserves_data() {
+    #[derive(TemplateSimple)]
+    #[template(source = "<script>const data = <%- data | json %>;</script>")]
+    struct Script<'a> {
+        data: &'a str,
+    }
+
+    let data = "</script><script>alert('test')</script>&\u{2028}\u{2029}🦀";
+    let rendered = Script { data }.render_once().unwrap();
+    let encoded = rendered
+        .strip_prefix("<script>const data = ")
+        .unwrap()
+        .strip_suffix(";</script>")
+        .unwrap();
+    let decoded: String = serde_json::from_str(encoded).unwrap();
+    assert_eq!(decoded, data);
+    assert!(!encoded.contains(['<', '>', '&', '\'', '\u{2028}', '\u{2029}']));
+}
+
+#[test]
+fn json_in_attribute_uses_html_escaping() {
+    #[derive(Template)]
+    #[template(source = "<div data-value=\"<%= self.data | json %>\"></div>")]
+    struct Attribute<'a> {
+        data: &'a str,
+    }
+
+    let rendered = Attribute { data: "\"<&'" }.render().unwrap();
+    assert_string_eq!(
+        &*rendered,
+        "<div data-value=\"&quot;\\&quot;&lt;&amp;&#039;&quot;\"></div>"
+    );
+}

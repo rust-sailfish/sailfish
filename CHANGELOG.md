@@ -6,6 +6,9 @@
   `<%= "&" | upper %>` now renders `&amp;` instead of `&AMP;`
 * `lower` filter no longer leaves partial output behind when rendering
   fails, and no longer panics when a custom renderer shrinks the buffer
+* Unescaped `json` filter output now uses JSON Unicode escapes for `<`, `>`,
+  `&`, `'`, U+2028, and U+2029 so it can be embedded directly in script elements.
+  The serialized text changes, but the decoded JSON values are preserved.
 
 ### Breaking Change
 
