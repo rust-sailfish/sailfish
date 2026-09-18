@@ -26,14 +26,14 @@ For example, enable the JSON filter while keeping the default features:
 
 ``` toml
 [dependencies]
-sailfish = { version = "0.11.7", features = "0.11.8"
+sailfish = { version = "0.11.8", features = ["json"] }
 ```
 
 To use derive macros without reading configuration files:
 
 ``` toml
 [dependencies]
-sailfish = { version = "0.11.7", default-features = false, features = "0.11.8"
+sailfish = { version = "0.11.8", default-features = false, features = ["derive", "perf-inline"] }
 ```
 
 Options set with `#[template(...)]` remain available when `config` is disabled.
