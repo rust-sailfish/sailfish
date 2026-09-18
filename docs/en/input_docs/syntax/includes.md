@@ -44,5 +44,10 @@ Then you can see the `header.stpl` is embedded in the output.
 
 Like [`std::include!`](https://doc.rust-lang.org/std/macro.include.html) macro in Rust, the provided path is interpreted as a relative path to the current template file.
 
-!!! Warning
-    The path format is platform-specific. You must use `\` character as a separator on Windows.
+Use `/` as the path separator for templates shared between Unix and Windows.
+Windows also accepts `\`, which must be escaped as `\\` in a regular Rust string
+literal.
+
+Includes require a file-backed template (`#[template(path = "...")]`). They are
+not available in inline templates using `#[template(source = "...")]`, which have
+no template directory to resolve paths against.

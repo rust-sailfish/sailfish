@@ -2,35 +2,44 @@
 //! Before reading this reference,
 //! I recommend reading [User guide](https://rust-sailfish.github.io/sailfish/).
 //!
-//! This crate contains utilities for rendering sailfish template.
-//! If you want to use sailfish templates, import `sailfish-macros` crate and use
-//! derive macro `#[derive(TemplateOnce)]`, `#[derive(TemplateMut)]` or `#[derive(Template)]`.
+//! This crate contains utilities for rendering Sailfish templates. With the default
+//! `derive` feature, it also re-exports the `TemplateSimple`, `TemplateOnce`,
+//! `TemplateMut`, and `Template` derive macros. A separate dependency on
+//! `sailfish-macros` is not required.
+//!
+//! Use [`TemplateSimple`] for direct field access, or [`TemplateOnce`],
+//! [`TemplateMut`], and [`Template`] to access fields and methods through `self`.
+//! The latter traits render by consuming the context, mutably borrowing it, or
+//! borrowing it through a shared reference, respectively.
 //!
 //! In most cases you don't need to care about the `runtime` module in this crate, but
 //! if you want to render custom data inside templates, you must implement
 //! `runtime::Render` trait for that type.
 //!
-//! ```compile_fail
-//! #[allow(rustdoc::invalid_rust_codeblocks)]
+//! ```
+//! # #[cfg(feature = "derive")]
+//! # fn main() -> Result<(), sailfish::RenderError> {
 //! use sailfish::Template;
 //!
 //! #[derive(Template)]
-//! #[template(path = "hello.stpl")]
+//! #[template(source = "<% for msg in &self.messages { %><div><%= msg %></div><% } %>")]
 //! struct HelloTemplate {
-//!     messages: Vec<String>
+//!     messages: Vec<String>,
 //! }
 //!
-//! fn main() {
-//!     let ctx = HelloTemplate {
-//!         messages: vec!["foo".to_string(), "bar".to_string()]
-//!     };
+//! let ctx = HelloTemplate {
+//!     messages: vec!["foo".to_string(), "bar".to_string()],
+//! };
 //!
-//!     println!("{}", ctx.render().unwrap());
-//! }
+//! assert_eq!(ctx.render()?, "<div>foo</div><div>bar</div>");
+//! # Ok(())
+//! # }
+//! # #[cfg(not(feature = "derive"))]
+//! # fn main() {}
 //! ```
 
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/rust-sailfish/sailfish/master/resources/icon.png"
+    html_logo_url = "https://raw.githubusercontent.com/rust-sailfish/sailfish/main/resources/icon.png"
 )]
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -45,12 +54,15 @@ pub use runtime::{RenderError, RenderResult};
 #[cfg_attr(docsrs, doc(cfg(feature = "derive")))]
 pub use sailfish_macros::{Template, TemplateMut, TemplateOnce, TemplateSimple};
 
-/// Template which can be accessed without using `self`.
+/// Template that consumes its context and exposes fields without using `self`.
+///
+/// The derive macro makes fields available as local variables. Use [`TemplateOnce`]
+/// instead if the template needs to access fields or methods through `self`.
 pub trait TemplateSimple: Sized {
     /// Render the template and return the rendering result as `RenderResult`
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails.
     ///
     /// When you use `render_once` method, total rendered size will be cached, and at
     /// the next time, buffer will be pre-allocated based on the cached length.
@@ -60,8 +72,9 @@ pub trait TemplateSimple: Sized {
 
     /// Render the template and append the result to `buf`.
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails. On error, `buf` may contain
+    /// partial output; changes to the buffer are not rolled back.
     ///
     /// ```
     /// use sailfish::TemplateSimple;
@@ -93,12 +106,12 @@ pub trait TemplateSimple: Sized {
     fn render_once_to(self, buf: &mut Buffer) -> Result<(), RenderError>;
 }
 
-/// Template that can be rendered with consuming itself.
+/// Template that consumes its context and accesses fields and methods through `self`.
 pub trait TemplateOnce: Sized {
     /// Render the template and return the rendering result as `RenderResult`
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails.
     ///
     /// When you use `render_once` method, total rendered size will be cached, and at
     /// the next time, buffer will be pre-allocated based on the cached length.
@@ -108,8 +121,9 @@ pub trait TemplateOnce: Sized {
 
     /// Render the template and append the result to `buf`.
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails. On error, `buf` may contain
+    /// partial output; changes to the buffer are not rolled back.
     ///
     /// ```
     /// use sailfish::TemplateOnce;
@@ -141,23 +155,27 @@ pub trait TemplateOnce: Sized {
     fn render_once_to(self, buf: &mut Buffer) -> Result<(), RenderError>;
 }
 
-/// Template that is mutable and can be rendered any number of times.
+/// Template that can be rendered repeatedly through a mutable reference.
+///
+/// Templates access fields and methods through `self` and may mutate the context.
+/// Deriving this trait also implements [`TemplateOnce`].
 pub trait TemplateMut: TemplateOnce {
     /// Render the template and return the rendering result as `RenderResult`
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails.
     ///
-    /// When you use `render` method, total rendered size will be cached, and at
+    /// When you use `render_mut` method, total rendered size will be cached, and at
     /// the next time, buffer will be pre-allocated based on the cached length.
     ///
-    /// If you don't want this behaviour, you can use `render_to` method instead.
+    /// If you don't want this behaviour, you can use `render_mut_to` method instead.
     fn render_mut(&mut self) -> runtime::RenderResult;
 
     /// Render the template and append the result to `buf`.
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails. On error, `buf` may contain
+    /// partial output; changes to the buffer are not rolled back.
     ///
     /// ```
     /// use sailfish::{TemplateOnce, TemplateMut};
@@ -200,12 +218,15 @@ pub trait TemplateMut: TemplateOnce {
     fn render_mut_to(&mut self, buf: &mut Buffer) -> Result<(), RenderError>;
 }
 
-/// Template that can be rendered any number of times.
+/// Template that can be rendered repeatedly through a shared reference.
+///
+/// Templates access fields and methods through `self`. Deriving this trait also
+/// implements [`TemplateMut`] and [`TemplateOnce`].
 pub trait Template: TemplateMut {
     /// Render the template and return the rendering result as `RenderResult`
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails.
     ///
     /// When you use `render` method, total rendered size will be cached, and at
     /// the next time, buffer will be pre-allocated based on the cached length.
@@ -215,8 +236,9 @@ pub trait Template: TemplateMut {
 
     /// Render the template and append the result to `buf`.
     ///
-    /// This method never returns `Err`, unless you explicitly return RenderError
-    /// inside templates
+    /// Returns an error if rendering a value, applying a filter, rendering a nested
+    /// template, or executing template code fails. On error, `buf` may contain
+    /// partial output; changes to the buffer are not rolled back.
     ///
     /// ```
     /// use sailfish::{TemplateOnce, TemplateMut, Template};
