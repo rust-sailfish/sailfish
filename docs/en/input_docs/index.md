@@ -10,16 +10,16 @@ There are many libraries for template rendering in Rust. Among those libraries, 
 
 - Write a Rust code directly inside templates, supporting many Rust syntax (struct definition, closure, macro invocation, etc.)
 - [Built-in filters](https://docs.rs/sailfish/latest/sailfish/runtime/filter/index.html)
-- Minimal dependencies (<15 crates in total)
+- Minimal dependencies
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Template rendering is always type-safe because templates are statically compiled.
-- Syntax highlighting ([vscode](http://github.com/rust-sailfish/sailfish/blob/master/syntax/vscode), [vim](http://github.com/rust-sailfish/sailfish/blob/master/syntax/vim))
+- Syntax highlighting ([vscode](https://github.com/rust-sailfish/sailfish/tree/main/syntax/vscode), [vim](https://github.com/rust-sailfish/sailfish/tree/main/syntax/vim))
+- Consuming, mutable, and shared-reference rendering through [four template traits](getting-started.md#choosing-a-template-trait)
 
 ## Upcoming features
 
-Since sailfish is on early stage of development, there are many upcoming features that is not supported yet. You can find many [RFC](https://github.com/rust-sailfish/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+RFC%22)s in my repository. These RFC include:
+You can find proposed features in the repository's [RFCs](https://github.com/rust-sailfish/sailfish/issues?q=is%3Aissue+is%3Aopen+label%3A%22Status%3A+RFC%22). Planned work includes:
 
-- `Template` trait (which does not consume itself)
 - Template inheritance (block, partials, etc.)
 
 If you have any idea about them or want to implement that feature, please send a comment on the issue!
@@ -28,4 +28,4 @@ If you have any idea about them or want to implement that feature, please send a
 
 Copyright &copy; 2020 Ryohei Machida
 
-This project is [MIT](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE) licensed
+This project is [MIT](https://github.com/rust-sailfish/sailfish/blob/main/LICENSE) licensed

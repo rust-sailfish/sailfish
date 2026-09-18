@@ -19,6 +19,7 @@ struct TemplateStruct {
 - `escape`: Enable HTML escaping (default: `true`)
 - `delimiter`: Replace the '%' character used for the tag delimiter (default: '%')
 - `rm_whitespace`: try to strip whitespaces as much as possible without collapsing HTML structure (default: `false`). This option might not work correctly if your templates have inline `script` tag.
+- `rm_newline`: remove `\n` and `\r` characters from literal template text (default: `false`). This does not change values rendered by expressions such as `<%= value %>`.
 
 For small templates you can inline the source instead of pointing to a file.
 
@@ -44,21 +45,29 @@ struct TemplateStruct {
 
 ## Configuration file
 
+Reading configuration files requires the `config` feature, which is enabled by
+default. When it is disabled, `sailfish.toml` files are ignored, but derive options
+still apply.
+
 Sailfish allows global and local configuration in a file named `sailfish.toml`. Sailfish looks for this file in same directory as `Cargo.toml` and all parent directories.
 If, for example, `Cargo.toml` exists in `/foo/bar/baz` directory, then the following configuration files would be scanned in this order.
 
-- `/foo/bar/baz/sailfish.toml`
-- `/foo/bar/sailfish.toml`
-- `/foo/sailfish.toml`
 - `/sailfish.toml`
+- `/foo/sailfish.toml`
+- `/foo/bar/sailfish.toml`
+- `/foo/bar/baz/sailfish.toml`
 
-If a key is specified in multiple configuration files, the value in the deeper directory takes precedence over ancestor directories.
+For `escape`, `delimiter`, and the optimization settings, values in the deeper
+directory take precedence over values in ancestor directories. `template_dirs`
+lists are combined: directories from deeper configuration files are searched
+first, in the order listed in each file.
 
 If a key is specified in both configuration file and derive options, then the value specified in the derive options takes precedence over the configuration file.
 
 ### Configuration file format
 
-Configuration files are written in the TOML 0.5 format. Here is the default configuration:
+Configuration files are written in TOML. Here is an example with the default
+rendering options and an explicit template directory:
 
 ``` toml
 template_dirs = ["templates"]
@@ -67,9 +76,16 @@ delimiter = "%"
 
 [optimizations]
 rm_whitespace = false
+rm_newline = false
 ```
 
-You can specify another template directory in `template_dirs` option. Other options are same as derive options.
+Paths in `template_dirs` can be absolute or relative to the configuration file
+that defines them. After searching the configured directories, Sailfish falls
+back to the `templates` directory next to the crate's `Cargo.toml`.
+
+The `escape` and `delimiter` options have the same meaning as the derive options.
+Set `rm_whitespace` and `rm_newline` inside `[optimizations]`. The `path` and
+`source` options are only available on `#[template(...)]`.
 
 You can also embed environment variables in `template_dirs` paths by wrapping the variable name with `${` and `}` like `${MY_ENV_VAR}`:
 

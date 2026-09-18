@@ -4,7 +4,7 @@
 
 Simple, small, and extremely fast template engine for Rust
 
-![Tests](https://github.com/rust-sailfish/sailfish/workflows/Tests/badge.svg)![Version](https://img.shields.io/crates/v/sailfish)![dependency status](https://deps.rs/repo/github/rust-sailfish/sailfish/status.svg)![Rust 1.60](https://img.shields.io/badge/rust-1.60+-lightgray.svg)![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Tests](https://github.com/rust-sailfish/sailfish/workflows/Tests/badge.svg)![Version](https://img.shields.io/crates/v/sailfish)![dependency status](https://deps.rs/repo/github/rust-sailfish/sailfish/status.svg)![Rust 1.89](https://img.shields.io/badge/rust-1.89+-lightgray.svg)![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 [User Guide](https://rust-sailfish.github.io/sailfish/) | [API Docs](https://docs.rs/sailfish) | [Examples](./examples)
 
@@ -15,7 +15,7 @@ Simple, small, and extremely fast template engine for Rust
 - Simple and intuitive syntax inspired by [EJS](https://ejs.co/)
 - Include another template file inside template
 - Built-in filters
-- Minimal dependencies (<15 crates in total)
+- Minimal dependencies
 - Extremely fast (See [benchmarks](https://github.com/djc/template-benchmarks-rs))
 - Better error message
 - Syntax highlighting support ([vscode](./syntax/vscode), [vim](./syntax/vim))
@@ -63,7 +63,7 @@ You can choose to use `TemplateSimple` to access fields directly:
 > }
 > ```
 
-Or use the more powerful `Template/TemplateMut/TemplateOnce`:
+Use `Template` to render through a shared reference and access fields and methods through `self`:
 
 > Template file (templates/hello.stpl):
 >
@@ -105,9 +105,12 @@ Or use the more powerful `Template/TemplateMut/TemplateOnce`:
 
 You can find more examples in [examples](./examples) directory.
 
+For mutable or consuming templates with access to `self`, use `TemplateMut` or
+`TemplateOnce`. See [Choosing a template trait](https://rust-sailfish.github.io/sailfish/getting-started/#choosing-a-template-trait)
+for a comparison of all four traits.
+
 ## 🐾 Roadmap
 
-- `Template` trait ([RFC](https://github.com/rust-sailfish/sailfish/issues/3))
 - Template inheritance (block, partials, etc.)
 
 ## 👤 Author
@@ -132,7 +135,7 @@ Give a ⭐️ if this project helped you!
 
 Copyright © 2020 [Ryohei Machida](https://github.com/Kogia-sima).
 
-This project is [MIT](https://github.com/rust-sailfish/sailfish/blob/master/LICENSE) licensed.
+This project is [MIT](./LICENSE) licensed.
 
 ---
 

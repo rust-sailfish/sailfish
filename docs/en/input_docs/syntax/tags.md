@@ -22,7 +22,7 @@ You can write Rust statement inside `<% %>` tag.
 === "Result"
 
     ``` html
-    <div>total = 105</div>
+    <div>total = 5151</div>
     ```
 
 !!! Note
@@ -52,7 +52,7 @@ If you need to simply render `<%` character, you can escape it, or use evaluatio
 === "Result"
 
     ``` text
-    <% is converted into <% character
+    <% is converted into <% character.
     ```
 
 Although almost all Rust statement is supported, the following statements inside templates may cause a strange compilation error.
@@ -109,11 +109,15 @@ If you want to render the results without escaping, you can use `<%- %>` tag or 
 ## Component block
 
 Rust expression inside `<%+ %>` tag is evaluated and then rendered by
-calling its `render_once()` method. If the value does not have an
-appropriate method, a compile-time error will be reported.
+calling its `render_once_to()` method with the current output buffer. When a
+filter is applied to the component, Sailfish calls `render_once()` first and
+passes the rendered string to the filter. If the value does not have the
+appropriate method in scope, a compile-time error will be reported.
 
-This makes it easy to use types which are `TemplateOnce` as components
-which can be embedded into other templates.
+Both `TemplateSimple` and `TemplateOnce` can be used for components. Import the
+corresponding trait so its rendering methods are available. The example below
+uses `TemplateSimple` for both templates, so `val` is accessed directly. With
+`TemplateOnce`, use `self.val` instead.
 
 === "Template A"
 
