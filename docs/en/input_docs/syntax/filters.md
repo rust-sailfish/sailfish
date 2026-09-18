@@ -38,6 +38,45 @@ Example:
 
 Built-In filters can be found in [`sailfish::runtime::filter`](https://docs.rs/sailfish/latest/sailfish/runtime/filter/index.html) module.
 
+### JSON
+
+The `json` filter requires the `json` feature and a value implementing
+`serde::Serialize`. Use `<%- value | json %>` to produce JSON:
+
+```rhtml
+{"data": <%- data | json %>}
+```
+
+This form replaces `<`, `>`, `&`, `'`, U+2028, and U+2029 with JSON Unicode
+escapes. For example, `"</script>"` becomes `"\u003c/script\u003e"`.
+The serialized text changes, but parsing the JSON recovers the original data.
+
+It can also be embedded directly as a JavaScript value:
+
+```rhtml
+<script>
+  const data = <%- data | json %>;
+</script>
+```
+
+Do not add quotes around the expression: the filter already serializes strings
+with their quotes. The same escaping also supports a JSON data block:
+
+```rhtml
+<script id="page-data" type="application/json"><%- data | json %></script>
+```
+
+Read the data block with `JSON.parse(document.getElementById("page-data").textContent)`.
+For a double-quoted HTML attribute, use HTML escaping instead:
+
+```rhtml
+<div data-value="<%= data | json %>"></div>
+```
+
+These examples do not make raw JSON suitable for event handler attributes or
+interpolation inside an existing JavaScript string. Serialization writes directly
+to the output buffer; if it fails, discard the partial rendering.
+
 ## Useful Filters
 
 You can also use the Display filter to do things like format a date, or a UUID.

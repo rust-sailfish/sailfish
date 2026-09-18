@@ -391,6 +391,62 @@ pub fn truncate<T: Render + ?Sized>(expr: &'_ T, limit: usize) -> Truncate<'_, T
 }
 
 cfg_json! {
+    const fn build_json_lut() -> [u8; 256] {
+        let mut table = [0u8; 256];
+        table[b'<' as usize] = 1;
+        table[b'>' as usize] = 2;
+        table[b'&' as usize] = 3;
+        table[b'\'' as usize] = 4;
+        table[0xE2] = 5;
+        table
+    }
+
+    static JSON_LUT: [u8; 256] = build_json_lut();
+    const JSON_REPL: [&str; 4] = ["\\u003c", "\\u003e", "\\u0026", "\\u0027"];
+
+    fn escape_json(s: &str, b: &mut Buffer) {
+        b.reserve(s.len());
+        let bytes = s.as_bytes();
+        let mut start = 0;
+        let mut i = 0;
+        while i < bytes.len() {
+            let tag = JSON_LUT[bytes[i] as usize];
+            if tag == 0 {
+                i += 1;
+                continue;
+            }
+            if tag == 5 {
+                if i + 2 < bytes.len()
+                    && bytes[i + 1] == 0x80
+                    && (bytes[i + 2] == 0xA8 || bytes[i + 2] == 0xA9)
+                {
+                    if i > start {
+                        b.push_str(&s[start..i]);
+                    }
+                    b.push_str(if bytes[i + 2] == 0xA8 {
+                        "\\u2028"
+                    } else {
+                        "\\u2029"
+                    });
+                    i += 3;
+                    start = i;
+                } else {
+                    i += 1;
+                }
+                continue;
+            }
+            if i > start {
+                b.push_str(&s[start..i]);
+            }
+            b.push_str(JSON_REPL[tag as usize - 1]);
+            i += 1;
+            start = i;
+        }
+        if start < s.len() {
+            b.push_str(&s[start..]);
+        }
+    }
+
     /// Helper struct for 'json' filter
     pub struct Json<'a, T: ?Sized>(&'a T);
 
@@ -403,7 +459,7 @@ cfg_json! {
                 #[inline]
                 fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
                     let buf = unsafe { std::str::from_utf8_unchecked(buf) };
-                    self.0.push_str(buf);
+                    escape_json(buf, self.0);
                     Ok(buf.len())
                 }
 
@@ -453,6 +509,12 @@ cfg_json! {
     }
 
     /// Serialize the given data structure as JSON into the buffer
+    ///
+    /// With `<%- value | json %>`, `<`, `>`, `&`, `'`, U+2028, and U+2029 are
+    /// written as JSON Unicode escapes. The output can be embedded directly as
+    /// a value in a `<script>` element without adding quotes around it.
+    /// Use `<%= value | json %>` inside double-quoted HTML attributes instead.
+    /// Serialization errors may leave partial output in the destination buffer.
     ///
     /// # Examples
     ///
@@ -665,9 +727,102 @@ mod tests {
     fn test_json() {
         assert_render(&json(""), "\"\"");
         assert_render(&json(&serde_json::json!({})), "{}");
+        assert_render(
+            &json("</script><script>alert(1)</script>"),
+            "\"\\u003c/script\\u003e\\u003cscript\\u003ealert(1)\\u003c/script\\u003e\"",
+        );
+        assert_render(&json("a&b"), "\"a\\u0026b\"");
+        assert_render(&json("a<b>c"), "\"a\\u003cb\\u003ec\"");
+        assert_render(&json("it's"), "\"it\\u0027s\"");
+        assert_render(&json("\u{2028}\u{2029}"), "\"\\u2028\\u2029\"");
+        assert_render(&json("–"), "\"–\"");
 
         assert_render_escaped(&json(&123_i32), "123");
         assert_render_escaped(&json("Pokémon"), "&quot;Pokémon&quot;");
+        assert_render_escaped(&json("</script>"), "&quot;&lt;/script&gt;&quot;");
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn test_json_roundtrip_and_append() {
+        for text in [
+            "",
+            "</ScRiPt><script>alert('test')</script>",
+            "<!--<script>&'\"\\\n\t\0",
+            "\\u003c\\u2028",
+            "é\u{2027}\u{2028}\u{2029}\u{202a}🦀<&>",
+        ] {
+            let value = serde_json::json!({
+                (text): [text, null, true, false, -123, 1.25, {"nested": text}]
+            });
+            let mut buf = Buffer::from("prefix:🦀");
+            json(&value).render(&mut buf).unwrap();
+
+            let rendered = buf.as_str().strip_prefix("prefix:🦀").unwrap();
+            let decoded: serde_json::Value = serde_json::from_str(rendered).unwrap();
+            assert_eq!(decoded, value);
+            assert!(!rendered.contains(['<', '>', '&', '\'', '\u{2028}', '\u{2029}']));
+        }
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn test_json_collect_str() {
+        struct Fragmented;
+
+        impl fmt::Display for Fragmented {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                for fragment in
+                    ["é", "<", "&", "\u{2028}", "\u{2029}", "'", "\\", "\"", "🦀"]
+                {
+                    f.write_str(fragment)?;
+                }
+                Ok(())
+            }
+        }
+
+        impl serde::Serialize for Fragmented {
+            fn serialize<S: serde::Serializer>(
+                &self,
+                serializer: S,
+            ) -> Result<S::Ok, S::Error> {
+                serializer.collect_str(self)
+            }
+        }
+
+        let mut buf = Buffer::new();
+        json(&Fragmented).render(&mut buf).unwrap();
+        let decoded: String = serde_json::from_str(buf.as_str()).unwrap();
+        assert_eq!(decoded, Fragmented.to_string());
+        assert!(
+            !buf.as_str()
+                .contains(['<', '>', '&', '\'', '\u{2028}', '\u{2029}'])
+        );
+    }
+
+    #[cfg(feature = "json")]
+    #[test]
+    fn test_json_serialization_error() {
+        use serde::ser::{Error, SerializeSeq};
+
+        struct FailingSerialize;
+
+        impl serde::Serialize for FailingSerialize {
+            fn serialize<S: serde::Serializer>(
+                &self,
+                serializer: S,
+            ) -> Result<S::Ok, S::Error> {
+                let mut sequence = serializer.serialize_seq(Some(2))?;
+                sequence.serialize_element("</script>")?;
+                Err(S::Error::custom("serialization failed"))
+            }
+        }
+
+        let mut buf = Buffer::from("prefix:");
+        let error = json(&FailingSerialize).render(&mut buf).unwrap_err();
+        assert_eq!(error.to_string(), "serialization failed");
+        assert!(buf.as_str().starts_with("prefix:"));
+        assert!(!buf.as_str().contains("</script>"));
     }
 
     #[test]
