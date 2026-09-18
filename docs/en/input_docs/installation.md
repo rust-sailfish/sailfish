@@ -4,7 +4,7 @@ Sailfish requires Rust 1.89 or later. Add the following dependency to your `Carg
 
 ``` toml
 [dependencies]
-sailfish = "0.11.7"
+sailfish = "0.11.8"
 ```
 
 The default `derive` feature re-exports the derive macros from `sailfish`, so a
@@ -26,14 +26,14 @@ For example, enable the JSON filter while keeping the default features:
 
 ``` toml
 [dependencies]
-sailfish = { version = "0.11.7", features = ["json"] }
+sailfish = { version = "0.11.7", features = "0.11.8"
 ```
 
 To use derive macros without reading configuration files:
 
 ``` toml
 [dependencies]
-sailfish = { version = "0.11.7", default-features = false, features = ["derive", "perf-inline"] }
+sailfish = { version = "0.11.7", default-features = false, features = "0.11.8"
 ```
 
 Options set with `#[template(...)]` remain available when `config` is disabled.
