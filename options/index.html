@@ -599,6 +599,7 @@
 <li><code>escape</code>: Enable HTML escaping (default: <code>true</code>)</li>
 <li><code>delimiter</code>: Replace the '%' character used for the tag delimiter (default: '%')</li>
 <li><code>rm_whitespace</code>: try to strip whitespaces as much as possible without collapsing HTML structure (default: <code>false</code>). This option might not work correctly if your templates have inline <code>script</code> tag.</li>
+<li><code>rm_newline</code>: remove <code>\n</code> and <code>\r</code> characters from literal template text (default: <code>false</code>). This does not change values rendered by expressions such as <code>&lt;%= value %&gt;</code>.</li>
 </ul>
 <p>For small templates you can inline the source instead of pointing to a file.</p>
 <div class="highlight"><pre><span></span><code><span class="cp">#[derive(TemplateSimple)]</span>
@@ -617,26 +618,39 @@
 <span class="p">}</span>
 </code></pre></div>
 <h2 id="configuration-file">Configuration file</h2>
+<p>Reading configuration files requires the <code>config</code> feature, which is enabled by
+default. When it is disabled, <code>sailfish.toml</code> files are ignored, but derive options
+still apply.</p>
 <p>Sailfish allows global and local configuration in a file named <code>sailfish.toml</code>. Sailfish looks for this file in same directory as <code>Cargo.toml</code> and all parent directories.
 If, for example, <code>Cargo.toml</code> exists in <code>/foo/bar/baz</code> directory, then the following configuration files would be scanned in this order.</p>
 <ul>
-<li><code>/foo/bar/baz/sailfish.toml</code></li>
-<li><code>/foo/bar/sailfish.toml</code></li>
-<li><code>/foo/sailfish.toml</code></li>
 <li><code>/sailfish.toml</code></li>
+<li><code>/foo/sailfish.toml</code></li>
+<li><code>/foo/bar/sailfish.toml</code></li>
+<li><code>/foo/bar/baz/sailfish.toml</code></li>
 </ul>
-<p>If a key is specified in multiple configuration files, the value in the deeper directory takes precedence over ancestor directories.</p>
+<p>For <code>escape</code>, <code>delimiter</code>, and the optimization settings, values in the deeper
+directory take precedence over values in ancestor directories. <code>template_dirs</code>
+lists are combined: directories from deeper configuration files are searched
+first, in the order listed in each file.</p>
 <p>If a key is specified in both configuration file and derive options, then the value specified in the derive options takes precedence over the configuration file.</p>
 <h3 id="configuration-file-format">Configuration file format</h3>
-<p>Configuration files are written in the TOML 0.5 format. Here is the default configuration:</p>
+<p>Configuration files are written in TOML. Here is an example with the default
+rendering options and an explicit template directory:</p>
 <div class="highlight"><pre><span></span><code><span class="n">template_dirs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;templates&quot;</span><span class="p">]</span>
 <span class="n">escape</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <span class="n">delimiter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;%&quot;</span>
 
 <span class="k">[optimizations]</span>
 <span class="n">rm_whitespace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="n">rm_newline</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
-<p>You can specify another template directory in <code>template_dirs</code> option. Other options are same as derive options.</p>
+<p>Paths in <code>template_dirs</code> can be absolute or relative to the configuration file
+that defines them. After searching the configured directories, Sailfish falls
+back to the <code>templates</code> directory next to the crate's <code>Cargo.toml</code>.</p>
+<p>The <code>escape</code> and <code>delimiter</code> options have the same meaning as the derive options.
+Set <code>rm_whitespace</code> and <code>rm_newline</code> inside <code>[optimizations]</code>. The <code>path</code> and
+<code>source</code> options are only available on <code>#[template(...)]</code>.</p>
 <p>You can also embed environment variables in <code>template_dirs</code> paths by wrapping the variable name with <code>${</code> and <code>}</code> like <code>${MY_ENV_VAR}</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="n">template_dirs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;${CI}/path/to/project/${MYVAR}/templates&quot;</span><span class="p">]</span>
 </code></pre></div>

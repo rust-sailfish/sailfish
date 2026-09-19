@@ -349,6 +349,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#choosing-a-template-trait" class="md-nav__link">
+    Choosing a template trait
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
+  <a href="#handling-rendering-errors" class="md-nav__link">
+    Handling rendering errors
+  </a>
+
+</li>
+
     </ul>
   
 </nav>
@@ -539,6 +553,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#choosing-a-template-trait" class="md-nav__link">
+    Choosing a template trait
+  </a>
+
+</li>
+
+        <li class="md-nav__item">
+  <a href="#handling-rendering-errors" class="md-nav__link">
+    Handling rendering errors
+  </a>
+
+</li>
+
     </ul>
   
 </nav>
@@ -576,7 +604,7 @@ templates/
     hello.stpl
 </code></pre></div>
 <h2 id="render-the-template">Render the template</h2>
-<ol><li>Import the sailfish crates:</li></ol>
+<ol><li>Import the template trait and derive macro:</li></ol>
 
 <div class="highlight"><pre><span></span><code><span class="k">use</span><span class="w"> </span><span class="n">sailfish</span>::<span class="n">TemplateSimple</span><span class="p">;</span>
 </code></pre></div>
@@ -601,7 +629,62 @@ templates/
 <span class="p">}</span>
 </code></pre></div>
 <p>That's it!</p>
-<p>You can find more examples in the <a href="https://github.com/rust-sailfish/sailfish/tree/master/examples">example</a> directory in the sailfish repository.</p>
+<p>You can find more examples in the <a href="https://github.com/rust-sailfish/sailfish/tree/main/examples">examples</a> directory in the sailfish repository.</p>
+<h2 id="choosing-a-template-trait">Choosing a template trait</h2>
+<p>The derive macro determines how a template accesses its fields and whether
+rendering consumes or borrows the context:</p>
+<table>
+<thead>
+<tr>
+<th>Trait</th>
+<th>Field access in the template</th>
+<th>Rendering method</th>
+<th>Context ownership</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TemplateSimple</code></td>
+<td><code>messages</code></td>
+<td><code>render_once(self)</code></td>
+<td>Consumes the context; fields become local variables.</td>
+</tr>
+<tr>
+<td><code>TemplateOnce</code></td>
+<td><code>self.messages</code></td>
+<td><code>render_once(self)</code></td>
+<td>Consumes the context; fields and methods are accessed through <code>self</code>.</td>
+</tr>
+<tr>
+<td><code>TemplateMut</code></td>
+<td><code>self.messages</code></td>
+<td><code>render_mut(&amp;mut self)</code></td>
+<td>Mutably borrows the context, allowing repeated rendering and mutation.</td>
+</tr>
+<tr>
+<td><code>Template</code></td>
+<td><code>self.messages</code></td>
+<td><code>render(&amp;self)</code></td>
+<td>Borrows the context through a shared reference, allowing repeated rendering.</td>
+</tr>
+</tbody>
+</table>
+<p>Deriving <code>TemplateMut</code> also implements <code>TemplateOnce</code>. Deriving <code>Template</code> also
+implements <code>TemplateMut</code> and <code>TemplateOnce</code>. <code>TemplateSimple</code> is a separate trait.
+Import the trait that provides the method you call.</p>
+<p>When switching the example above to <code>#[derive(Template)]</code>, import
+<code>sailfish::Template</code>, change the loop to <code>for msg in &amp;self.messages</code>, and call
+<code>ctx.render()</code>. You can then render the same context more than once.</p>
+<p>Each trait also has a method that appends to a <code>sailfish::runtime::Buffer</code>:
+<code>render_once_to</code>, <code>render_mut_to</code>, or <code>render_to</code>, with the same ownership rules as
+the corresponding method returning a string.</p>
+<h2 id="handling-rendering-errors">Handling rendering errors</h2>
+<p>Rendering methods return a <code>Result</code>. Errors can come from custom <code>Render</code>
+implementations, filters such as <code>json</code> or <code>disp</code>, nested templates, or explicit
+error returns in template code. The examples use <code>unwrap()</code> for brevity; in an
+application, handle the error or propagate it with <code>?</code>.</p>
+<p>If a method that appends to a buffer returns an error, the buffer may contain
+partial output. Rendering does not automatically roll back changes to the buffer.</p>
 
 
 

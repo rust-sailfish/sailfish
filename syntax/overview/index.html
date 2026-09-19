@@ -605,7 +605,7 @@
 <li><code>&lt;% %&gt;</code>: Inline tag, you can write Rust code inside this tag</li>
 <li><code>&lt;%= %&gt;</code>: Evaluate the Rust expression and outputs the value into the template (HTML escaped)</li>
 <li><code>&lt;%- %&gt;</code>: Evaluate the Rust expression and outputs the unescaped value into the template</li>
-<li><code>&lt;%+ %&gt;</code>: Evaluate the Rust expression producing a <code>TemplateOnce</code> value, and render that value into the template</li>
+<li><code>&lt;%+ %&gt;</code>: Evaluate the Rust expression producing a <code>TemplateSimple</code> or <code>TemplateOnce</code> value, and render that value into the template</li>
 <li><code>&lt;%# %&gt;</code>: Comment tag</li>
 <li><code>&lt;%%</code>: Outputs a literal '&lt;%'</li>
 </ul>
@@ -626,10 +626,11 @@
 <div class="highlight"><pre><span></span><code><span class="cp">&lt;%=</span><span class="w"> </span><span class="n">message</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">upper</span><span class="w"> </span><span class="cp">%&gt;</span>
 </code></pre></div>
 <div class="highlight"><pre><span></span><code>{
-    &quot;id&quot;: <span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">id</span><span class="w"> </span><span class="cp">%&gt;</span>
+    &quot;id&quot;: <span class="cp">&lt;%=</span><span class="w"> </span><span class="nb">id</span><span class="w"> </span><span class="cp">%&gt;</span>,
     &quot;comment&quot;: <span class="cp">&lt;%-</span><span class="w"> </span><span class="n">comment</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="cp">%&gt;</span>
 }
 </code></pre></div>
+<p>The <code>json</code> filter requires the <a href="../../installation/#feature-flags"><code>json</code> feature</a>.</p>
 
 
 

@@ -479,6 +479,19 @@
     Built-In Filters
   </a>
   
+    <nav class="md-nav" aria-label="Built-In Filters">
+      <ul class="md-nav__list">
+
+          <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    JSON
+  </a>
+
+</li>
+
+      </ul>
+    </nav>
+
 </li>
       
         <li class="md-nav__item">
@@ -542,6 +555,19 @@
     Built-In Filters
   </a>
   
+    <nav class="md-nav" aria-label="Built-In Filters">
+      <ul class="md-nav__list">
+
+          <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    JSON
+  </a>
+
+</li>
+
+      </ul>
+    </nav>
+
 </li>
       
         <li class="md-nav__item">
@@ -601,6 +627,30 @@
 </code></pre></div>
 <h2 id="built-in-filters">Built-In Filters</h2>
 <p>Built-In filters can be found in <a href="https://docs.rs/sailfish/latest/sailfish/runtime/filter/index.html"><code>sailfish::runtime::filter</code></a> module.</p>
+<h3 id="json">JSON</h3>
+<p>The <code>json</code> filter requires the <code>json</code> feature and a value implementing
+<code>serde::Serialize</code>. Use <code>&lt;%- value | json %&gt;</code> to produce JSON:</p>
+<div class="highlight"><pre><span></span><code>{&quot;data&quot;: <span class="cp">&lt;%-</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="cp">%&gt;</span>}
+</code></pre></div>
+<p>This form replaces <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, <code>'</code>, U+2028, and U+2029 with JSON Unicode
+escapes. For example, <code>"&lt;/script&gt;"</code> becomes <code>"\u003c/script\u003e"</code>.
+The serialized text changes, but parsing the JSON recovers the original data.</p>
+<p>It can also be embedded directly as a JavaScript value:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="cp">&lt;%-</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="cp">%&gt;</span><span class="p">;</span>
+<span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Do not add quotes around the expression: the filter already serializes strings
+with their quotes. The same escaping also supports a JSON data block:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">script</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;page-data&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;application/json&quot;</span><span class="p">&gt;</span><span class="cp">&lt;%-</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="cp">%&gt;</span><span class="p">&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>Read the data block with <code>JSON.parse(document.getElementById("page-data").textContent)</code>.
+For a double-quoted HTML attribute, use HTML escaping instead:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span> <span class="na">data-value</span><span class="o">=</span><span class="s">&quot;</span><span class="cp">&lt;%=</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="cp">%&gt;</span><span class="s">&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>These examples do not make raw JSON suitable for event handler attributes or
+interpolation inside an existing JavaScript string. Serialization writes directly
+to the output buffer; if it fails, discard the partial rendering.</p>
 <h2 id="useful-filters">Useful Filters</h2>
 <p>You can also use the Display filter to do things like format a date, or a UUID.</p>
 <ul>

@@ -528,10 +528,12 @@
 <span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
 </code></pre></div>
 <p>Like <a href="https://doc.rust-lang.org/std/macro.include.html"><code>std::include!</code></a> macro in Rust, the provided path is interpreted as a relative path to the current template file.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The path format is platform-specific. You must use <code>\</code> character as a separator on Windows.</p>
-</div>
+<p>Use <code>/</code> as the path separator for templates shared between Unix and Windows.
+Windows also accepts <code>\</code>, which must be escaped as <code>\\</code> in a regular Rust string
+literal.</p>
+<p>Includes require a file-backed template (<code>#[template(path = "...")]</code>). They are
+not available in inline templates using <code>#[template(source = "...")]</code>, which have
+no template directory to resolve paths against.</p>
 
 
 

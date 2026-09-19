@@ -590,7 +590,7 @@
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>total = 105<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>total = 5151<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 </code></pre></div>
 </div>
 </div>
@@ -620,7 +620,7 @@
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code>&lt;% is converted into &lt;% character
+<div class="highlight"><pre><span></span><code>&lt;% is converted into &lt;% character.
 </code></pre></div>
 </div>
 </div>
@@ -673,10 +673,14 @@
 </div>
 <h2 id="component-block">Component block</h2>
 <p>Rust expression inside <code>&lt;%+ %&gt;</code> tag is evaluated and then rendered by
-calling its <code>render_once()</code> method. If the value does not have an
-appropriate method, a compile-time error will be reported.</p>
-<p>This makes it easy to use types which are <code>TemplateOnce</code> as components
-which can be embedded into other templates.</p>
+calling its <code>render_once_to()</code> method with the current output buffer. When a
+filter is applied to the component, Sailfish calls <code>render_once()</code> first and
+passes the rendered string to the filter. If the value does not have the
+appropriate method in scope, a compile-time error will be reported.</p>
+<p>Both <code>TemplateSimple</code> and <code>TemplateOnce</code> can be used for components. Import the
+corresponding trait so its rendering methods are available. The example below
+uses <code>TemplateSimple</code> for both templates, so <code>val</code> is accessed directly. With
+<code>TemplateOnce</code>, use <code>self.val</code> instead.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="6:3"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><input id="__tabbed_6_3" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Template A</label><label for="__tabbed_6_2">Template B</label><label for="__tabbed_6_3">Result</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">

@@ -544,34 +544,59 @@
 
 
 <h1 id="installation">Installation</h1>
-<p>In order to use sailfish templates, you have add two dependencies in your <code>Cargo.toml</code>.</p>
+<p>Sailfish requires Rust 1.89 or later. Add the following dependency to your <code>Cargo.toml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="k">[dependencies]</span>
-<span class="n">sailfish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.11.7&quot;</span>
+<span class="n">sailfish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.11.8&quot;</span>
 </code></pre></div>
+<p>The default <code>derive</code> feature re-exports the derive macros from <code>sailfish</code>, so a
+separate dependency on <code>sailfish-macros</code> is not required.</p>
 <h2 id="feature-flags">Feature Flags</h2>
-<p>Sailfish accepts the following feature flags</p>
+<p>Sailfish accepts the following feature flags:</p>
 <table>
 <thead>
 <tr>
 <th>Feature</th>
+<th>Enabled by default</th>
 <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>derive</td>
-<td>enable derive macros (enabled by default)</td>
+<td><code>config</code></td>
+<td>Yes</td>
+<td>Read <code>sailfish.toml</code> configuration files when compiling templates. When disabled, these files are ignored.</td>
 </tr>
 <tr>
-<td>json</td>
-<td>enable <code>json</code> filter</td>
+<td><code>derive</code></td>
+<td>Yes</td>
+<td>Re-export the <code>TemplateSimple</code>, <code>TemplateOnce</code>, <code>TemplateMut</code>, and <code>Template</code> derive macros.</td>
 </tr>
 <tr>
-<td>perf-inline</td>
-<td>Add more <code>#[inline]</code> attributes. This may improve rendering performance, but generates a bit larger binary (enabled by default)</td>
+<td><code>perf-inline</code></td>
+<td>Yes</td>
+<td>Add more <code>#[inline]</code> attributes. This may improve rendering performance, but generates a slightly larger binary.</td>
+</tr>
+<tr>
+<td><code>json</code></td>
+<td>No</td>
+<td>Enable the <code>json</code> filter for values implementing <code>serde::Serialize</code>.</td>
+</tr>
+<tr>
+<td><code>hermetic</code></td>
+<td>No</td>
+<td>Compile templates without writing generated template files to disk. Template source files are still read at compile time.</td>
 </tr>
 </tbody>
 </table>
+<p>For example, enable the JSON filter while keeping the default features:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[dependencies]</span>
+<span class="n">sailfish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;0.11.8&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;json&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>To use derive macros without reading configuration files:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[dependencies]</span>
+<span class="n">sailfish</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">version</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;0.11.8&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">default-features</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="n">features</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;derive&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;perf-inline&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+<p>Options set with <code>#[template(...)]</code> remain available when <code>config</code> is disabled.</p>
 
 
 
