@@ -270,17 +270,23 @@ impl fmt::Write for Buffer {
 }
 
 impl From<String> for Buffer {
-    /// Shrink the data and pass raw pointer directory to buffer
+    /// Take ownership of the string's allocation, keeping its capacity
     ///
-    /// This operation is `O(1)`
+    /// This operation is `O(1)` and does not allocate
     #[inline]
     fn from(other: String) -> Buffer {
-        let bs = other.into_boxed_str();
-        let data = Box::leak(bs);
+        // Take the pointer from the `Vec`: `Vec::as_mut_ptr` is valid for the whole
+        // allocation, while `str::as_mut_ptr` (via `Deref`) only covers `len` bytes,
+        // so writing into the spare capacity through it would be undefined behaviour.
+        let mut v = ManuallyDrop::new(other.into_bytes());
+
+        // SAFETY: `String` allocates `capacity` bytes with alignment 1, which is the
+        // layout `Buffer` uses. When `capacity` is zero, the pointer is dangling and
+        // `Buffer` never dereferences or deallocates it.
         Buffer {
-            data: data.as_mut_ptr(),
-            len: data.len(),
-            capacity: data.len(),
+            data: v.as_mut_ptr(),
+            len: v.len(),
+            capacity: v.capacity(),
         }
     }
 }
@@ -375,8 +381,8 @@ mod tests {
         let mut buf = Buffer::from(s);
         assert_eq!(buf.as_str(), "");
 
-        // capacity should be shrinked for safety
-        assert_eq!(buf.capacity(), 0);
+        // capacity should be kept so that no reallocation is needed
+        assert!(buf.capacity() >= 2);
 
         buf.push_str("abc");
         assert_eq!(buf.as_str(), "abc");

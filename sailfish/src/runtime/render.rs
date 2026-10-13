@@ -45,11 +45,61 @@ pub trait Render {
     /// render to `Buffer` with HTML escaping
     #[inline]
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        let mut tmp = Buffer::new();
-        self.render(&mut tmp)?;
-        escape::escape_to_buf(tmp.as_str(), b);
-        Ok(())
+        let start = b.len();
+        // discard partially rendered contents on error, as they are not escaped yet
+        render_or_discard(b, |b| self.render(b))?;
+        escape_rendered(b, start)
     }
+}
+
+/// Calls `render`, removing anything it appended to `b` if it fails
+#[inline]
+pub(crate) fn render_or_discard(
+    b: &mut Buffer,
+    render: impl FnOnce(&mut Buffer) -> Result<(), RenderError>,
+) -> Result<(), RenderError> {
+    let start = b.len();
+    render(b).inspect_err(|_| {
+        // SAFETY: `start` was a valid length, and capacity never shrinks
+        unsafe { b._set_len(start.min(b.len())) };
+    })
+}
+
+/// HTML-escapes the contents rendered into `b` since `start`
+///
+/// Contents without escapable characters are left in place without copying.
+fn escape_rendered(b: &mut Buffer, start: usize) -> Result<(), RenderError> {
+    let rendered = b.as_str().get(start..).ok_or(RenderError::BufSize)?;
+
+    let Some(idx) = escape::first_escape_index(rendered.as_bytes()) else {
+        return Ok(());
+    };
+
+    // The escaper cannot read from the buffer it writes to, so copy out the
+    // contents from the first escapable byte onwards. Short contents are copied
+    // to the stack to avoid allocating.
+    const STACK_LEN: usize = 256;
+    let tail = &rendered[idx..];
+    let tail_len = tail.len();
+
+    if tail_len <= STACK_LEN {
+        let mut stack = [0u8; STACK_LEN];
+        stack[..tail_len].copy_from_slice(tail.as_bytes());
+
+        // SAFETY: `start + idx < b.len()`
+        unsafe { b._set_len(start + idx) };
+        // SAFETY: the bytes were copied from a `str`, starting at an ASCII byte
+        let tail = unsafe { std::str::from_utf8_unchecked(&stack[..tail_len]) };
+        escape::escape_to_buf(tail, b);
+    } else {
+        let tail = tail.to_owned();
+
+        // SAFETY: `start + idx < b.len()`
+        unsafe { b._set_len(start + idx) };
+        escape::escape_to_buf(&tail, b);
+    }
+
+    Ok(())
 }
 
 // /// Autoref-based stable specialization
