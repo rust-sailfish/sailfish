@@ -275,15 +275,18 @@ impl From<String> for Buffer {
     /// This operation is `O(1)` and does not allocate
     #[inline]
     fn from(other: String) -> Buffer {
-        let mut s = ManuallyDrop::new(other);
+        // Take the pointer from the `Vec`: `Vec::as_mut_ptr` is valid for the whole
+        // allocation, while `str::as_mut_ptr` (via `Deref`) only covers `len` bytes,
+        // so writing into the spare capacity through it would be undefined behaviour.
+        let mut v = ManuallyDrop::new(other.into_bytes());
 
         // SAFETY: `String` allocates `capacity` bytes with alignment 1, which is the
         // layout `Buffer` uses. When `capacity` is zero, the pointer is dangling and
         // `Buffer` never dereferences or deallocates it.
         Buffer {
-            data: s.as_mut_ptr(),
-            len: s.len(),
-            capacity: s.capacity(),
+            data: v.as_mut_ptr(),
+            len: v.len(),
+            capacity: v.capacity(),
         }
     }
 }
