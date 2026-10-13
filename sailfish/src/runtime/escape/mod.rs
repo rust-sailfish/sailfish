@@ -50,6 +50,36 @@ pub(crate) fn escaped_entity_len(haystack: &[u8]) -> Option<usize> {
         .then_some(entity.len())
 }
 
+/// Returns the index of the first byte in `bytes` matching `pred`
+///
+/// `pred` should be branch-free so that the scan vectorizes.
+#[inline]
+pub(crate) fn find_byte(bytes: &[u8], pred: impl Fn(u8) -> bool) -> Option<usize> {
+    const CHUNK: usize = 32;
+
+    let (chunks, remainder) = bytes.as_chunks::<CHUNK>();
+    let mut offset = 0;
+    for chunk in chunks {
+        // Accumulating into `u8` rather than `bool` lets LLVM vectorize this loop,
+        // which is over 10x faster on long inputs.
+        let found = chunk.iter().fold(0u8, |acc, &c| acc | pred(c) as u8);
+        if found != 0 {
+            return chunk.iter().position(|&c| pred(c)).map(|i| offset + i);
+        }
+        offset += CHUNK;
+    }
+
+    remainder.iter().position(|&c| pred(c)).map(|i| offset + i)
+}
+
+/// Returns the index of the first byte in `bytes` that must be escaped
+#[inline]
+pub(crate) fn first_escape_index(bytes: &[u8]) -> Option<usize> {
+    find_byte(bytes, |c| {
+        (c == b'"') | (c == b'&') | (c == b'\'') | (c == b'<') | (c == b'>')
+    })
+}
+
 use super::buffer::Buffer;
 
 /// write the escaped contents into `Buffer`

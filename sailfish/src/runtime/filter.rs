@@ -3,7 +3,8 @@
 use std::fmt;
 use std::ptr;
 
-use super::escape::escaped_entity_len;
+use super::escape::{escaped_entity_len, find_byte};
+use super::render::render_or_discard;
 use super::{Buffer, Render, RenderError};
 
 /// Helper struct for 'display' filter
@@ -67,19 +68,54 @@ impl<'a, T: Render + ?Sized> Render for Upper<'a, T> {
         self.0.render(b)?;
 
         let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
-        let s = content.to_uppercase();
-        unsafe { b._set_len(old_len) };
-        b.push_str(&s);
+        if content.is_ascii() {
+            // SAFETY: ASCII case conversion keeps the contents valid UTF-8
+            unsafe { rendered_bytes_mut(b, old_len) }.make_ascii_uppercase();
+        } else {
+            let s = content.to_uppercase();
+            unsafe { b._set_len(old_len) };
+            b.push_str(&s);
+        }
         Ok(())
     }
 
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        let mut tmp = Buffer::new();
-        self.0.render_escaped(&mut tmp)?;
+        let old_len = b.len();
+        render_or_discard(b, |b| self.0.render_escaped(b))?;
 
-        uppercase_escaped(tmp.as_str(), b);
+        let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
+        if content.is_ascii() {
+            // SAFETY: ASCII case conversion keeps the contents valid UTF-8
+            uppercase_escaped_ascii(unsafe { rendered_bytes_mut(b, old_len) });
+        } else {
+            let s = content.to_owned();
+            unsafe { b._set_len(old_len) };
+            uppercase_escaped(&s, b);
+        }
         Ok(())
     }
+}
+
+/// Returns the contents rendered into `b` since `start` as mutable bytes
+///
+/// # Safety
+///
+/// - `start` must be less than or equal to `b.len()`
+/// - The caller must keep the bytes valid UTF-8
+unsafe fn rendered_bytes_mut(b: &mut Buffer, start: usize) -> &mut [u8] {
+    debug_assert!(start <= b.len());
+    unsafe { std::slice::from_raw_parts_mut(b.as_mut_ptr().add(start), b.len() - start) }
+}
+
+/// Uppercases escaped ASCII contents in place, leaving HTML entities untouched
+fn uppercase_escaped_ascii(mut bytes: &mut [u8]) {
+    while let Some(amp) = find_byte(bytes, |c| c == b'&') {
+        let (head, tail) = bytes.split_at_mut(amp);
+        head.make_ascii_uppercase();
+        let skip = escaped_entity_len(tail).unwrap_or(1);
+        bytes = &mut tail[skip..];
+    }
+    bytes.make_ascii_uppercase();
 }
 
 fn uppercase_escaped(s: &str, b: &mut Buffer) {
@@ -233,17 +269,31 @@ impl<'a, T: Render + ?Sized> Render for Lower<'a, T> {
         self.0.render(b)?;
 
         let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
-        let s = content.to_lowercase();
-        unsafe { b._set_len(old_len) };
-        b.push_str(&s);
+        if content.is_ascii() {
+            // SAFETY: ASCII case conversion keeps the contents valid UTF-8
+            unsafe { rendered_bytes_mut(b, old_len) }.make_ascii_lowercase();
+        } else {
+            let s = content.to_lowercase();
+            unsafe { b._set_len(old_len) };
+            b.push_str(&s);
+        }
         Ok(())
     }
 
     fn render_escaped(&self, b: &mut Buffer) -> Result<(), RenderError> {
-        let mut tmp = Buffer::new();
-        self.0.render_escaped(&mut tmp)?;
+        let old_len = b.len();
+        render_or_discard(b, |b| self.0.render_escaped(b))?;
 
-        lowercase_escaped(tmp.as_str(), b);
+        let content = b.as_str().get(old_len..).ok_or(RenderError::BufSize)?;
+        if content.is_ascii() {
+            // HTML entities are already lowercase, so they need no special casing.
+            // SAFETY: ASCII case conversion keeps the contents valid UTF-8
+            unsafe { rendered_bytes_mut(b, old_len) }.make_ascii_lowercase();
+        } else {
+            let s = content.to_owned();
+            unsafe { b._set_len(old_len) };
+            lowercase_escaped(&s, b);
+        }
         Ok(())
     }
 }
