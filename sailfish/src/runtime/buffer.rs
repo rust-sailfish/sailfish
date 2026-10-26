@@ -107,7 +107,7 @@ impl Buffer {
     /// overflows `isize::MAX`.
     #[inline]
     pub(crate) unsafe fn reserve_small(&mut self, size: usize) {
-        debug_assert!(size <= std::isize::MAX as usize);
+        debug_assert!(size <= isize::MAX as usize);
         if likely!(self.len + size <= self.capacity) {
             return;
         }
@@ -163,7 +163,7 @@ impl Buffer {
 
     #[cfg_attr(feature = "perf-inline", inline)]
     fn reserve_internal(&mut self, size: usize) {
-        debug_assert!(size <= std::isize::MAX as usize);
+        debug_assert!(size <= isize::MAX as usize);
 
         let new_capacity = std::cmp::max(self.capacity * 2, self.capacity + size);
         debug_assert!(new_capacity > self.capacity);
@@ -179,7 +179,7 @@ impl Buffer {
 fn safe_alloc(capacity: usize) -> *mut u8 {
     assert!(capacity > 0);
     assert!(
-        capacity <= std::isize::MAX as usize,
+        capacity <= isize::MAX as usize,
         "capacity is too large"
     );
 
@@ -204,7 +204,7 @@ fn safe_alloc(capacity: usize) -> *mut u8 {
 unsafe fn safe_realloc(ptr: *mut u8, capacity: usize, new_capacity: usize) -> *mut u8 { unsafe {
     assert!(new_capacity > 0);
     assert!(
-        new_capacity <= std::isize::MAX as usize,
+        new_capacity <= isize::MAX as usize,
         "capacity is too large"
     );
 
@@ -270,17 +270,23 @@ impl fmt::Write for Buffer {
 }
 
 impl From<String> for Buffer {
-    /// Shrink the data and pass raw pointer directory to buffer
+    /// Take ownership of the string's allocation, keeping its capacity
     ///
-    /// This operation is `O(1)`
+    /// This operation is `O(1)` and does not allocate
     #[inline]
     fn from(other: String) -> Buffer {
-        let bs = other.into_boxed_str();
-        let data = Box::leak(bs);
+        // Take the pointer from the `Vec`: `Vec::as_mut_ptr` is valid for the whole
+        // allocation, while `str::as_mut_ptr` (via `Deref`) only covers `len` bytes,
+        // so writing into the spare capacity through it would be undefined behaviour.
+        let mut v = ManuallyDrop::new(other.into_bytes());
+
+        // SAFETY: `String` allocates `capacity` bytes with alignment 1, which is the
+        // layout `Buffer` uses. When `capacity` is zero, the pointer is dangling and
+        // `Buffer` never dereferences or deallocates it.
         Buffer {
-            data: data.as_mut_ptr(),
-            len: data.len(),
-            capacity: data.len(),
+            data: v.as_mut_ptr(),
+            len: v.len(),
+            capacity: v.capacity(),
         }
     }
 }
@@ -375,8 +381,8 @@ mod tests {
         let mut buf = Buffer::from(s);
         assert_eq!(buf.as_str(), "");
 
-        // capacity should be shrinked for safety
-        assert_eq!(buf.capacity(), 0);
+        // capacity should be kept so that no reallocation is needed
+        assert!(buf.capacity() >= 2);
 
         buf.push_str("abc");
         assert_eq!(buf.as_str(), "abc");
@@ -481,7 +487,7 @@ mod tests {
     #[should_panic]
     fn reserve_overflow() {
         let mut buf = Buffer::new();
-        buf.reserve(std::isize::MAX as usize + 1);
+        buf.reserve(isize::MAX as usize + 1);
     }
 
     #[test]

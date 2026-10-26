@@ -9,6 +9,17 @@
 * Unescaped `json` filter output now uses JSON Unicode escapes for `<`, `>`,
   `&`, `'`, U+2028, and U+2029 so it can be embedded directly in script elements.
   The serialized text changes, but the decoded JSON values are preserved.
+* The default `Render::render_escaped` implementation discards partially
+  rendered, unescaped contents when `render` fails
+
+### Performance
+
+* The default `Render::render_escaped` implementation (used by custom `Render`
+  types and the `disp` and `dbg` filters) renders directly into the output buffer
+  instead of allocating a temporary buffer
+* `upper` and `lower` filters convert ASCII contents in place without allocating
+* `Buffer::from(String)` keeps the string's capacity instead of shrinking it,
+  which also speeds up `escape_to_string`
 
 ### Breaking Change
 
