@@ -26,12 +26,12 @@ hermetic = []
 memchr = "2.8.3"
 quote = { version = "1.0.47", default-features = false }
 serde = { version = "1.0.229", features = ["derive"], optional = true }
-toml = { version = "1.1.5", optional = true }
+toml = { version = "1.1.8", optional = true }
 home = "0.5.12"
 filetime = "0.2.29"
 
 [dependencies.syn]
-version = "3.0.5"
+version = "3.0.9"
 default-features = false
 features = ["parsing", "full", "visit-mut", "printing"]
 

@@ -29,7 +29,7 @@ hermetic = ["sailfish-macros/hermetic"]
 itoap = "1.0.1"
 ryu = "1.0.23"
 serde = { version = "1.0.229", optional = true }
-serde_json = { version = "1.0.151", optional = true }
+serde_json = { version = "1.0.154", optional = true }
 
 [dependencies.sailfish-macros]
 path = "../sailfish-macros"

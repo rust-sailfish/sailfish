@@ -9,8 +9,8 @@ publish = false
 sailfish = { path = "../../sailfish", features = ["json"] }
 sailfish-macros = { path = "../../sailfish-macros" }
 sailfish-compiler = { path = "../../sailfish-compiler" }
-serde_json = "1.0.151"
+serde_json = "1.0.154"
 
 [dev-dependencies]
-trybuild = "1.0.121"
+trybuild = "1.0.122"
 pretty_assertions = "1.4.1"

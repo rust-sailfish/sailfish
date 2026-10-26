@@ -6,8 +6,8 @@ edition = "2024"
 publish = false
 
 [dependencies]
-actix-web = { version = "4.15.0", default-features = false }
-actix-rt = "2.13.0"
+actix-web = { version = "4.18.1", default-features = false }
+actix-rt = "2.15.0"
 sailfish = { path = "../sailfish" }
 sailfish-macros = { path = "../sailfish-macros" }
 
